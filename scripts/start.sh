@@ -280,9 +280,22 @@ start_backend() {
     info "Starte Spring-Boot-Backend (Port ${BACKEND_PORT})..."
     cd "${REPO_ROOT}"
     local backend_log="${LOG_DIR}/backend.log"
+    local install_log="${LOG_DIR}/backend-install.log"
 
-    # spring-boot:run startet das gesamte Multimodul-Projekt aus cvm-app
-    nohup "${REPO_ROOT}/mvnw" -pl cvm-app -am \
+    # spring-boot:run laeuft sonst auf jedem Projekt im Reaktor (auch
+    # cvm-parent ohne Main-Klasse). Daher zwei Schritte:
+    #   1. Dependencies in den lokalen Maven-Cache installieren.
+    #   2. spring-boot:run NUR auf cvm-app, ohne -am.
+    info "Installiere Maven-Module fuer cvm-app (Log: ${install_log})..."
+    if ! "${REPO_ROOT}/mvnw" -q -pl cvm-app -am -DskipTests install \
+            > "${install_log}" 2>&1; then
+        fail "Maven-Install fehlgeschlagen. Letzte Log-Zeilen:"
+        tail -n 40 "${install_log}" >&2 || true
+        exit 75
+    fi
+    ok "Maven-Install fertig."
+
+    nohup "${REPO_ROOT}/mvnw" -pl cvm-app \
         -Dspring-boot.run.jvmArguments="-Dserver.port=${BACKEND_PORT}" \
         spring-boot:run \
         > "${backend_log}" 2>&1 &
