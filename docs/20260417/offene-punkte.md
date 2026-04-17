@@ -28,6 +28,32 @@
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
 
+### Stand nach Iteration 07
+- **Karma-Tests** koennen lokal nur mit Headless-Chrome laufen
+  (Sandbox-Build: `No binary for ChromeHeadless`). CI muss
+  `karma-chrome-launcher` + `ChromeHeadlessNoSandbox` mitbringen.
+  Specs (`RoleMenuServiceTest`, `AppConfigServiceTest`,
+  `AuthInterceptorTest`, `ApiClientTest`) sind geschrieben und
+  kompilieren sauber via `ng build`.
+- **Playwright-E2E-Smoke** (Login-Redirect, Dashboard, Logout) noch
+  nicht eingerichtet. Spec aus 07-Frontend-Shell.md nennt es
+  "nice-to-have"; sollte mit Iteration 08 nachgereicht werden.
+- **`@typescript-eslint/parser`** in Iteration 00 vergessen worden.
+  Iteration 07 hat ihn als devDependency hinzugefuegt; package.json
+  jetzt komplett, `ng lint` ist gruen.
+- **Tailwind-Severity-Plugin**: Severity-Farben sind aktuell hart in
+  `severity-badge.component.ts` (Tailwind-Klassen-Map). Sobald die
+  Queue-Tabelle die gleichen Farben braucht, lohnt sich ein Tailwind-
+  Plugin (`severity-bg-{level}`).
+- **Login-Modus**: aktuell `check-sso` (kein Hard-Redirect bei
+  Anwendung-Start). Falls PortalCore-typisch `login-required`
+  gewuenscht ist, muss `keycloak-init.ts` umgestellt werden.
+- **Produkt-/Umgebungs-Auswahl im Header**: aktuell statische Optionen
+  ohne LocalStorage-Persistenz; Iteration 08 sollte echte Produkt-Daten
+  aus dem Backend laden und die Auswahl persistieren.
+- **i18n**: Locale-Service vorbereitet auf `en`, aber englische Texte
+  fehlen.
+
 ### Stand nach Iteration 06
 - **Security**: Rollen `CVE_APPROVER`, `CVE_REVIEWER` noch nicht
   verdrahtet. Endpunkte unter `/api/v1/assessments` und

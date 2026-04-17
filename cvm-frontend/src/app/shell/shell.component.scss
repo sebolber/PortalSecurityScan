@@ -2,6 +2,18 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cvm-title {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.cvm-product {
+  width: 280px;
 }
 
 .flex-1 { flex: 1 1 auto; }
@@ -11,15 +23,23 @@
 }
 
 mat-sidenav {
-  width: 240px;
+  width: 260px;
+  border-right: 1px solid #e6e6e6;
+  background: #ffffff;
 }
 
 .cvm-content {
   padding: 1.5rem;
-  background: #fafafa;
+  background: #f7f7f7;
 }
 
-.disabled {
-  opacity: 0.5;
-  pointer-events: none;
+.cvm-no-menu {
+  padding: 1rem;
+  color: #777;
+}
+
+a.active {
+  background: rgba(226, 0, 26, 0.08);
+  color: #b00015;
+  font-weight: 600;
 }

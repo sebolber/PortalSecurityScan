@@ -1,0 +1,38 @@
+<div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <ahs-card [title]="texte.openCves" [subtitle]="texte.openCvesSubtitle">
+    <div class="flex items-baseline gap-2">
+      <span class="text-4xl font-bold">{{ offene }}</span>
+      <span class="text-sm text-zinc-500">CVEs</span>
+    </div>
+  </ahs-card>
+
+  <ahs-card [title]="texte.severityChart">
+    <div
+      class="h-48"
+      echarts
+      [options]="chartOption"
+      [autoResize]="true"
+    ></div>
+  </ahs-card>
+
+  <ahs-card [title]="texte.oldestCritical">
+    <div class="flex items-center gap-3">
+      <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
+      <span class="text-lg">{{ aeltesteCritical }}</span>
+    </div>
+  </ahs-card>
+
+  <ahs-card [title]="texte.operationStatus">
+    @if (weiterbetriebOk) {
+      <div class="flex items-center gap-3">
+        <ahs-severity-badge severity="LOW"></ahs-severity-badge>
+        <span>{{ texte.operationStatusOk }}</span>
+      </div>
+    } @else {
+      <div class="flex items-center gap-3">
+        <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
+        <span>{{ texte.operationStatusWarning }}</span>
+      </div>
+    }
+  </ahs-card>
+</div>
