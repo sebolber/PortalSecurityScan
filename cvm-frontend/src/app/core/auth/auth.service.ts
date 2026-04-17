@@ -15,13 +15,37 @@ export class AuthService {
   readonly username = signal<string>('');
 
   refreshFromKeycloak(): void {
-    this.loggedIn.set(this.keycloak.isLoggedIn());
-    if (this.loggedIn()) {
-      this.userRoles.set(this.keycloak.getUserRoles(true));
-      this.username.set(this.keycloak.getUsername() ?? '');
-    } else {
+    let loggedIn = false;
+    try {
+      loggedIn = this.keycloak.isLoggedIn();
+    } catch {
+      loggedIn = false;
+    }
+    this.loggedIn.set(loggedIn);
+    if (!loggedIn) {
       this.userRoles.set([]);
       this.username.set('');
+      return;
+    }
+    // KeycloakService wirft "User not logged in or user profile was not
+    // loaded.", wenn das Profil noch nicht eingeladen ist (Default bei
+    // check-sso). Wir greifen defensiv und holen das Profil bei Bedarf
+    // asynchron nach.
+    let roles: string[] = [];
+    try {
+      roles = this.keycloak.getUserRoles(true);
+    } catch {
+      roles = [];
+    }
+    this.userRoles.set(roles);
+    try {
+      this.username.set(this.keycloak.getUsername() ?? '');
+    } catch {
+      this.username.set('');
+      void this.keycloak.loadUserProfile()
+        .then((profile) =>
+          this.username.set(profile?.username ?? profile?.email ?? ''))
+        .catch(() => undefined);
     }
   }
 
