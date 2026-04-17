@@ -1,0 +1,103 @@
+package com.ahs.cvm.application.rules;
+
+import com.ahs.cvm.domain.enums.AhsSeverity;
+import com.ahs.cvm.domain.enums.RuleOrigin;
+import com.ahs.cvm.domain.enums.RuleStatus;
+import com.ahs.cvm.persistence.rule.Rule;
+import com.ahs.cvm.persistence.rule.RuleRepository;
+import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * CRUD fuer Regeln inkl. Vier-Augen-Aktivierung. Der Parser validiert die
+ * Condition bei Draft-Erzeugung, damit defekte Regeln nicht persistiert werden.
+ */
+@Service
+public class RuleService {
+
+    private static final Logger log = LoggerFactory.getLogger(RuleService.class);
+
+    private final RuleRepository ruleRepository;
+    private final ConditionParser parser;
+
+    public RuleService(RuleRepository ruleRepository, ConditionParser parser) {
+        this.ruleRepository = ruleRepository;
+        this.parser = parser;
+    }
+
+    @Transactional(readOnly = true)
+    public List<RuleView> listAll() {
+        return ruleRepository.findAll().stream().map(RuleView::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<RuleView> find(UUID id) {
+        return ruleRepository.findById(id).map(RuleView::from);
+    }
+
+    @Transactional
+    public RuleView proposeRule(RuleDraftInput input, String createdBy) {
+        if (createdBy == null || createdBy.isBlank()) {
+            throw new IllegalArgumentException("createdBy darf nicht leer sein.");
+        }
+        parser.parse(input.conditionJson());
+        Rule rule = Rule.builder()
+                .ruleKey(input.ruleKey())
+                .name(input.name())
+                .description(input.description())
+                .proposedSeverity(input.proposedSeverity())
+                .conditionJson(input.conditionJson())
+                .rationaleTemplate(input.rationaleTemplate())
+                .rationaleSourceFields(input.rationaleSourceFields())
+                .origin(input.origin() == null ? RuleOrigin.MANUAL : input.origin())
+                .status(RuleStatus.DRAFT)
+                .createdBy(createdBy)
+                .build();
+        log.info("Rule-Draft angelegt: key={}, severity={}", input.ruleKey(), input.proposedSeverity());
+        return RuleView.from(ruleRepository.save(rule));
+    }
+
+    @Transactional
+    public RuleView activate(UUID ruleId, String approverId) {
+        if (approverId == null || approverId.isBlank()) {
+            throw new IllegalArgumentException("approverId darf nicht leer sein.");
+        }
+        Rule rule = ruleRepository.findById(ruleId)
+                .orElseThrow(() -> new RuleNotFoundException(ruleId));
+        if (rule.getStatus() != RuleStatus.DRAFT) {
+            throw new IllegalStateException(
+                    "Regel " + ruleId + " ist nicht im Status DRAFT (ist " + rule.getStatus() + ").");
+        }
+        if (Objects.equals(rule.getCreatedBy(), approverId)) {
+            throw new RuleFourEyesViolationException(
+                    "Vier-Augen-Prinzip verletzt: Approver '" + approverId
+                            + "' ist identisch mit dem Autor.");
+        }
+        rule.setStatus(RuleStatus.ACTIVE);
+        rule.setActivatedBy(approverId);
+        rule.setActivatedAt(Instant.now());
+        log.info("Rule aktiviert: key={}, by={}", rule.getRuleKey(), approverId);
+        return RuleView.from(ruleRepository.save(rule));
+    }
+
+    /**
+     * Eingabe-Record fuer Draft-Erzeugung. Entkoppelt den Service von
+     * REST-DTOs.
+     */
+    public record RuleDraftInput(
+            String ruleKey,
+            String name,
+            String description,
+            AhsSeverity proposedSeverity,
+            String conditionJson,
+            String rationaleTemplate,
+            List<String> rationaleSourceFields,
+            RuleOrigin origin) {}
+}

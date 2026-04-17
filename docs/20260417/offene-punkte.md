@@ -28,6 +28,21 @@
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
 
+### Stand nach Iteration 05
+- **Condition-JSON ist TEXT**, nicht JSONB. Fuer Server-seitige
+  JSON-Queries (z.&nbsp;B. "welche Regel referenziert Pfad X") muesste
+  die Spalte spaeter auf JSONB migriert werden. Aktuell kein Bedarf.
+- **Dry-Run-Profilhistorie**: nimmt das heute aktive Profil je Umgebung.
+  Sobald Profil-Zeitreihen relevant werden (&rarr; z.&nbsp;B. fuer
+  Executive-Reports in Iteration 19), Profil-at-point-in-time anbinden.
+- **Regel-Immutable-Versionierung**: derzeit genuegt der Status-Zyklus
+  DRAFT &rarr; ACTIVE &rarr; RETIRED. Wenn Regeln inhaltlich geaendert
+  werden sollen, sollte analog zu Assessment/Profil eine Zeile je
+  Version angelegt werden. Offen bis Iteration 17 (KI-Regel-Extraktion).
+- **Security**: Rolle `CVM_ADMIN` bewacht POST/activate/dry-run. Feinere
+  Aufteilung (z.&nbsp;B. `CVM_RULE_AUTHOR`, `CVM_RULE_APPROVER`) noch
+  offen.
+
 ### Stand nach Iteration 04
 - **Security** fuer die Profile-Endpunkte nachziehen: Rolle
   `CVM_PROFILE_AUTHOR` fuer PUT, `CVM_PROFILE_APPROVER` fuer
