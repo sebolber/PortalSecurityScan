@@ -8,7 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -21,6 +20,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "scan")
@@ -52,8 +53,13 @@ public class Scan {
     @Column(name = "content_sha256", nullable = false)
     private String contentSha256;
 
-    @Lob
+    /**
+     * Verschluesselte SBOM-Rohdaten als BYTEA. {@code @Lob} wuerde Hibernate
+     * 6 zu Postgres-OID/BLOB greifen lassen und gegen die Migration
+     * (V0006: BYTEA) verstossen. Wir mappen daher explizit auf VARBINARY.
+     */
     @Basic(fetch = FetchType.LAZY)
+    @JdbcTypeCode(SqlTypes.VARBINARY)
     @Column(name = "raw_sbom")
     private byte[] rawSbom;
 
