@@ -1,0 +1,132 @@
+package com.ahs.cvm.application.assessment;
+
+import com.ahs.cvm.application.cascade.CascadeInput;
+import com.ahs.cvm.application.cascade.CascadeOutcome;
+import com.ahs.cvm.application.cascade.CascadeService;
+import com.ahs.cvm.application.profile.ContextProfileService;
+import com.ahs.cvm.application.profile.ProfileView;
+import com.ahs.cvm.application.rules.RuleEvaluationContext;
+import com.ahs.cvm.application.rules.RuleEvaluationContext.ComponentSnapshot;
+import com.ahs.cvm.application.rules.RuleEvaluationContext.CveSnapshot;
+import com.ahs.cvm.application.rules.RuleEvaluationContext.FindingSnapshot;
+import com.ahs.cvm.application.scan.ScanIngestedEvent;
+import com.ahs.cvm.persistence.cve.Cve;
+import com.ahs.cvm.persistence.finding.Finding;
+import com.ahs.cvm.persistence.finding.FindingRepository;
+import com.ahs.cvm.persistence.scan.ComponentOccurrence;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionalEventListener;
+
+/**
+ * Haengt die Cascade aus Iteration 05 an die Scan-Ingest-Pipeline aus
+ * Iteration 02. Pro Finding wird {@link CascadeService#bewerte(CascadeInput)}
+ * aufgerufen und das Ergebnis ueber {@link AssessmentWriteService#propose}
+ * persistiert. Doppelte PROPOSED-Eintraege je Finding werden vermieden,
+ * indem die naechste Version nur dann angelegt wird, wenn noch kein
+ * offenes Assessment existiert.
+ */
+@Component
+public class FindingsCreatedListener {
+
+    private static final Logger log = LoggerFactory.getLogger(FindingsCreatedListener.class);
+
+    private final FindingRepository findingRepository;
+    private final ContextProfileService profileService;
+    private final CascadeService cascadeService;
+    private final AssessmentWriteService writeService;
+    private final YAMLMapper yamlMapper;
+
+    public FindingsCreatedListener(
+            FindingRepository findingRepository,
+            ContextProfileService profileService,
+            CascadeService cascadeService,
+            AssessmentWriteService writeService) {
+        this.findingRepository = findingRepository;
+        this.profileService = profileService;
+        this.cascadeService = cascadeService;
+        this.writeService = writeService;
+        this.yamlMapper = new YAMLMapper();
+    }
+
+    @TransactionalEventListener
+    public void onScanIngested(ScanIngestedEvent event) {
+        List<Finding> findings = findingRepository.findByScanId(event.scanId());
+        if (findings.isEmpty()) {
+            return;
+        }
+        JsonNode profileTree = ladeProfilbaum(event.environmentId());
+        log.info("Cascade-Run fuer Scan {} ({} Findings)", event.scanId(), findings.size());
+        for (Finding f : findings) {
+            try {
+                CascadeInput input = baueInput(f, event, profileTree);
+                CascadeOutcome outcome = cascadeService.bewerte(input);
+                writeService.propose(new AssessmentWriteService.ProposeCommand(
+                        f.getId(),
+                        f.getCve().getId(),
+                        event.productVersionId(),
+                        event.environmentId(),
+                        outcome.source(),
+                        outcome.severity(),
+                        outcome.rationale(),
+                        outcome.sourceFields(),
+                        outcome.ruleId(),
+                        outcome.reusedAssessmentId()));
+            } catch (RuntimeException ex) {
+                log.warn("Cascade fuer Finding {} fehlgeschlagen: {}",
+                        f.getId(), ex.getMessage());
+            }
+        }
+    }
+
+    private CascadeInput baueInput(Finding f, ScanIngestedEvent event, JsonNode profileTree) {
+        Cve cve = f.getCve();
+        ComponentOccurrence occ = f.getComponentOccurrence();
+        CveSnapshot cveSnap = new CveSnapshot(
+                cve.getId(),
+                cve.getCveId(),
+                cve.getSummary(),
+                cve.getCwes() == null ? List.of() : List.copyOf(cve.getCwes()),
+                cve.getKevListed() != null && cve.getKevListed(),
+                Optional.ofNullable(cve.getEpssScore()).orElse(BigDecimal.ZERO),
+                Optional.ofNullable(cve.getCvssBaseScore()).orElse(BigDecimal.ZERO));
+        ComponentSnapshot componentSnap = new ComponentSnapshot(
+                occ.getComponent().getType(),
+                occ.getComponent().getName(),
+                occ.getComponent().getVersion());
+        FindingSnapshot findingSnap = new FindingSnapshot(f.getId(), f.getDetectedAt());
+        RuleEvaluationContext ctx = new RuleEvaluationContext(
+                cveSnap, profileTree, componentSnap, findingSnap);
+        return new CascadeInput(cve.getId(), event.productVersionId(),
+                event.environmentId(), ctx);
+    }
+
+    private JsonNode ladeProfilbaum(UUID environmentId) {
+        if (environmentId == null) {
+            return JsonNodeFactory.instance.objectNode();
+        }
+        Optional<ProfileView> aktiv = profileService.latestActiveFor(environmentId);
+        if (aktiv.isEmpty()) {
+            log.debug(
+                    "Kein aktives Profil fuer Umgebung {}; Cascade nutzt leeres Profil.",
+                    environmentId);
+            return JsonNodeFactory.instance.objectNode();
+        }
+        try {
+            return yamlMapper.readTree(aktiv.get().yamlSource());
+        } catch (JsonProcessingException e) {
+            log.warn("Profil {} nicht parsebar, leeres Profil fuer Cascade verwendet.",
+                    aktiv.get().id());
+            return JsonNodeFactory.instance.objectNode();
+        }
+    }
+}

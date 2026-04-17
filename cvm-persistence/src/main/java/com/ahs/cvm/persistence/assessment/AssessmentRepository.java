@@ -1,6 +1,8 @@
 package com.ahs.cvm.persistence.assessment;
 
 import com.ahs.cvm.domain.enums.AssessmentStatus;
+import com.ahs.cvm.domain.enums.ProposalSource;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -52,4 +54,45 @@ public interface AssessmentRepository extends JpaRepository<Assessment, UUID> {
     int markiereAlsReview(
             @Param("ids") Collection<UUID> ids,
             @Param("profileVersionId") UUID profileVersionId);
+
+    /**
+     * Queue-Query: offene Assessments je Umgebung. Die Filter auf
+     * {@code productVersionId} und {@code source} sind optional
+     * ({@code null} = keine Einschraenkung).
+     */
+    @Query("SELECT a FROM Assessment a "
+            + "WHERE a.supersededAt IS NULL "
+            + "  AND a.status IN (com.ahs.cvm.domain.enums.AssessmentStatus.PROPOSED, "
+            + "                   com.ahs.cvm.domain.enums.AssessmentStatus.NEEDS_REVIEW) "
+            + "  AND (:environmentId IS NULL OR a.environment.id = :environmentId) "
+            + "  AND (:productVersionId IS NULL OR a.productVersion.id = :productVersionId) "
+            + "  AND (:source IS NULL OR a.proposalSource = :source) "
+            + "ORDER BY a.severity ASC, a.createdAt ASC")
+    List<Assessment> findeOffeneQueue(
+            @Param("environmentId") UUID environmentId,
+            @Param("productVersionId") UUID productVersionId,
+            @Param("source") ProposalSource source);
+
+    /**
+     * Findet APPROVED-Assessments, deren {@code validUntil} vor
+     * {@code grenze} liegt und die noch nicht {@code supersededAt} sind.
+     * Basis fuer den Expiry-Scheduler.
+     */
+    List<Assessment>
+            findByStatusAndValidUntilLessThanEqualAndSupersededAtIsNull(
+                    AssessmentStatus status, Instant grenze);
+
+    /**
+     * Batch-Update: setzt {@code status=EXPIRED} ohne den
+     * {@link AssessmentImmutabilityListener} zu triggern. Analog zum
+     * {@code NEEDS_REVIEW}-Fall in {@link #markiereAlsReview}.
+     */
+    @Modifying
+    @Query("UPDATE Assessment a "
+            + "SET a.status = com.ahs.cvm.domain.enums.AssessmentStatus.EXPIRED, "
+            + "    a.updatedAt = :zeitpunkt "
+            + "WHERE a.id IN :ids")
+    int markiereAlsAbgelaufen(
+            @Param("ids") Collection<UUID> ids,
+            @Param("zeitpunkt") Instant zeitpunkt);
 }

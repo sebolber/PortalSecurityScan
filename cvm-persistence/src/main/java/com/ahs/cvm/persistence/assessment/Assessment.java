@@ -111,6 +111,12 @@ public class Assessment {
     @Column(name = "review_triggered_by_profile_version")
     private UUID reviewTriggeredByProfileVersion;
 
+    @Column(name = "valid_until")
+    private Instant validUntil;
+
+    @Column(name = "reviewed_by", updatable = false)
+    private String reviewedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

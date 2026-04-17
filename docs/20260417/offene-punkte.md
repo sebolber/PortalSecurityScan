@@ -28,6 +28,37 @@
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
 
+### Stand nach Iteration 06
+- **Security**: Rollen `CVE_APPROVER`, `CVE_REVIEWER` noch nicht
+  verdrahtet. Endpunkte unter `/api/v1/assessments` und
+  `/api/v1/findings` laufen aktuell mit `authenticated()`. Vier-Augen ist
+  fachlich (UserId-Vergleich) bereits durchgesetzt; rollenbasierte
+  Pruefung folgt zusammen mit den Profile-/Rule-Rollen.
+- **Mitigation-Plan-Status**: Auto-Anlage als `PLANNED`, Owner =
+  Approver. Status `OPEN` waere fachlich sauberer; bleibt UI-Aufgabe in
+  Iteration 08.
+- **Severity-/Umgebungs-spezifische `validUntil`-Konfiguration**: aktuell
+  ein einziger Default `cvm.assessment.default-valid-months=12`. Sobald
+  Konzept v0.2 (6.2 Punkt 5) konkretisiert wird, kann pro
+  Severity/Umgebung gesteuert werden.
+- **AssessmentExpiredEvent**: nicht publiziert. Sollte spaetestens in
+  Iteration 09 (SMTP) ergaenzt werden, damit Re-Vorschlaege auf der UI
+  sichtbar sind.
+- **REUSE und AssessmentApprovedEvent**: REUSE-Fortschreibung publiziert
+  derzeit kein Event, da fachlich keine neue Bewertung. Falls Alerts
+  trotzdem sinnvoll sind &rarr; Iteration 09 entscheiden.
+- **JsonNode-Profile in der Cascade**: Listener parst die YAML-Quelle
+  jedes Mal frisch, ohne Schema-Validierung. Profile-at-point-in-time
+  greift erst, wenn Iteration 19 die Profil-Zeitreihen einbezieht.
+- **Persistenz-Integration-Test fuer V0010** (`valid_until`,
+  `reviewed_by`, EXPIRED-Constraint): in CI noch zu ergaenzen, sobald
+  Docker verfuegbar.
+- **Pitest fuer Severity-Mapping und Cascade-Logik**: Konzept-Vorgabe
+  ist 100 % Mutation Survival; bleibt offen bis ein eigener Mutation-
+  Run-Schritt ergaenzt wird.
+- **CVE_APPROVER**-Rolle: Eintragung in Keycloak-Realm + Zuordnung im
+  WebSecurityConfig folgt mit Iteration 11.
+
 ### Stand nach Iteration 05
 - **Condition-JSON ist TEXT**, nicht JSONB. Fuer Server-seitige
   JSON-Queries (z.&nbsp;B. "welche Regel referenziert Pfad X") muesste

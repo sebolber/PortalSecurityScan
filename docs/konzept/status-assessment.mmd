@@ -1,0 +1,20 @@
+%% Iteration 06 - Statusmaschine fuer Assessment
+%% (siehe AssessmentStateMachine.java und Konzept v0.2 Abschnitt 6.2)
+stateDiagram-v2
+    [*] --> PROPOSED: Cascade RULE / KI / manuelles propose
+    [*] --> APPROVED: Cascade REUSE (Fortschreibung)
+
+    PROPOSED --> APPROVED: approve (Vier-Augen bei Downgrade)
+    PROPOSED --> REJECTED: reject (Kommentar pflicht)
+    PROPOSED --> NEEDS_REVIEW: Profil-Aenderung (rationaleSourceFields)
+    PROPOSED --> SUPERSEDED: neuer Vorschlag versionspraegt
+
+    APPROVED --> EXPIRED: Scheduler (validUntil ueberschritten)
+    APPROVED --> SUPERSEDED: neue APPROVED-Version
+
+    NEEDS_REVIEW --> PROPOSED: erneut bewerten
+    NEEDS_REVIEW --> SUPERSEDED: neue Version
+
+    REJECTED --> [*]
+    SUPERSEDED --> [*]
+    EXPIRED --> [*]
