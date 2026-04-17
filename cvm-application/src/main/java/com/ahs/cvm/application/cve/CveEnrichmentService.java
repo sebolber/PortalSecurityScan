@@ -14,6 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +37,18 @@ public class CveEnrichmentService {
     private final Map<String, CveEnrichmentPort> portsByName;
     private final Duration refreshAfter;
 
+    @Autowired
     public CveEnrichmentService(
             CveRepository cveRepository, List<CveEnrichmentPort> ports) {
         this(cveRepository, ports, REFRESH_AFTER_DEFAULT);
     }
 
+    /**
+     * Test-/Tuning-Konstruktor mit konfigurierbarer Cache-Lebenszeit.
+     * Wird vom Spring-Container nicht aufgerufen (siehe {@link Autowired}
+     * am Default-Konstruktor); Spring 6 verlangt sonst eine eindeutige
+     * Konstruktor-Wahl.
+     */
     public CveEnrichmentService(
             CveRepository cveRepository,
             List<CveEnrichmentPort> ports,
