@@ -1,0 +1,96 @@
+<div
+  class="flex h-[calc(100vh-4rem)] w-full flex-col"
+  cvmQueueShortcuts
+  (next)="onNext()"
+  (previous)="onPrevious()"
+  (approve)="onShortcutApprove()"
+  (override)="onShortcutOverride()"
+  (reject)="onShortcutReject()"
+  (help)="openHelp()"
+>
+  <header class="flex items-center justify-between border-b bg-white px-4 py-2">
+    <div>
+      <h1 class="text-lg font-semibold">Bewertungs-Queue</h1>
+      <p class="text-xs text-zinc-500">
+        Offene Vorschlaege. j/k bewegt, a freigibt, r lehnt ab, ? zeigt Hilfe.
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      @if (checkedIds().size > 0) {
+        <span class="text-xs text-zinc-500">
+          {{ checkedIds().size }} ausgewaehlt
+        </span>
+      }
+      <button
+        type="button"
+        class="rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50"
+        (click)="onReload()"
+        [disabled]="loading()"
+      >
+        {{ loading() ? 'Lade...' : 'Aktualisieren' }}
+      </button>
+      <button
+        type="button"
+        class="rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50"
+        (click)="openHelp()"
+        aria-label="Tastatur-Shortcuts anzeigen"
+      >
+        ?
+      </button>
+    </div>
+  </header>
+
+  @if (banner(); as b) {
+    <div
+      class="flex items-start justify-between gap-2 bg-amber-50 px-4 py-2 text-sm text-amber-800"
+      role="status"
+    >
+      <span>{{ b }}</span>
+      <button type="button" class="text-xs underline" (click)="dismissBanner()">
+        ausblenden
+      </button>
+    </div>
+  }
+  @if (error(); as e) {
+    <div
+      class="flex items-start justify-between gap-2 bg-red-50 px-4 py-2 text-sm text-red-800"
+      role="alert"
+    >
+      <span>{{ e }}</span>
+      <button type="button" class="text-xs underline" (click)="onReload()">
+        erneut laden
+      </button>
+    </div>
+  }
+
+  <div class="flex flex-1 overflow-hidden">
+    <cvm-queue-filter-sidebar></cvm-queue-filter-sidebar>
+
+    <main class="flex-1 overflow-auto">
+      <cvm-queue-table
+        [entries]="entries()"
+        [checkedIds]="checkedIds()"
+        [pendingIds]="pendingIds()"
+        [selectedId]="selectedId()"
+        (select)="onSelect($event)"
+        (toggle)="onToggle($event)"
+      ></cvm-queue-table>
+    </main>
+
+    @if (selected(); as s) {
+      <cvm-queue-detail
+        [entry]="s"
+        [pending]="pendingIds().has(s.id)"
+        (close)="onCloseDetail()"
+        (approve)="onApproveFromDetail(s, $event)"
+        (reject)="onRejectFromDetail(s, $event)"
+        (override)="onOverrideFromDetail()"
+      ></cvm-queue-detail>
+    }
+  </div>
+
+  <cvm-queue-help-overlay
+    [visible]="helpVisible()"
+    (close)="closeHelp()"
+  ></cvm-queue-help-overlay>
+</div>

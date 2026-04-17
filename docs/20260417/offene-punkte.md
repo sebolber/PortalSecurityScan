@@ -1,5 +1,24 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-17 nach Iteration 08
+- **Produkt-/Umgebungs-Dropdowns**: In der Queue-Seite sind Produkt-
+  version und Umgebung aktuell UUID-Freitextfelder. Sobald die
+  Produkt-/Versions-Read-Endpunkte existieren (geplant in Iteration 19),
+  werden Dropdowns mit LocalStorage-Persistenz aktiviert.
+- **Bulk-Approve-Endpoint**: UI-seitig ist die Checkbox-Batch-Auswahl
+  vorbereitet. Ein Server-seitiger Bulk-Endpoint ist nicht im Scope
+  von Iteration 08 (laut Prompt "UI vorbereitet"); Iteration 13
+  (KI-Clustering) macht einen Bulk-Approve fachlich relevant.
+- **Playwright-E2E fuer die Queue**: Sandbox hat kein Chromium. Die
+  Szenarien aus 08-Bewertungs-Queue-UI.md (Happy-Path, Override,
+  Reject, Vier-Augen, Konflikt) sind zu implementieren, sobald das
+  E2E-Setup steht (siehe schon bestehender Backlog-Punkt).
+- **`ng test`-Lauf**: Karma-Specs sind geschrieben und kompilieren;
+  die Ausfuehrung haengt an Headless-Chrome in CI.
+- **Bundle-Budget-Warnung** (Initial > 1.05 MB) besteht weiter.
+  Kommt aus keycloak-js + echarts; Option ist weiteres Lazy-Loading
+  des Dashboards oder ein separater Login-Chunk. Nicht dringend.
+
 ## Stand 2026-04-17 nach Iteration 00
 
 ### Blockierend fuer spaetere Iterationen
