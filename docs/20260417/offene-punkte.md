@@ -28,6 +28,15 @@
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
 
+### Stand nach Iteration 02
+- Performance-Smoke-Test mit 10 000 Komponenten nachreichen
+  (`@Tag("perf")`), sobald Docker-Ressourcen in CI verfuegbar.
+- Dedup-Scope: Triple `(product_version_id, environment_id,
+  content_sha256)` bestaetigen.
+- `cvm.encryption.sbom-secret` in Vault einbinden (aktuell Default in
+  `application.yaml`).
+- `ScanIngestedEvent`-Listener in Iteration 05/06 verdrahten.
+
 ### Stand nach Iteration 01
 - Entscheidung: Soll Assessment ueber Record/Value-Object den
   Immutability-Vertrag stark typisieren statt ueber `updatable=false`

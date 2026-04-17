@@ -1,11 +1,14 @@
 package com.ahs.cvm.persistence.scan;
 
+import com.ahs.cvm.persistence.environment.Environment;
 import com.ahs.cvm.persistence.product.ProductVersion;
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -36,11 +39,23 @@ public class Scan {
     @JoinColumn(name = "product_version_id", nullable = false)
     private ProductVersion productVersion;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "environment_id")
+    private Environment environment;
+
     @Column(name = "sbom_format", nullable = false)
     private String sbomFormat;
 
     @Column(name = "sbom_checksum", nullable = false)
     private String sbomChecksum;
+
+    @Column(name = "content_sha256", nullable = false)
+    private String contentSha256;
+
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "raw_sbom")
+    private byte[] rawSbom;
 
     @Column(name = "scanned_at", nullable = false)
     private Instant scannedAt;

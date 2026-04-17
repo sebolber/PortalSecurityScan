@@ -10,5 +10,8 @@ public interface ScanRepository extends JpaRepository<Scan, UUID> {
     Optional<Scan> findByProductVersionIdAndSbomChecksum(
             UUID productVersionId, String sbomChecksum);
 
+    Optional<Scan> findByProductVersionIdAndEnvironmentIdAndContentSha256(
+            UUID productVersionId, UUID environmentId, String contentSha256);
+
     List<Scan> findByProductVersionIdOrderByScannedAtDesc(UUID productVersionId);
 }

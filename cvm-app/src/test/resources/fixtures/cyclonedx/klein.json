@@ -1,0 +1,69 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+  "version": 1,
+  "components": [
+    {
+      "bom-ref": "pkg:maven/org.springframework/spring-core@6.1.12",
+      "type": "library",
+      "name": "spring-core",
+      "version": "6.1.12",
+      "purl": "pkg:maven/org.springframework/spring-core@6.1.12"
+    },
+    {
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.17.0",
+      "type": "library",
+      "name": "jackson-databind",
+      "version": "2.17.0",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.17.0"
+    },
+    {
+      "bom-ref": "pkg:maven/io.netty/netty-common@4.1.100",
+      "type": "library",
+      "name": "netty-common",
+      "version": "4.1.100",
+      "purl": "pkg:maven/io.netty/netty-common@4.1.100"
+    },
+    {
+      "bom-ref": "pkg:maven/org.postgresql/postgresql@42.7.3",
+      "type": "library",
+      "name": "postgresql",
+      "version": "42.7.3",
+      "purl": "pkg:maven/org.postgresql/postgresql@42.7.3"
+    },
+    {
+      "bom-ref": "pkg:maven/org.hibernate.orm/hibernate-core@6.4.0",
+      "type": "library",
+      "name": "hibernate-core",
+      "version": "6.4.0",
+      "purl": "pkg:maven/org.hibernate.orm/hibernate-core@6.4.0"
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "bom-ref": "vex-1",
+      "id": "CVE-2017-18640",
+      "source": { "name": "NVD", "url": "https://nvd.nist.gov/vuln/detail/CVE-2017-18640" },
+      "ratings": [
+        { "method": "CVSSv31", "vector": "AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H", "score": 7.5, "severity": "high" }
+      ],
+      "description": "SnakeYAML durch Deserialisierung unsicherer Typen anfaellig.",
+      "affects": [
+        { "ref": "pkg:maven/org.hibernate.orm/hibernate-core@6.4.0" }
+      ]
+    },
+    {
+      "bom-ref": "vex-2",
+      "id": "CVE-2025-48924",
+      "source": { "name": "GHSA" },
+      "ratings": [
+        { "method": "CVSSv31", "score": 5.3, "severity": "medium" }
+      ],
+      "description": "Platzhalter-Beschreibung fuer Test-Zwecke.",
+      "affects": [
+        { "ref": "pkg:maven/io.netty/netty-common@4.1.100" }
+      ]
+    }
+  ]
+}
