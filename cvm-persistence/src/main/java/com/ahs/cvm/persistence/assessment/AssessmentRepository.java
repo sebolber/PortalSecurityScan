@@ -29,11 +29,20 @@ public interface AssessmentRepository extends JpaRepository<Assessment, UUID> {
      * Profilpfade enthaelt. Treffer sind Kandidaten fuer einen
      * {@code NEEDS_REVIEW}-Ruecksprung.
      */
+    /*
+     * Hinweis: Wir verwenden bewusst die Postgres-Funktion
+     * {@code jsonb_exists_any(...)} statt des aequivalenten Operators
+     * {@code ?|}. Spring Data JPA / Hibernate parst {@code ?} in nativen
+     * Queries als positionalen Parameter und bricht in Kombination mit
+     * {@code :named}-Parametern mit
+     * "Mixing of ? parameters and other forms like ?1 is not supported"
+     * ab. Die Funktion ist semantisch identisch.
+     */
     @Query(value =
             "SELECT a.id FROM assessment a "
             + "WHERE a.superseded_at IS NULL "
             + "  AND a.environment_id = :environmentId "
-            + "  AND a.rationale_source_fields ?| CAST(:paths AS text[])",
+            + "  AND jsonb_exists_any(a.rationale_source_fields, CAST(:paths AS text[]))",
             nativeQuery = true)
     List<UUID> findAktiveIdsByEnvironmentAndSourceFields(
             @Param("environmentId") UUID environmentId,
