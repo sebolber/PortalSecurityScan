@@ -8,7 +8,11 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,6 +62,17 @@ public class Cve {
 
     @Column(name = "epss_percentile", precision = 5, scale = 4)
     private BigDecimal epssPercentile;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "cwes", columnDefinition = "jsonb")
+    private List<String> cwes;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "advisories", columnDefinition = "jsonb")
+    private List<Map<String, Object>> advisories;
+
+    @Column(name = "last_fetched_at")
+    private Instant lastFetchedAt;
 
     @Column(name = "source", nullable = false)
     private String source;

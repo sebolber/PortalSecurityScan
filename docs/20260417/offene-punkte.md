@@ -28,6 +28,14 @@
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
 
+### Stand nach Iteration 03
+- Resilience4j (Retry/Circuit-Breaker) nachziehen, vorzugsweise parallel
+  zu Iteration 11 (LLM-Gateway).
+- GHSA-Token in Vault hinterlegen, damit der Feed in Prod aktiv wird.
+- KEV-CSV-Variante nur bei Bedarf nachruesten.
+- Scheduled-Jobs benoetigen Cluster-Koordination (z.B. ShedLock), sobald
+  mehr als eine Instanz laeuft. Jetzt nicht, aber Backlog merken.
+
 ### Stand nach Iteration 02
 - Performance-Smoke-Test mit 10 000 Komponenten nachreichen
   (`@Tag("perf")`), sobald Docker-Ressourcen in CI verfuegbar.
