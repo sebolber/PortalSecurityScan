@@ -11,8 +11,10 @@ export const APP_ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
+        // Dashboard ist bewusst public, damit die Shell auch dann
+        // sichtbar ist, wenn Keycloak nicht laeuft. Echte Daten kommen
+        // erst nach Login (Bearer-Token via Interceptor).
         path: 'dashboard',
-        canActivate: [authGuard],
         loadComponent: () =>
           import('./features/dashboard/dashboard.component')
             .then((m) => m.DashboardComponent)
