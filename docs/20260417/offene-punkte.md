@@ -27,3 +27,13 @@
 - Echtes Container-Image-Build plus Sign/Push im GitLab-CI-Stage
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
+
+### Stand nach Iteration 01
+- Entscheidung: Soll Assessment ueber Record/Value-Object den
+  Immutability-Vertrag stark typisieren statt ueber `updatable=false`
+  plus Listener?
+- Entscheidung: `@angular/flex-layout` im Frontend entfernen
+  (Material-Grid reicht)?
+- ArchUnit: `failOnEmptyShould=true` aktivieren, sobald
+  `com.ahs.cvm.ai`, `com.ahs.cvm.llm`, `com.ahs.cvm.api` befuellt sind
+  (spaetestens Iteration 11).
