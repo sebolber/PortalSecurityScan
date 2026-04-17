@@ -20,7 +20,10 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -92,6 +95,21 @@ public class Assessment {
 
     @Column(name = "ai_suggestion_id", updatable = false)
     private UUID aiSuggestionId;
+
+    /**
+     * Liste von Profilpfaden (z.&nbsp;B. {@code "architecture.windows_hosts"}), auf
+     * die sich die Begruendung dieses Assessments stuetzt. Wird vom
+     * Regel-Engine (Iteration 05) und den KI-Services (Iteration 13) befuellt.
+     * Der {@link com.ahs.cvm.persistence.profile.ContextProfile}-Listener setzt
+     * {@code status=NEEDS_REVIEW}, sobald eines der hier gelisteten Felder in
+     * der neuen Profil-Version geaendert wurde.
+     */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "rationale_source_fields", columnDefinition = "jsonb")
+    private List<String> rationaleSourceFields;
+
+    @Column(name = "review_triggered_by_profile_version")
+    private UUID reviewTriggeredByProfileVersion;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

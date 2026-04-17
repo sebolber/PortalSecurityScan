@@ -28,6 +28,24 @@
   `package` (aktuell Stub).
 - Trivy-Scan des eigenen Images in Stage `package` verdrahten.
 
+### Stand nach Iteration 04
+- **Security** fuer die Profile-Endpunkte nachziehen: Rolle
+  `CVM_PROFILE_AUTHOR` fuer PUT, `CVM_PROFILE_APPROVER` fuer
+  POST `/approve`. Aktuell geschuetzt nur durch den Default-
+  `authenticated()`-Guard.
+- **Integrationstest** fuer die Flyway-Migration V0008 und den
+  End-to-End-Flow (propose &rarr; approve &rarr; NEEDS_REVIEW) mit
+  Docker ergaenzen, sobald die CI Docker hat.
+- **Profil-Schema v2**: sobald Iteration 05 (Regel-Engine) weitere Felder
+  braucht (z.&nbsp;B. `customer_segment`, `data_classification`), Schema
+  migrieren und `schemaVersion` hochziehen.
+- Entscheidung: wer darf einen Draft **verwerfen**? Aktuell existiert
+  kein REJECTED-State &mdash; einfacher Cleanup ueber DB-Delete, da DRAFTs
+  nicht referenziert werden.
+- Der `AssessmentImmutabilityListener`-Bypass laeuft via
+  `@Modifying`-Query. Iteration 06 kann ein explizites Audit-Event
+  ergaenzen, sobald der Bewertungs-Workflow steht.
+
 ### Stand nach Iteration 03
 - Resilience4j (Retry/Circuit-Breaker) nachziehen, vorzugsweise parallel
   zu Iteration 11 (LLM-Gateway).

@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ahs.test/cvm/profile/v1.json",
+  "title": "Kontextprofil (schemaVersion 1)",
+  "type": "object",
+  "required": ["schemaVersion", "umgebung"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "umgebung": {
+      "type": "object",
+      "required": ["key", "stage"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "stage": { "type": "string", "enum": ["DEV", "TEST", "REF", "ABN", "PROD"] },
+        "tenant": { "type": "string" }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "hardening": {
+      "type": "object",
+      "additionalProperties": { "type": "boolean" }
+    },
+    "compliance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "frameworks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

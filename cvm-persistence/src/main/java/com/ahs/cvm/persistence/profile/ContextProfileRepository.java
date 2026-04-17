@@ -1,5 +1,6 @@
 package com.ahs.cvm.persistence.profile;
 
+import com.ahs.cvm.domain.enums.ProfileState;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -10,4 +11,7 @@ public interface ContextProfileRepository extends JpaRepository<ContextProfile, 
     List<ContextProfile> findByEnvironmentIdOrderByVersionNumberDesc(UUID environmentId);
 
     Optional<ContextProfile> findFirstByEnvironmentIdOrderByVersionNumberDesc(UUID environmentId);
+
+    Optional<ContextProfile> findFirstByEnvironmentIdAndStateOrderByVersionNumberDesc(
+            UUID environmentId, ProfileState state);
 }

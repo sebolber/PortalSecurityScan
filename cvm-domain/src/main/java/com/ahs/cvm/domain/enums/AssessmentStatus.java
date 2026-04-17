@@ -8,5 +8,6 @@ public enum AssessmentStatus {
     PROPOSED,
     APPROVED,
     REJECTED,
-    SUPERSEDED
+    SUPERSEDED,
+    NEEDS_REVIEW
 }

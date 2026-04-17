@@ -1,8 +1,11 @@
 package com.ahs.cvm.persistence.profile;
 
+import com.ahs.cvm.domain.enums.ProfileState;
 import com.ahs.cvm.persistence.environment.Environment;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -45,11 +48,21 @@ public class ContextProfile {
     @Column(name = "yaml_source", nullable = false, columnDefinition = "text")
     private String yamlSource;
 
+    @Column(name = "proposed_by")
+    private String proposedBy;
+
     @Column(name = "approved_by")
     private String approvedBy;
 
     @Column(name = "approved_at")
     private Instant approvedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "state", nullable = false)
+    private ProfileState state;
+
+    @Column(name = "superseded_at")
+    private Instant supersededAt;
 
     @Column(name = "needs_review", nullable = false)
     private Boolean needsReview;
@@ -70,6 +83,12 @@ public class ContextProfile {
         }
         if (needsReview == null) {
             needsReview = Boolean.FALSE;
+        }
+        if (state == null) {
+            state = ProfileState.DRAFT;
+        }
+        if (validFrom == null) {
+            validFrom = Instant.now();
         }
     }
 
