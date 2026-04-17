@@ -209,8 +209,12 @@ checkout_branch() {
         exit 70
     fi
 
-    if [[ -n "$(git status --porcelain)" ]] && ! "${ALLOW_DIRTY}"; then
-        fail "Working-Tree hat lokale Aenderungen. Commit/stash sie oder nutze --allow-dirty."
+    # Nur Aenderungen an getrackten Dateien blockieren den Branch-Wechsel.
+    # Untracked-Files (z.B. das gerade angelegte logs/-Verzeichnis) sind
+    # unkritisch, denn git wechselt den Branch trotzdem ohne Datenverlust.
+    if [[ -n "$(git status --porcelain --untracked-files=no)" ]] && ! "${ALLOW_DIRTY}"; then
+        fail "Working-Tree hat lokale Aenderungen an getrackten Dateien."
+        fail "Commit/stash sie oder nutze --allow-dirty."
         git status --short >&2
         exit 71
     fi
