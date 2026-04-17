@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.ahs.cvm</groupId>
+        <artifactId>cvm-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cvm-architecture-tests</artifactId>
+    <name>cvm-architecture-tests</name>
+    <description>ArchUnit-Tests fuer Modulgrenzen.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-persistence</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-application</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-integration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-llm-gateway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-ai-services</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.tngtech.archunit</groupId>
+            <artifactId>archunit-junit5</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

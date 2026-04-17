@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ahs.cvm</groupId>
+    <artifactId>cvm-parent</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>CVE-Relevance-Manager</name>
+    <description>Eltern-POM des CVE-Relevance-Managers (CVM)</description>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+        <relativePath/>
+    </parent>
+
+    <modules>
+        <module>cvm-domain</module>
+        <module>cvm-persistence</module>
+        <module>cvm-application</module>
+        <module>cvm-integration</module>
+        <module>cvm-llm-gateway</module>
+        <module>cvm-ai-services</module>
+        <module>cvm-api</module>
+        <module>cvm-app</module>
+        <module>cvm-architecture-tests</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Dependency-Versionen -->
+        <archunit.version>1.3.0</archunit.version>
+        <testcontainers.version>1.20.3</testcontainers.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok.version>1.18.34</lombok.version>
+        <cyclonedx-core.version>9.0.5</cyclonedx-core.version>
+        <openhtmltopdf.version>1.0.10</openhtmltopdf.version>
+        <bucket4j.version>8.10.1</bucket4j.version>
+        <springdoc.version>2.6.0</springdoc.version>
+        <pgvector.version>0.1.6</pgvector.version>
+
+        <!-- Plugin-Versionen -->
+        <spotless-plugin.version>2.43.0</spotless-plugin.version>
+        <checkstyle-plugin.version>3.5.0</checkstyle-plugin.version>
+        <jacoco-plugin.version>0.8.12</jacoco-plugin.version>
+        <pitest-plugin.version>1.17.0</pitest-plugin.version>
+        <surefire-plugin.version>3.5.1</surefire-plugin.version>
+        <failsafe-plugin.version>3.5.1</failsafe-plugin.version>
+
+        <!-- SonarCloud -->
+        <sonar.projectKey>TBD</sonar.projectKey>
+        <sonar.organization>TBD</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.basedir}/../target/site/jacoco-aggregate/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+
+        <!-- JaCoCo Schwellwert -->
+        <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.tngtech.archunit</groupId>
+                <artifactId>archunit-junit5</artifactId>
+                <version>${archunit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.cyclonedx</groupId>
+                <artifactId>cyclonedx-core-java</artifactId>
+                <version>${cyclonedx-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.openhtmltopdf</groupId>
+                <artifactId>openhtmltopdf-pdfbox</artifactId>
+                <version>${openhtmltopdf.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bucket4j</groupId>
+                <artifactId>bucket4j-core</artifactId>
+                <version>${bucket4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pgvector</groupId>
+                <artifactId>pgvector</artifactId>
+                <version>${pgvector.version}</version>
+            </dependency>
+
+            <!-- Projekt-Module -->
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-persistence</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-application</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-integration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-llm-gateway</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-ai-services</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.ahs.cvm</groupId>
+                <artifactId>cvm-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>${failsafe-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <version>${spotless-plugin.version}</version>
+                    <configuration>
+                        <java>
+                            <googleJavaFormat>
+                                <version>1.24.0</version>
+                                <style>AOSP</style>
+                            </googleJavaFormat>
+                            <removeUnusedImports/>
+                            <trimTrailingWhitespace/>
+                            <endWithNewline/>
+                        </java>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${checkstyle-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals><goal>prepare-agent</goal></goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals><goal>report</goal></goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>pitest-maven</artifactId>
+                    <version>${pitest-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>

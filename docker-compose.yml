@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: cvm-postgres
+    environment:
+      POSTGRES_USER: cvm
+      POSTGRES_PASSWORD: cvm
+      POSTGRES_DB: cvm
+    ports:
+      - "5432:5432"
+    volumes:
+      - cvm-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cvm -d cvm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: cvm-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/keycloak/dev-realm.json:/opt/keycloak/data/import/dev-realm.json:ro
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: cvm-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  cvm-postgres-data:

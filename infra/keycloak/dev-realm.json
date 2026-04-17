@@ -1,0 +1,55 @@
+{
+  "realm": "cvm-local",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "roles": {
+    "realm": [
+      { "name": "CVM_VIEWER",   "description": "Lesezugriff auf Bewertungen und Reports" },
+      { "name": "CVM_ASSESSOR", "description": "Bewerten, Queue-Bearbeitung" },
+      { "name": "CVM_APPROVER", "description": "Vier-Augen-Freigabe" },
+      { "name": "CVM_ADMIN",    "description": "Profil-, Regel-, LLM-Verwaltung" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "cvm-local",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["http://localhost:4200/*"],
+      "webOrigins": ["http://localhost:4200"],
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:4200/*"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "t.tester@ahs.test",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "t.tester@ahs.test",
+      "firstName": "Tom",
+      "lastName": "Tester",
+      "credentials": [{ "type": "password", "value": "test", "temporary": false }],
+      "realmRoles": ["CVM_ASSESSOR"]
+    },
+    {
+      "username": "a.admin@ahs.test",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "a.admin@ahs.test",
+      "firstName": "Anna",
+      "lastName": "Admin",
+      "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
+      "realmRoles": ["CVM_ADMIN", "CVM_APPROVER"]
+    }
+  ]
+}

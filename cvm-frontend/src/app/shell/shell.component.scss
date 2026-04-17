@@ -1,0 +1,25 @@
+.cvm-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.flex-1 { flex: 1 1 auto; }
+
+.cvm-container {
+  height: calc(100vh - 64px);
+}
+
+mat-sidenav {
+  width: 240px;
+}
+
+.cvm-content {
+  padding: 1.5rem;
+  background: #fafafa;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

@@ -1,0 +1,8 @@
+{
+  "apiBaseUrl": "http://localhost:8081",
+  "keycloak": {
+    "url": "http://localhost:8080",
+    "realm": "cvm-local",
+    "clientId": "cvm-local"
+  }
+}

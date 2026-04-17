@@ -1,0 +1,49 @@
+# Build-Artefakte
+target/
+**/target/
+*.class
+*.jar
+*.war
+
+# Node/Angular
+node_modules/
+dist/
+.angular/
+coverage/
+.nx/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Secrets (niemals committen)
+.env
+.env.local
+*.pem
+*.p12
+*.key
+application-local.yaml
+
+# Testcontainers Reuse
+.testcontainers.properties
+
+# Docker-Volumes (lokal)
+.docker-data/
+
+# Maven
+.mvn/wrapper/maven-wrapper.jar
+
+# Generated
+docs/YYYYMMDD/

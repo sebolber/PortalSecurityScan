@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.ahs.cvm</groupId>
+        <artifactId>cvm-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>cvm-ai-services</artifactId>
+    <name>cvm-ai-services</name>
+    <description>KI-Anwendungsfaelle. Implementierung ab Iteration 13.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-application</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-llm-gateway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.ahs.cvm</groupId>
+            <artifactId>cvm-integration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

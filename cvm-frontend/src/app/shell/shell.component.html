@@ -1,0 +1,32 @@
+<mat-toolbar color="primary" class="cvm-header">
+  <span>CVE-Relevance-Manager</span>
+  <span class="flex-1"></span>
+  <button mat-button disabled>
+    <mat-icon>account_circle</mat-icon>
+    <span>Login (Keycloak folgt)</span>
+  </button>
+</mat-toolbar>
+
+<mat-sidenav-container class="cvm-container">
+  <mat-sidenav mode="side" opened>
+    <mat-nav-list>
+      @for (entry of menu; track entry.path) {
+        <a
+          mat-list-item
+          [routerLink]="entry.path"
+          routerLinkActive="active"
+          [class.disabled]="entry.disabled"
+          [attr.aria-disabled]="entry.disabled"
+          [tabIndex]="entry.disabled ? -1 : 0"
+        >
+          <mat-icon matListItemIcon>{{ entry.icon }}</mat-icon>
+          <span matListItemTitle>{{ entry.label }}</span>
+        </a>
+      }
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="cvm-content">
+    <router-outlet></router-outlet>
+  </mat-sidenav-content>
+</mat-sidenav-container>

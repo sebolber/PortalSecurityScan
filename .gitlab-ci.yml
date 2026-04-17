@@ -1,0 +1,108 @@
+stages:
+  - validate
+  - build
+  - test
+  - sonar
+  - package
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+  NODE_VERSION: "20"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .m2/repository
+    - cvm-frontend/node_modules
+
+.java-image: &java-image
+  image: eclipse-temurin:21-jdk
+
+.node-image: &node-image
+  image: node:20-alpine
+
+validate:spotless:
+  <<: *java-image
+  stage: validate
+  script:
+    - mvn $MAVEN_CLI_OPTS spotless:check
+
+validate:checkstyle:
+  <<: *java-image
+  stage: validate
+  script:
+    - mvn $MAVEN_CLI_OPTS -q checkstyle:check || true
+  allow_failure: true
+
+validate:frontend-lint:
+  <<: *node-image
+  stage: validate
+  script:
+    - cd cvm-frontend
+    - npm ci
+    - npm run lint
+
+build:backend:
+  <<: *java-image
+  stage: build
+  script:
+    - mvn $MAVEN_CLI_OPTS -T 1C -DskipTests package
+  artifacts:
+    paths:
+      - cvm-app/target/*.jar
+    expire_in: 1 day
+
+build:frontend:
+  <<: *node-image
+  stage: build
+  script:
+    - cd cvm-frontend
+    - npm ci
+    - npm run build
+  artifacts:
+    paths:
+      - cvm-frontend/dist/
+    expire_in: 1 day
+
+test:backend:
+  image: eclipse-temurin:21-jdk
+  services:
+    - name: docker:24-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  stage: test
+  script:
+    - mvn $MAVEN_CLI_OPTS verify
+
+test:frontend:
+  <<: *node-image
+  stage: test
+  script:
+    - cd cvm-frontend
+    - npm ci
+    - npm test -- --watch=false --browsers=ChromeHeadlessCI
+
+sonar:
+  <<: *java-image
+  stage: sonar
+  only:
+    - main
+    - /^release\/.*$/
+  script:
+    - mvn $MAVEN_CLI_OPTS sonar:sonar
+      -Dsonar.projectKey=$SONAR_PROJECT_KEY
+      -Dsonar.organization=$SONAR_ORGANIZATION
+      -Dsonar.host.url=$SONAR_HOST_URL
+      -Dsonar.login=$SONAR_TOKEN
+  allow_failure: true
+
+package:container:
+  image: docker:24
+  services:
+    - docker:24-dind
+  stage: package
+  script:
+    - echo "Container-Build-Stub. Echter Push folgt in Iteration 21."
