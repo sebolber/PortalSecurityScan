@@ -173,6 +173,13 @@ public class ScanIngestService {
         Scan scan = scanRepository.findById(scanId).orElseThrow();
 
         Map<String, ComponentOccurrence> occByBomRef = new HashMap<>();
+        // Multi-Modul-SBOMs listen denselben PURL mehrfach (Submodule
+        // mit identischer transitiver Abhaengigkeit). Der UNIQUE-Key
+        // (scan_id, component_id) verbietet zweimal die gleiche
+        // Occurrence in einem Scan - daher Dedup ueber Component-UUID.
+        // Zusaetzliche bomRefs werden weiterhin in occByBomRef gefuehrt,
+        // damit der Vulnerability-Block die Occurrence spaeter findet.
+        Map<UUID, ComponentOccurrence> occByComponentId = new HashMap<>();
 
         for (CycloneDxBom.Component c : Objects.requireNonNullElse(
                 bom.components(), List.<CycloneDxBom.Component>of())) {
@@ -186,13 +193,18 @@ public class ScanIngestService {
                                     .version(c.version() != null ? c.version() : "0.0.0")
                                     .type(c.type())
                                     .build()));
-            ComponentOccurrence occ = occurrenceRepository.save(
-                    ComponentOccurrence.builder()
-                            .scan(scan)
-                            .component(component)
-                            .direct(Boolean.TRUE)
-                            .bomRef(c.bomRef())
-                            .build());
+
+            ComponentOccurrence occ = occByComponentId.get(component.getId());
+            if (occ == null) {
+                occ = occurrenceRepository.save(
+                        ComponentOccurrence.builder()
+                                .scan(scan)
+                                .component(component)
+                                .direct(Boolean.TRUE)
+                                .bomRef(c.bomRef())
+                                .build());
+                occByComponentId.put(component.getId(), occ);
+            }
             if (c.bomRef() != null) {
                 occByBomRef.put(c.bomRef(), occ);
             }
@@ -228,7 +240,9 @@ public class ScanIngestService {
             }
         }
 
-        return new ErgebnisZaehler(bom.components() != null ? bom.components().size() : 0, findingCount);
+        // componentCount spiegelt nach dem Dedup die tatsaechlich
+        // angelegten Occurrences, nicht die rohen SBOM-Eintraege.
+        return new ErgebnisZaehler(occByComponentId.size(), findingCount);
     }
 
     public record ErgebnisZaehler(int componentCount, int findingCount) {}

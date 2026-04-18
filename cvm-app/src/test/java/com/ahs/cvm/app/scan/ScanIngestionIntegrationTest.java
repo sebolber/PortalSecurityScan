@@ -82,6 +82,29 @@ class ScanIngestionIntegrationTest extends AbstractIntegrationTest {
                 .isInstanceOf(ScanAlreadyIngestedException.class);
     }
 
+    @Test
+    @DisplayName(
+        "Ingestion: doppelte PURL in der SBOM loest keine Unique-Verletzung aus")
+    void duplicatePurlWirdDedupliziert() throws Exception {
+        byte[] sbom = new ClassPathResource("fixtures/cyclonedx/duplicate-purl.json")
+                .getContentAsByteArray();
+
+        Fixtures fx = erzeugeFixtures();
+        ScanUploadResponse response = scanIngestService.uploadAkzeptieren(
+                fx.productVersionId(), fx.environmentId(), "cyclonedx-maven", sbom);
+
+        Awaitility.await().atMost(java.time.Duration.ofSeconds(15))
+                .until(() -> scanIngestService.zusammenfassung(response.scanId())
+                        .map(ScanSummary::componentCount)
+                        .orElse(0) >= 2);
+
+        ScanSummary summary = scanIngestService
+                .zusammenfassung(response.scanId()).orElseThrow();
+        // Zwei eindeutige Components (commons-lang3 + guava), obwohl
+        // die SBOM drei Eintraege hat.
+        assertThat(summary.componentCount()).isEqualTo(2);
+    }
+
     private Fixtures erzeugeFixtures() {
         Product p = productRepository.save(Product.builder()
                 .name("PortalCore-IT")
