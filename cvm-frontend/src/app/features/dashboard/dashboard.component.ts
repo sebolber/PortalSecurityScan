@@ -1,10 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { AhsCardComponent } from '../../shared/components/ahs-card.component';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
 import { LocaleService } from '../../core/i18n/locale.service';
+import { ChartThemeService } from '../../core/theme/chart-theme.service';
 
 interface SeverityCount {
   readonly severity: string;
@@ -37,6 +38,7 @@ interface SeverityCount {
 })
 export class DashboardComponent {
   private readonly locale = inject(LocaleService);
+  private readonly chartTheme = inject(ChartThemeService);
 
   readonly texte = this.locale.messages.dashboard;
 
@@ -52,21 +54,29 @@ export class DashboardComponent {
   readonly aeltesteCritical = '–';
   readonly weiterbetriebOk = true;
 
-  readonly chartOption: EChartsOption = {
-    tooltip: { trigger: 'item' },
-    legend: { bottom: 0 },
-    series: [
-      {
-        type: 'pie',
-        radius: ['40%', '70%'],
-        avoidLabelOverlap: true,
-        itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
-        label: { show: false },
-        data: this.severityVerteilung.map((e) => ({
-          name: e.severity,
-          value: e.anzahl
-        }))
-      }
-    ]
-  };
+  readonly chartOption = computed<EChartsOption>(() => {
+    const colors = this.chartTheme.severityColors();
+    return {
+      tooltip: { trigger: 'item' },
+      legend: { bottom: 0, textStyle: { color: this.chartTheme.textColor() } },
+      series: [
+        {
+          type: 'pie',
+          radius: ['40%', '70%'],
+          avoidLabelOverlap: true,
+          itemStyle: {
+            borderRadius: 4,
+            borderColor: this.chartTheme.sliceBorderColor(),
+            borderWidth: 2
+          },
+          label: { show: false },
+          data: this.severityVerteilung.map((e) => ({
+            name: e.severity,
+            value: e.anzahl,
+            itemStyle: { color: colors[e.severity] }
+          }))
+        }
+      ]
+    };
+  });
 }
