@@ -45,6 +45,8 @@ class FixVerificationControllerWebTest {
 
     @Autowired MockMvc mockMvc;
     @MockBean FixVerificationService service;
+    // Satisfies FixVerificationQueryController constructor (same @ComponentScan).
+    @MockBean com.ahs.cvm.application.fixverification.FixVerificationQueryService fixVerificationQueryService;
 
     @Test
     @DisplayName("POST /verify-fix: 200 mit Grade + Evidenz")
