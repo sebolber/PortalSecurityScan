@@ -1,5 +1,21 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 16
+- **Watchdog-Mapping `cveKey -> repoUrl`**: aktuell Map aus
+  Admin-/Test-Input. Fuer automatischen Tageslauf braucht es einen
+  persistenten Ort (Tabelle oder ProduktVersion-Metadaten).
+- **Audit-Id aus `AiCallAuditService.execute(...)`**: Orchestratoren
+  (AutoAssessment, FixVerification) behelfen sich mit "letzter OK-
+  Audit des Use-Cases". Ein `AuditedLlmResponse(response, auditId)`
+  waere sauberer.
+- **Watchdog-Audit-Lightweight**: aktuell synthetischer
+  `ai_call_audit`-Eintrag. Eigene `ai_subprocess_audit`-Tabelle
+  oder `ai_call_audit_id` nullable waere semantisch sauberer.
+- **UI-Badge fuer Grade A/B/C** in der Queue-Detail-Ansicht.
+- **Cache-Eviction im FixVerificationService**: aktuell kein
+  Cleanup, Speicher waechst bis JVM-Restart.
+- **GitLab-Provider**: Port ist abstrakt, nur GitHub implementiert.
+
 ## Stand 2026-04-18 - Frontend-Nachzug Iterationen 10/11
 - **Reports-Listing-Endpoint** im Backend fehlt: das Frontend
   zeigt aktuell nur die in der laufenden Sitzung erzeugten Reports.

@@ -1,5 +1,7 @@
 package com.ahs.cvm.persistence.mitigation;
 
+import com.ahs.cvm.domain.enums.FixEvidenceType;
+import com.ahs.cvm.domain.enums.FixVerificationGrade;
 import com.ahs.cvm.domain.enums.MitigationStatus;
 import com.ahs.cvm.domain.enums.MitigationStrategy;
 import com.ahs.cvm.persistence.assessment.Assessment;
@@ -62,6 +64,17 @@ public class MitigationPlan {
 
     @Column(name = "notes")
     private String notes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "verification_grade")
+    private FixVerificationGrade verificationGrade;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "verification_evidence_type")
+    private FixEvidenceType verificationEvidenceType;
+
+    @Column(name = "verified_at")
+    private Instant verifiedAt;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
