@@ -29,6 +29,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Orchestriert die SBOM-Ingestion:
@@ -122,15 +124,32 @@ public class ScanIngestService {
                         .scanner(scanner != null ? scanner : "unknown")
                         .build());
 
-        CompletableFuture<Void> future = selbstProxy.verarbeiteAsync(reservierterScan.getId(), rawSbom);
-        future.exceptionally(ex -> {
-            log.error("Async-Ingestion fehlgeschlagen fuer Scan {}", reservierterScan.getId(), ex);
-            return null;
-        });
+        UUID scanId = reservierterScan.getId();
+        // Async-Dispatch erst nach Commit, sonst sieht der Worker-Thread den
+        // gerade reservierten Scan-Record nicht und laeuft in NoSuchElementException.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            planeVerarbeitung(scanId, rawSbom);
+                        }
+                    });
+        } else {
+            planeVerarbeitung(scanId, rawSbom);
+        }
 
         return new ScanUploadResponse(
-                reservierterScan.getId(),
-                "/api/v1/scans/" + reservierterScan.getId());
+                scanId,
+                "/api/v1/scans/" + scanId);
+    }
+
+    private void planeVerarbeitung(UUID scanId, byte[] rawSbom) {
+        CompletableFuture<Void> future = selbstProxy.verarbeiteAsync(scanId, rawSbom);
+        future.exceptionally(ex -> {
+            log.error("Async-Ingestion fehlgeschlagen fuer Scan {}", scanId, ex);
+            return null;
+        });
     }
 
     @Async(ScanIngestConfig.EXECUTOR_NAME)
