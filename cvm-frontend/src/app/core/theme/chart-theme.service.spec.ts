@@ -17,12 +17,15 @@ describe('ChartThemeService', () => {
     doc.documentElement.style.cssText = '';
   });
 
-  it('liefert Severity-Fallbacks wenn keine Tokens gesetzt sind', () => {
+  it('liefert Severity-Fallbacks fuer alle Stufen wenn keine Tokens gesetzt sind', () => {
     const service = TestBed.inject(ChartThemeService);
     const colors = service.severityColors();
     expect(colors.CRITICAL).toMatch(/^#?[0-9a-fA-F]{3,}/);
     expect(colors.HIGH).toBeTruthy();
+    expect(colors.MEDIUM).toBeTruthy();
     expect(colors.LOW).toBeTruthy();
+    expect(colors.INFORMATIONAL).toBeTruthy();
+    expect(colors.NOT_APPLICABLE).toBeTruthy();
   });
 
   it('liest --color-severity-critical-bg aus dem documentElement', () => {

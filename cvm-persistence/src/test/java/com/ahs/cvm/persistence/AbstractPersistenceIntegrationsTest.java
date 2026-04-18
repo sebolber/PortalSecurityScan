@@ -28,7 +28,16 @@ public abstract class AbstractPersistenceIntegrationsTest {
 
     static {
         if (DockerAvailability.isAvailable()) {
-            POSTGRES.start();
+            try {
+                POSTGRES.start();
+            } catch (RuntimeException startFehler) {
+                // Docker-Socket erreichbar, Testcontainers kann die Umgebung aber nicht
+                // aushandeln (z. B. Docker-Desktop-Mac ohne Standard-Host-Alias). In diesem
+                // Fall Signal an DockerAvailability geben, damit die nachfolgende
+                // @EnabledIf-Pruefung die Slice-Tests sauber skippt statt in einen
+                // NoClassDefFoundError zu laufen.
+                DockerAvailability.markContainerStartFailed(startFehler);
+            }
         }
     }
 

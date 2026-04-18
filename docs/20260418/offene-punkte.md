@@ -1,16 +1,25 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 28 am 2026-04-18 hat Produkt-Anlage (`POST /api/v1/products`
-> + `.../versions`), LLM-Modell-Profil-Anlage mit Vier-Augen-Audit
-> (`POST /api/v1/llm-model-profiles`, Migration `V0026`) und die
-> SBOM-Upload-UI (`/scans/upload`) ausgeliefert. Details:
-> `docs/20260418/iteration-28-fortschritt.md`.
+> Iteration 29 am 2026-04-18 hat die Test-Bootstrap-Blocker behoben:
+> Chart-Theme-Spec kompiliert wieder (TS4111), Persistenz- und
+> Integrationstests skippen sauber, wenn Testcontainers die
+> Docker-Umgebung nicht aushandeln kann. Details:
+> `docs/20260418/iteration-29-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 29 - offen
+
+- **Karma-Lauf in CI**: Spec kompiliert jetzt, aber Headless-Chrome
+  in CI bleibt offen (Umgebung).
+- **Testcontainers auf Docker Desktop (macOS)**: lokaler Lauf
+  skippt Slice-Tests, weil der Docker-Desktop-Socket von
+  Testcontainers nicht direkt aushandelbar ist. Option:
+  `TESTCONTAINERS_HOST_OVERRIDE` in Entwickler-Setup dokumentieren
+  oder TCP-Daemon exponieren.
 
 ## Stand 2026-04-18 nach Iteration 28 - offen
 
-- **Karma-Suite blockiert**: `chart-theme.service.spec.ts` hat
-  TS4111-Index-Access-Fehler (pre-existent). Eigener Fix in separater
-  Iteration, damit Tests wieder laufen.
+- ~~**Karma-Suite blockiert**~~: in Iteration 29 behoben
+  (Severity-Typisierung + tsc-Check).
 - ~~Server-Multipart-Limit~~ erledigt: `spring.servlet.multipart.max-file-size=30MB`
   in `application.yaml` gesetzt, Client-Limit synchron bei 30 MB.
 - **Produkt-/Profil-Edit und Soft-Delete** (eigene Iteration, Vier-Augen

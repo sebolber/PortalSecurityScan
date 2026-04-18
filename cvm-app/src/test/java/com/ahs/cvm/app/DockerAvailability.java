@@ -19,15 +19,47 @@ import java.nio.file.Path;
 public final class DockerAvailability {
 
     private static final String DEFAULT_UNIX_SOCKET = "/var/run/docker.sock";
+    private static volatile Boolean cachedAvailability = null;
 
     private DockerAvailability() {}
 
     public static boolean isAvailable() {
-        String dockerHost = System.getenv("DOCKER_HOST");
-        if (dockerHost != null && !dockerHost.isBlank()) {
-            return pingDockerHost(dockerHost);
+        Boolean cached = cachedAvailability;
+        if (cached != null) {
+            return cached;
         }
-        return Files.exists(Path.of(DEFAULT_UNIX_SOCKET));
+        boolean result = probe();
+        cachedAvailability = result;
+        return result;
+    }
+
+    public static void markContainerStartFailed(Throwable ursache) {
+        cachedAvailability = false;
+        System.err.println("[DockerAvailability] Testcontainers-Start fehlgeschlagen, "
+                + "Integrationstests werden geskippt: " + ursache.getMessage());
+    }
+
+    private static boolean probe() {
+        String dockerHost = System.getenv("DOCKER_HOST");
+        boolean socketSichtbar;
+        if (dockerHost != null && !dockerHost.isBlank()) {
+            socketSichtbar = pingDockerHost(dockerHost);
+        } else {
+            socketSichtbar = Files.exists(Path.of(DEFAULT_UNIX_SOCKET));
+        }
+        if (!socketSichtbar) {
+            return false;
+        }
+        try {
+            Class<?> factoryCls = Class.forName("org.testcontainers.DockerClientFactory");
+            Object factory = factoryCls.getMethod("instance").invoke(null);
+            Object ok = factoryCls.getMethod("isDockerAvailable").invoke(factory);
+            return Boolean.TRUE.equals(ok);
+        } catch (ReflectiveOperationException | RuntimeException probeFehler) {
+            System.err.println("[DockerAvailability] Testcontainers-Probe fehlgeschlagen: "
+                    + probeFehler.getMessage());
+            return false;
+        }
     }
 
     private static boolean pingDockerHost(String dockerHost) {

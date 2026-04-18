@@ -3,12 +3,15 @@ import { CommonModule } from '@angular/common';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { AhsCardComponent } from '../../shared/components/ahs-card.component';
-import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
+import {
+  Severity,
+  SeverityBadgeComponent
+} from '../../shared/components/severity-badge.component';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { ChartThemeService } from '../../core/theme/chart-theme.service';
 
 interface SeverityCount {
-  readonly severity: string;
+  readonly severity: Severity;
   readonly anzahl: number;
 }
 

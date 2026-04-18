@@ -31,7 +31,11 @@ public abstract class AbstractIntegrationTest {
 
     static {
         if (DockerAvailability.isAvailable()) {
-            POSTGRES.start();
+            try {
+                POSTGRES.start();
+            } catch (RuntimeException startFehler) {
+                DockerAvailability.markContainerStartFailed(startFehler);
+            }
         }
     }
 

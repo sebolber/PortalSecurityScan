@@ -1,5 +1,6 @@
 import { DOCUMENT } from '@angular/common';
 import { Injectable, computed, inject } from '@angular/core';
+import { Severity } from '../../shared/components/severity-badge.component';
 import { ThemeService } from './theme.service';
 
 /**
@@ -21,7 +22,7 @@ export class ChartThemeService {
    * Aktuelle Severity-Farben als Map. Recomputed, sobald das
    * Branding-Signal triggert.
    */
-  readonly severityColors = computed<Record<string, string>>(() => {
+  readonly severityColors = computed<Record<Severity, string>>(() => {
     void this.theme.branding();
     return {
       CRITICAL: this.css('--color-severity-critical-bg', '#da1e28'),

@@ -15,15 +15,61 @@ import java.nio.file.Path;
 public final class DockerAvailability {
 
     private static final String DEFAULT_UNIX_SOCKET = "/var/run/docker.sock";
+    private static volatile Boolean cachedAvailability = null;
 
     private DockerAvailability() {}
 
     public static boolean isAvailable() {
-        String dockerHost = System.getenv("DOCKER_HOST");
-        if (dockerHost != null && !dockerHost.isBlank()) {
-            return pingDockerHost(dockerHost);
+        Boolean cached = cachedAvailability;
+        if (cached != null) {
+            return cached;
         }
-        return Files.exists(Path.of(DEFAULT_UNIX_SOCKET));
+        boolean result = probe();
+        cachedAvailability = result;
+        return result;
+    }
+
+    /**
+     * Signalisiert, dass Testcontainers zwar einen Socket gefunden, den
+     * Container aber nicht starten konnte. Nachfolgende
+     * {@link #isAvailable()}-Aufrufe liefern {@code false}, damit
+     * {@code @EnabledIf}-Guards die abhaengigen Tests skippen, anstatt mit
+     * einem {@code ApplicationContextException} aus einem gescheiterten
+     * Container-Start zu laufen.
+     */
+    public static void markContainerStartFailed(Throwable ursache) {
+        cachedAvailability = false;
+        System.err.println("[DockerAvailability] Testcontainers-Start fehlgeschlagen, "
+                + "Slice-Tests werden geskippt: " + ursache.getMessage());
+    }
+
+    private static boolean probe() {
+        String dockerHost = System.getenv("DOCKER_HOST");
+        boolean socketSichtbar;
+        if (dockerHost != null && !dockerHost.isBlank()) {
+            socketSichtbar = pingDockerHost(dockerHost);
+        } else {
+            socketSichtbar = Files.exists(Path.of(DEFAULT_UNIX_SOCKET));
+        }
+        if (!socketSichtbar) {
+            return false;
+        }
+        // Socket sichtbar heisst nicht automatisch, dass Testcontainers die Umgebung
+        // erfolgreich aushandeln kann (Docker Desktop auf macOS veroeffentlicht den
+        // Socket unter {@code ~/.docker/run/docker.sock}, Testcontainers probiert
+        // aber zunaechst feste TCP-Hosts). Wir triggern daher einen echten
+        // Testcontainers-Probe und fallen auf "nicht verfuegbar" zurueck, falls der
+        // fehlschlaegt.
+        try {
+            Class<?> factoryCls = Class.forName("org.testcontainers.DockerClientFactory");
+            Object factory = factoryCls.getMethod("instance").invoke(null);
+            Object ok = factoryCls.getMethod("isDockerAvailable").invoke(factory);
+            return Boolean.TRUE.equals(ok);
+        } catch (ReflectiveOperationException | RuntimeException probeFehler) {
+            System.err.println("[DockerAvailability] Testcontainers-Probe fehlgeschlagen: "
+                    + probeFehler.getMessage());
+            return false;
+        }
     }
 
     private static boolean pingDockerHost(String dockerHost) {
