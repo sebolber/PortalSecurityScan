@@ -1,5 +1,18 @@
 # Offene Punkte (kumulativ)
 
+> Iteration 32 am 2026-04-18 hat alle 15 Findings aus der
+> UI-Exploration behoben (4 HIGH, 6 MEDIUM, 5 LOW).
+> Details: `docs/20260418/iteration-32-fortschritt.md`.
+> Frontend-Build gruen, Backend alle Module gruen. Karma-Run bleibt
+> weiter Sandbox-geblockt (Chromium fehlt) - kein neuer Finding.
+
+## Stand 2026-04-18 nach Iteration 32 - offen
+
+- **Material-Icons offline haerten**: Aktuell CDN
+  (`fonts.googleapis.com`). Fuer air-gapped Installationen muss
+  `material-icons` als self-hosted npm-Paket eingebunden werden.
+- Karma-Sandbox-Chromium fehlt weiterhin.
+
 > Iteration 31 am 2026-04-18 hat `branding_config_history` (Flyway
 > V0027, Entity + Repository), `BrandingService#rollbackForCurrentTenant`
 > und die Admin-Endpunkte
@@ -13,7 +26,7 @@
   `AdminThemeComponent`.
 - Persistenz-Integrationstest fuer V0027 bleibt Docker-pflichtig.
 
-## Stand 2026-04-18 UI-Exploration - Findings aus Screenshot-Review
+## Stand 2026-04-18 UI-Exploration - Findings aus Screenshot-Review (erledigt in Iteration 32)
 
 Volltext: `docs/20260418/ui-exploration-findings.md`.
 

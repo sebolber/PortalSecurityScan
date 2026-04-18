@@ -2,17 +2,54 @@
   <ahs-card title="Hardening-Report erzeugen"
             subtitle="Generiert ein PDF zur uebergebenen Produkt-/Umgebungs-Kombination.">
     <form (ngSubmit)="erzeuge()" class="flex flex-col gap-3">
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Produkt-Version (UUID)</mat-label>
-        <input matInput name="productVersionId"
-               [(ngModel)]="productVersionId" required />
-      </mat-form-field>
+      <!--
+        UI-Fix MEDIUM-5 (UI-Exploration 20260418): Dropdowns statt
+        manueller UUID-Eingabe. Bei Katalog-Fehler (fehlende Rolle,
+        Backend-Fehler) greift der Text-Fallback darunter.
+      -->
+      @if (produktVersionen().length > 0) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Produkt-Version</mat-label>
+          <mat-select name="productVersionId"
+                      [(ngModel)]="productVersionId" required>
+            @for (pv of produktVersionen(); track pv.id) {
+              <mat-option [value]="pv.id">{{ pv.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Produkt-Version (UUID)</mat-label>
+          <input matInput name="productVersionId"
+                 [(ngModel)]="productVersionId" required />
+        </mat-form-field>
+      }
 
-      <mat-form-field appearance="outline" subscriptSizing="dynamic">
-        <mat-label>Umgebung (UUID)</mat-label>
-        <input matInput name="environmentId"
-               [(ngModel)]="environmentId" required />
-      </mat-form-field>
+      @if (umgebungen().length > 0) {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Umgebung</mat-label>
+          <mat-select name="environmentId"
+                      [(ngModel)]="environmentId" required>
+            @for (e of umgebungen(); track e.id) {
+              <mat-option [value]="e.id">
+                {{ e.key }} ({{ e.stage }})
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Umgebung (UUID)</mat-label>
+          <input matInput name="environmentId"
+                 [(ngModel)]="environmentId" required />
+        </mat-form-field>
+      }
+
+      @if (katalogFehler()) {
+        <p class="text-caption">
+          Hinweis: {{ katalogFehler() }}
+        </p>
+      }
 
       <mat-form-field appearance="outline" subscriptSizing="dynamic">
         <mat-label>Gesamteinstufung</mat-label>

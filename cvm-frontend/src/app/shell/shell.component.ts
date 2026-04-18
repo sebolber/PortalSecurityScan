@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/auth/auth.service';
 import { MenuEntry, MenuSection, RoleMenuService } from '../core/auth/role-menu.service';
@@ -42,6 +43,7 @@ import { AlertBannerComponent } from './alert-banner.component';
     MatSelectModule,
     MatFormFieldModule,
     MatTooltipModule,
+    MatDividerModule,
     AlertBannerComponent
   ],
   templateUrl: './shell.component.html',
@@ -113,6 +115,18 @@ export class ShellComponent implements OnInit {
       .filter((r): r is CvmRole => r in labels)
       .map((r) => ({ key: r, label: labels[r] }));
   });
+
+  /**
+   * UI-Fix HIGH-2: Tooltip-Zusammenfassung fuer die Rollen-Liste
+   * im Header. Rollen werden im User-Menue voll angezeigt und hier
+   * nur als "N Rollen"-Chip mit Hover-Tooltip, um den Header nicht
+   * zu ueberladen.
+   */
+  readonly rollenTooltip = computed(() =>
+    this.rollenChips()
+      .map((r) => r.label)
+      .join(', ')
+  );
 
   readonly produkte: readonly { key: string; label: string }[] = [
     { key: 'PortalCore-Test', label: 'PortalCore-Test (1.14.2-test)' },

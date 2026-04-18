@@ -3,8 +3,9 @@
     <h1 class="text-title-lg">Theme &amp; Branding</h1>
     <p class="text-body">
       Konfiguriert Farben, Schriftart und Logo fuer alle Nutzer dieses
-      Mandanten. Aenderungen gelten sofort; ein Rollback ist innerhalb
-      von 24 Stunden moeglich.
+      Mandanten. Aenderungen gelten sofort. Jede frueher gespeicherte
+      Version bleibt in der Historie und kann unten per Klick wieder
+      hergestellt werden.
     </p>
   </header>
 
@@ -79,15 +80,28 @@
             WCAG-Kontrast: {{ contrastLabel() }}
           </p>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Akzentfarbe</mat-label>
-            <input
-              matInput
-              [ngModel]="draft().accentColor || ''"
-              name="accent"
-              (ngModelChange)="update('accentColor', $event || null)"
-            />
-          </mat-form-field>
+          <!--
+            UI-Fix LOW-2 (UI-Exploration 20260418): Akzentfarbe bekommt
+            denselben Farb-Preview wie Primaer-/Kontrastfarbe.
+          -->
+          <div class="cvm-color-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Akzentfarbe</mat-label>
+              <input
+                matInput
+                [ngModel]="draft().accentColor || ''"
+                name="accent"
+                (ngModelChange)="update('accentColor', $event || null)"
+                pattern="^#([0-9a-fA-F]{3}){1,2}$"
+              />
+            </mat-form-field>
+            <span
+              class="cvm-color-swatch"
+              [style.background]="draft().accentColor || 'transparent'"
+              [class.cvm-color-swatch--empty]="!draft().accentColor"
+              aria-hidden="true"
+            ></span>
+          </div>
 
           <mat-form-field appearance="outline">
             <mat-label>Schriftart</mat-label>
@@ -202,6 +216,70 @@
               }
             </div>
           </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cvm-admin-theme__history">
+      <mat-card-header>
+        <mat-card-title>Historie &amp; Rollback</mat-card-title>
+        <mat-card-subtitle>
+          Jeder Speichervorgang erzeugt einen Snapshot der zuvor aktiven
+          Version. Der Rollback uebernimmt die Werte in eine neue Version,
+          damit auch das Zuruecksetzen selbst auditierbar bleibt.
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (historyError()) {
+          <ahs-banner kind="warn" title="Historie nicht verfuegbar">
+            {{ historyError() }}
+          </ahs-banner>
+        }
+        @if (!historyError() && history().length === 0) {
+          <p class="text-caption">
+            Noch keine historischen Versionen. Sobald das Branding einmal
+            gespeichert wird, erscheint hier eine Liste.
+          </p>
+        }
+        @if (history().length > 0) {
+          <ul class="cvm-admin-theme__history-list">
+            @for (h of history(); track h.version) {
+              <li class="cvm-admin-theme__history-row">
+                <div class="cvm-admin-theme__history-meta">
+                  <span class="cvm-admin-theme__history-version">
+                    v{{ h.version }}
+                  </span>
+                  <span class="cvm-admin-theme__history-swatch"
+                        [style.background]="h.primaryColor"
+                        [attr.aria-label]="'Primaerfarbe ' + h.primaryColor">
+                  </span>
+                  <div class="cvm-admin-theme__history-text">
+                    <span>{{ h.appTitle || '(kein App-Titel)' }}</span>
+                    <span class="text-caption">
+                      {{ h.primaryColor }} / {{ h.fontFamilyName }}
+                    </span>
+                    <span class="text-caption">
+                      gespeichert am {{ h.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
+                      durch {{ h.updatedBy }}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  mat-stroked-button
+                  (click)="rollback(h)"
+                  [disabled]="rollingBackVersion() !== null"
+                >
+                  <mat-icon>history</mat-icon>
+                  @if (rollingBackVersion() === h.version) {
+                    Zuruecksetzen...
+                  } @else {
+                    Auf v{{ h.version }} zuruecksetzen
+                  }
+                </button>
+              </li>
+            }
+          </ul>
         }
       </mat-card-content>
     </mat-card>

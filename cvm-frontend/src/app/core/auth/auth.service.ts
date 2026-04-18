@@ -41,11 +41,20 @@ export class AuthService {
     try {
       this.username.set(this.keycloak.getUsername() ?? '');
     } catch {
-      this.username.set('');
-      void this.keycloak.loadUserProfile()
-        .then((profile) =>
-          this.username.set(profile?.username ?? profile?.email ?? ''))
-        .catch(() => undefined);
+      // UI-Fix HIGH-3 (UI-Exploration 20260418): loadUserProfile()
+      // ruft den Keycloak-Account-Endpoint (/realms/<r>/account), der
+      // im Default-Realm kein CORS erlaubt. Das hat beim jeden Wechsel
+      // in der Konsole Fehler produziert. Da wir username/email nur
+      // fuer das Header-Label brauchen und keycloak-angular den
+      // Username aus dem ID-Token herauszieht, ist der Account-Call
+      // verzichtbar. Wir fallen zurueck auf das Token-Claim
+      // `preferred_username`/`email`, wenn getUsername() nicht liefert.
+      const tokenParsed = (this.keycloak.getKeycloakInstance?.() as
+        | { tokenParsed?: { preferred_username?: string; email?: string } }
+        | undefined)?.tokenParsed;
+      this.username.set(
+        tokenParsed?.preferred_username ?? tokenParsed?.email ?? ''
+      );
     }
   }
 

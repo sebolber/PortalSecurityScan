@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -16,6 +16,20 @@ import {
   ReportResponse,
   ReportsService
 } from '../../core/reports/reports.service';
+import {
+  EnvironmentView,
+  EnvironmentsService
+} from '../../core/environments/environments.service';
+import {
+  ProductVersionView,
+  ProductView,
+  ProductsService
+} from '../../core/products/products.service';
+
+interface ProduktVersionOption {
+  readonly id: string;
+  readonly label: string;
+}
 
 /**
  * Reports-UI (Iteration 10 Nachzug):
@@ -44,9 +58,11 @@ import {
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
 })
-export class ReportsComponent {
+export class ReportsComponent implements OnInit {
   private readonly reports = inject(ReportsService);
   private readonly auth = inject(AuthService);
+  private readonly products = inject(ProductsService);
+  private readonly environments = inject(EnvironmentsService);
 
   readonly severities: readonly AhsSeverity[] = [
     'CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'INFORMATIONAL', 'NOT_APPLICABLE'
@@ -61,7 +77,64 @@ export class ReportsComponent {
   readonly busy = signal<boolean>(false);
   readonly fehler = signal<string | null>(null);
 
+  /**
+   * UI-Fix MEDIUM-5 (UI-Exploration 20260418): Statt UUIDs per Hand
+   * eintippen zu lassen, laden wir Produkt-Versionen und Umgebungen
+   * aus dem Backend und zeigen sie im Dropdown. Scheitert das Laden
+   * (z. B. fehlende Rolle), bieten wir als Fallback ein Textfeld an.
+   */
+  readonly produktVersionen = signal<readonly ProduktVersionOption[]>([]);
+  readonly umgebungen = signal<readonly EnvironmentView[]>([]);
+  readonly ladeKatalog = signal<boolean>(false);
+  readonly katalogFehler = signal<string | null>(null);
+
   readonly displayedColumns = ['title', 'gesamteinstufung', 'erzeugtAm', 'sha', 'actions'];
+
+  async ngOnInit(): Promise<void> {
+    this.ladeKatalog.set(true);
+    this.katalogFehler.set(null);
+    try {
+      const [produkte, envs] = await Promise.all([
+        this.products.list(),
+        this.environments.list()
+      ]);
+      const versionen = await this.sammleVersionen(produkte);
+      this.produktVersionen.set(versionen);
+      this.umgebungen.set(envs);
+    } catch (err) {
+      this.katalogFehler.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Produkt-/Umgebungsliste konnte nicht geladen werden. '
+              + 'UUIDs bitte manuell eintragen.'
+      );
+    } finally {
+      this.ladeKatalog.set(false);
+    }
+  }
+
+  private async sammleVersionen(
+    produkte: readonly ProductView[]
+  ): Promise<ProduktVersionOption[]> {
+    const alle: ProduktVersionOption[] = [];
+    for (const produkt of produkte) {
+      let vs: readonly ProductVersionView[] = [];
+      try {
+        vs = await this.products.versions(produkt.id);
+      } catch {
+        // einzelne Produkte duerfen scheitern (z. B. Soft-Deletes)
+        continue;
+      }
+      for (const v of vs) {
+        alle.push({
+          id: v.id,
+          label: produkt.name + ' ' + v.version
+            + (v.gitCommit ? ' (' + v.gitCommit.slice(0, 7) + ')' : '')
+        });
+      }
+    }
+    return alle;
+  }
 
   async erzeuge(): Promise<void> {
     if (this.busy()) {

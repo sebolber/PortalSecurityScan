@@ -26,6 +26,34 @@
     <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
   }
 
+  @if (!loading() && rows().length === 0) {
+    <!--
+      UI-Fix MEDIUM-2 (UI-Exploration 20260418): Seite hatte bisher
+      keinen Empty-State. Admins sahen nur den Header und wussten
+      nicht, wo der naechste Schritt ist.
+    -->
+    <div class="cvm-profiles__empty">
+      <mat-icon class="cvm-profiles__empty-icon" aria-hidden="true"
+        >description</mat-icon
+      >
+      <h2 class="text-title-sm">Noch keine Kontextprofile</h2>
+      <p class="text-body">
+        Ein Profil gehoert immer zu einer Umgebung. Solange keine
+        Umgebungen angelegt sind, kannst du hier kein Profil erstellen.
+      </p>
+      <div class="cvm-profiles__empty-actions">
+        <a mat-stroked-button routerLink="/admin/environments">
+          <mat-icon>layers</mat-icon>
+          Umgebungen anlegen
+        </a>
+        <button type="button" mat-stroked-button (click)="laden()">
+          <mat-icon>refresh</mat-icon>
+          Neu laden
+        </button>
+      </div>
+    </div>
+  }
+
   <mat-accordion multi>
     @for (row of rows(); track row.env.id) {
       <mat-expansion-panel class="cvm-profiles__panel">

@@ -15,6 +15,7 @@ import {
 } from '../../core/theme/branding';
 import {
   BrandingAssetKind,
+  BrandingHistoryEntry,
   BrandingHttpService
 } from '../../core/theme/branding.service';
 import { ThemeService } from '../../core/theme/theme.service';
@@ -95,6 +96,16 @@ export class AdminThemeComponent implements OnInit {
   readonly uploadMessage = signal<string | null>(null);
   readonly contrastWarning = this.theme.contrastWarning;
 
+  /**
+   * UI-Fix MEDIUM-4 (UI-Exploration 20260418): History-Liste aus dem
+   * Backend. Wird beim Laden der Seite geholt und nach jedem Save/
+   * Rollback aktualisiert. {@link rollingBackVersion} markiert die
+   * Zeile, die gerade zurueckgerollt wird (fuer Button-Disable).
+   */
+  readonly history = signal<readonly BrandingHistoryEntry[]>([]);
+  readonly historyError = signal<string | null>(null);
+  readonly rollingBackVersion = signal<number | null>(null);
+
   readonly contrast = computed(() => {
     const d = this.draft();
     try {
@@ -127,6 +138,54 @@ export class AdminThemeComponent implements OnInit {
       this.theme.applyBranding(current);
     } catch {
       this.error.set('Branding-Konfiguration konnte nicht geladen werden.');
+    }
+    await this.ladeHistorie();
+  }
+
+  private async ladeHistorie(): Promise<void> {
+    try {
+      const items = await this.branding.history(20);
+      this.history.set(items);
+      this.historyError.set(null);
+    } catch (err) {
+      this.history.set([]);
+      this.historyError.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'History konnte nicht geladen werden.'
+      );
+    }
+  }
+
+  async rollback(entry: BrandingHistoryEntry): Promise<void> {
+    const bestaetigt = window.confirm(
+      'Branding wirklich auf Version ' + entry.version +
+        ' zuruecksetzen? Die aktuelle Konfiguration wird als neue Version gespeichert.'
+    );
+    if (!bestaetigt) {
+      return;
+    }
+    this.rollingBackVersion.set(entry.version);
+    this.error.set(null);
+    try {
+      const saved = await this.branding.rollback(entry.version);
+      this.draft.set({ ...saved });
+      this.theme.applyBranding(saved);
+      this.snackBar.open(
+        'Branding auf Version ' + entry.version + ' zurueckgerollt (neue Version ' +
+          saved.version + ').',
+        'OK',
+        { duration: 6000 }
+      );
+      await this.ladeHistorie();
+    } catch (err) {
+      this.error.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Rollback fehlgeschlagen.'
+      );
+    } finally {
+      this.rollingBackVersion.set(null);
     }
   }
 
@@ -162,10 +221,12 @@ export class AdminThemeComponent implements OnInit {
       this.draft.set({ ...saved });
       this.theme.applyBranding(saved);
       this.snackBar.open(
-        'Branding gespeichert. Rollback innerhalb 24 h moeglich.',
+        'Branding gespeichert. Jede frueher gespeicherte Version kann '
+          + 'ueber die Historie rechts wiederhergestellt werden.',
         'OK',
         { duration: 6000 }
       );
+      await this.ladeHistorie();
     } catch (err) {
       this.error.set(
         err instanceof Error && err.message

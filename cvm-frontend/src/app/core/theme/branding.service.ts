@@ -30,6 +30,30 @@ export interface BrandingAssetResponse {
 }
 
 /**
+ * UI-Fix MEDIUM-4 (UI-Exploration 20260418): Iteration 31 hat
+ * {@code GET /admin/theme/history} und {@code POST /admin/theme/rollback/{version}}
+ * ausgeliefert, das Frontend nutzt sie noch nicht. Diese Projektion
+ * spiegelt den Response des Backends 1:1.
+ */
+export interface BrandingHistoryEntry {
+  readonly version: number;
+  readonly primaryColor: string;
+  readonly primaryContrastColor: string;
+  readonly accentColor: string | null;
+  readonly fontFamilyName: string;
+  readonly fontFamilyMonoName: string | null;
+  readonly appTitle: string | null;
+  readonly logoUrl: string | null;
+  readonly logoAltText: string | null;
+  readonly faviconUrl: string | null;
+  readonly fontFamilyHref: string | null;
+  readonly updatedAt: string;
+  readonly updatedBy: string;
+  readonly recordedAt: string;
+  readonly recordedBy: string;
+}
+
+/**
  * HTTP-Wrapper um die Branding-Endpunkte. Iteration 27 liefert
  * GET/PUT, Iteration 28f den Multipart-Asset-Upload fuer
  * LOGO/FAVICON/FONT.
@@ -70,6 +94,25 @@ export class BrandingHttpService {
       this.http.post<BrandingAssetResponse>(
         this.api.url('/api/v1/admin/theme/assets'),
         form
+      )
+    );
+  }
+
+  /** UI-Fix MEDIUM-4: Liste historisierter Versionen (neueste zuerst). */
+  history(limit = 20): Promise<BrandingHistoryEntry[]> {
+    return firstValueFrom(
+      this.api.get<BrandingHistoryEntry[]>(
+        '/api/v1/admin/theme/history?limit=' + limit
+      )
+    );
+  }
+
+  /** UI-Fix MEDIUM-4: Ruecksetzen auf eine vergangene Version. */
+  rollback(version: number): Promise<BrandingConfig> {
+    return firstValueFrom(
+      this.api.post<BrandingConfig, Record<string, never>>(
+        '/api/v1/admin/theme/rollback/' + version,
+        {}
       )
     );
   }

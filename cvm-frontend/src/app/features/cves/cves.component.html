@@ -1,6 +1,6 @@
 <div class="cvm-cves-page">
   <div class="cvm-cves-head">
-    <h1 class="cvm-cves-title">CVE-Inventar</h1>
+    <h1 class="cvm-cves-title text-title-lg">CVE-Inventar</h1>
     <button mat-stroked-button (click)="resetFilter()" [disabled]="loading()">
       <mat-icon>clear</mat-icon>
       Filter zuruecksetzen
@@ -20,6 +20,10 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
 
+      <!--
+        UI-Fix LOW-4 (UI-Exploration 20260418): data-sev-Attribut, damit
+        jeder Toggle einen dezenten Farbrand in Severity-Farbe bekommt.
+      -->
       <mat-button-toggle-group
         [(ngModel)]="severityFilter"
         (change)="sucheAusloesen()"
@@ -27,7 +31,9 @@
       >
         <mat-button-toggle [value]="null">Alle</mat-button-toggle>
         @for (s of severities; track s) {
-          <mat-button-toggle [value]="s">{{ s }}</mat-button-toggle>
+          <mat-button-toggle [value]="s" [attr.data-sev]="s">
+            {{ s }}
+          </mat-button-toggle>
         }
       </mat-button-toggle-group>
 

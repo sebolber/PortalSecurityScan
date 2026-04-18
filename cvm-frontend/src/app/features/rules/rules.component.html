@@ -1,6 +1,15 @@
 <div class="cvm-rules-page">
   <div class="cvm-rules-head">
-    <h1 class="cvm-rules-title">Regeln</h1>
+    <div class="cvm-rules-head-text">
+      <!-- UI-Fix MEDIUM-6: H1 gross wie auf den anderen Seiten. -->
+      <h1 class="cvm-rules-title text-title-lg">Regeln</h1>
+      <p class="text-body cvm-rules-lead">
+        Regeln werten CVEs im Kontext eines Profils automatisch vor. Eine
+        Regel liefert eine Severity-Empfehlung und ein Rationale-Template;
+        sie ersetzt nie die Freigabe durch einen Reviewer. Anlage durch
+        <code>CVM_RULE_AUTHOR</code>, Aktivierung im Vier-Augen-Prinzip.
+      </p>
+    </div>
     <div class="cvm-rules-head-actions">
       <button
         mat-stroked-button
@@ -159,9 +168,29 @@
     <p class="cvm-rules-error">{{ error() }}</p>
   }
   @if (!loading() && !error() && rules().length === 0) {
-    <p class="cvm-rules-muted">
-      Es sind noch keine Regeln angelegt. Nutze "Neue Regel anlegen".
-    </p>
+    <!--
+      UI-Fix LOW-5 (UI-Exploration 20260418): Empty-State erklaert jetzt,
+      was eine Regel tut und welche Rollen dafuer noetig sind, statt nur
+      auf den Button zu verweisen.
+    -->
+    <div class="cvm-rules-empty">
+      <mat-icon aria-hidden="true">rule</mat-icon>
+      <div>
+        <p class="text-body">
+          <strong>Es sind noch keine Regeln angelegt.</strong>
+        </p>
+        <p class="text-caption">
+          Eine Regel vergleicht CVE-Eigenschaften mit dem Profil der
+          Umgebung (z. B. <code>cve.kevListed eq true</code>) und schlaegt
+          eine Severity plus Rationale vor. Jede aktive Regel bleibt
+          bis zur Freigabe in DRAFT - aktiviert wird sie durch einen
+          anderen User mit <code>CVM_RULE_APPROVER</code>.
+        </p>
+        <p class="text-caption">
+          Nutze <em>Neue Regel anlegen</em>, um einen Draft zu erstellen.
+        </p>
+      </div>
+    </div>
   }
 
   <mat-accordion multi>

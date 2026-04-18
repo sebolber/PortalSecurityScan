@@ -58,21 +58,53 @@
   .cvm-user-name {
     font-weight: var(--font-weight-semibold);
     font-size: var(--text-sm);
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/**
+ * UI-Fix HIGH-2: Rollen-Pills sind aus dem Header in das User-Menue
+ * gewandert. Im Header verbleibt eine kompakte Zusammenfassung
+ * "N Rollen" mit Tooltip, damit die Navigation nicht ueberlaeuft.
+ */
+.cvm-role-summary {
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  padding: var(--space-0) var(--space-2);
+  background: rgba(255, 255, 255, 0.18);
+  color: var(--color-primary-contrast);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  cursor: help;
+}
+
+.cvm-user-menu__roles {
+  padding: var(--space-3) var(--space-4);
+  max-width: 320px;
+
+  .cvm-user-menu__roles-label {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--letter-spacing-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
   }
 
   .cvm-role-chips {
     display: flex;
     gap: var(--space-1);
     flex-wrap: wrap;
-    max-width: 280px;
-    justify-content: flex-end;
   }
 
   .cvm-role-chip {
     font-size: var(--text-xs);
     padding: var(--space-1) var(--space-2);
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--color-primary-contrast);
+    background: var(--color-primary-muted);
+    color: var(--color-primary);
     border-radius: var(--radius-pill);
     white-space: nowrap;
   }

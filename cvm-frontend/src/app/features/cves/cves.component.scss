@@ -50,6 +50,24 @@
 
 .cvm-sev-toggle {
   flex: 0 0 auto;
+
+  // UI-Fix LOW-4: dezente Farbandeutung an den Toggle-Rand, damit der
+  // Filter schneller scanbar ist. Hintergrund bleibt neutral.
+  mat-button-toggle[data-sev='CRITICAL'] {
+    border-top: 3px solid var(--color-severity-critical-bg);
+  }
+  mat-button-toggle[data-sev='HIGH'] {
+    border-top: 3px solid var(--color-severity-high-bg);
+  }
+  mat-button-toggle[data-sev='MEDIUM'] {
+    border-top: 3px solid var(--color-severity-medium-bg);
+  }
+  mat-button-toggle[data-sev='LOW'] {
+    border-top: 3px solid var(--color-severity-low-bg);
+  }
+  mat-button-toggle[data-sev='INFORMATIONAL'] {
+    border-top: 3px solid var(--color-severity-informational-bg);
+  }
 }
 
 .cvm-cves-table {
@@ -68,35 +86,40 @@
   white-space: nowrap;
 }
 
+// UI-Fix MEDIUM-1 (UI-Exploration 20260418): Severity-Chip greift jetzt
+// auf die offiziellen Farb-Token aus docs/konzept/severity-farbentscheidung.md
+// zu, damit /cves dieselbe Skala rendert wie /tenant-kpi. INFORMATIONAL
+// war vorher grau, sollte aber adesso-Blau sein.
 .cvm-sev-chip {
   display: inline-block;
   font-size: 0.75rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 0.1rem 0.5rem;
+  font-weight: 600;
+  padding: 0.1rem 0.6rem;
   border-radius: 999px;
-  background: var(--cvm-border);
-  color: var(--cvm-text-muted);
+  background: var(--color-severity-not-applicable-bg);
+  color: var(--color-severity-not-applicable-fg);
 }
 .cvm-sev-chip[data-sev='CRITICAL'] {
-  background: rgba(198, 40, 40, 0.15);
-  color: #c62828;
+  background: var(--color-severity-critical-bg);
+  color: var(--color-severity-critical-fg);
 }
 .cvm-sev-chip[data-sev='HIGH'] {
-  background: rgba(239, 108, 0, 0.15);
-  color: #ef6c00;
+  background: var(--color-severity-high-bg);
+  color: var(--color-severity-high-fg);
 }
 .cvm-sev-chip[data-sev='MEDIUM'] {
-  background: rgba(251, 192, 45, 0.2);
-  color: #b26a00;
+  background: var(--color-severity-medium-bg);
+  color: var(--color-severity-medium-fg);
 }
 .cvm-sev-chip[data-sev='LOW'] {
-  background: rgba(46, 125, 50, 0.15);
-  color: #2e7d32;
+  background: var(--color-severity-low-bg);
+  color: var(--color-severity-low-fg);
 }
 .cvm-sev-chip[data-sev='INFORMATIONAL'] {
-  background: rgba(117, 117, 117, 0.18);
-  color: #616161;
+  background: var(--color-severity-informational-bg);
+  color: var(--color-severity-informational-fg);
 }
 
 .cvm-kev-icon {

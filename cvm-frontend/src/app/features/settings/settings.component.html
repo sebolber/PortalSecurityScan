@@ -1,5 +1,5 @@
 <div class="cvm-settings-page">
-  <h1 class="cvm-settings-title">Einstellungen</h1>
+  <h1 class="cvm-settings-title text-title-lg">Einstellungen</h1>
 
   <mat-card class="cvm-settings-card">
     <mat-card-header>
@@ -7,15 +7,28 @@
       <mat-card-subtitle>Gelten nur fuer diesen Browser</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content class="cvm-settings-content">
+      <!--
+        UI-Fix LOW-3 (UI-Exploration 20260418): Farbschema ist jetzt ein
+        Segment-Control mit sichtbarem aktiven Zustand, statt eines
+        Sliders, dessen Off-Position "Light-Mode" war, aber optisch
+        "ausgeschaltet" wirkte.
+      -->
       <div class="cvm-settings-row">
         <label class="cvm-settings-label">Farbschema</label>
-        <mat-slide-toggle
-          [checked]="themeMode() === 'dark'"
-          (change)="setTheme($event.checked)"
+        <mat-button-toggle-group
+          name="farbschema"
+          [value]="themeMode()"
+          (change)="setTheme($event.value === 'dark')"
         >
-          <ng-container *ngIf="themeMode() === 'dark'; else lightLabel">Dark-Mode</ng-container>
-          <ng-template #lightLabel>Light-Mode</ng-template>
-        </mat-slide-toggle>
+          <mat-button-toggle value="light">
+            <mat-icon>light_mode</mat-icon>
+            Hell
+          </mat-button-toggle>
+          <mat-button-toggle value="dark">
+            <mat-icon>dark_mode</mat-icon>
+            Dunkel
+          </mat-button-toggle>
+        </mat-button-toggle-group>
       </div>
 
       <div class="cvm-settings-row">

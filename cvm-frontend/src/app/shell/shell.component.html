@@ -28,17 +28,34 @@
       <div class="cvm-user-info">
         <span class="cvm-user-name">{{ username() || 'Benutzer' }}</span>
         @if (rollenChips().length > 0) {
-          <div class="cvm-role-chips">
-            @for (r of rollenChips(); track r.key) {
-              <span class="cvm-role-chip">{{ r.label }}</span>
-            }
-          </div>
+          <span
+            class="cvm-role-summary"
+            [matTooltip]="rollenTooltip()"
+            matTooltipPosition="below"
+          >
+            {{ rollenChips().length }} Rollen
+          </span>
         }
       </div>
-      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Benutzer-Menue">
+      <button
+        mat-icon-button
+        [matMenuTriggerFor]="userMenu"
+        aria-label="Benutzer-Menue"
+      >
         <mat-icon>account_circle</mat-icon>
       </button>
-      <mat-menu #userMenu="matMenu">
+      <mat-menu #userMenu="matMenu" class="cvm-user-menu">
+        @if (rollenChips().length > 0) {
+          <div class="cvm-user-menu__roles" (click)="$event.stopPropagation()">
+            <p class="cvm-user-menu__roles-label">Meine Rollen</p>
+            <div class="cvm-role-chips">
+              @for (r of rollenChips(); track r.key) {
+                <span class="cvm-role-chip">{{ r.label }}</span>
+              }
+            </div>
+          </div>
+          <mat-divider></mat-divider>
+        }
         <button mat-menu-item (click)="logout()">
           <mat-icon>logout</mat-icon>
           <span>{{ texte.app.logout }}</span>

@@ -56,19 +56,30 @@ export class QueueComponent implements OnInit {
   readonly selectedId = this.store.selectedId;
 
   constructor() {
-    effect(() => {
-      const aktuell = this.selected();
-      if (aktuell) {
-        this.banner.set(null);
-      }
-    });
+    // UI-Fix HIGH-4 (UI-Exploration 20260418): Der Banner-Reset ist ein
+    // Signal-Write im Effect. allowSignalWrites explizit, damit Angular
+    // keinen NG0600 wirft.
+    effect(
+      () => {
+        const aktuell = this.selected();
+        if (aktuell) {
+          this.banner.set(null);
+        }
+      },
+      { allowSignalWrites: true }
+    );
 
-    // Filter-Aenderungen automatisch nachladen.
-    effect(() => {
-      // Abhaengigkeit auf das Filter-Signal registrieren.
-      this.store.filter();
-      void this.store.reload();
-    });
+    // Filter-Aenderungen automatisch nachladen. reload() setzt
+    // loadingSig/errorSig/entriesSig synchron - ohne allowSignalWrites
+    // wirft Angular NG0600 und die Queue-Tabelle bleibt leer.
+    effect(
+      () => {
+        // Abhaengigkeit auf das Filter-Signal registrieren.
+        this.store.filter();
+        void this.store.reload();
+      },
+      { allowSignalWrites: true }
+    );
   }
 
   ngOnInit(): void {
