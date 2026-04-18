@@ -7,7 +7,9 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import com.ahs.cvm.application.modelprofile.ModelProfileService.CreateCommand;
 import com.ahs.cvm.application.modelprofile.ModelProfileService.ModelProfileChangeView;
+import com.ahs.cvm.application.modelprofile.ModelProfileService.ProfileKeyConflictException;
 import com.ahs.cvm.application.modelprofile.ModelProfileService.SwitchCommand;
 import com.ahs.cvm.application.modelprofile.ModelProfileService.VierAugenViolationException;
 import com.ahs.cvm.persistence.environment.Environment;
@@ -26,6 +28,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 class ModelProfileServiceTest {
 
@@ -112,5 +115,117 @@ class ModelProfileServiceTest {
         assertThatThrownBy(() -> service.switchProfile(new SwitchCommand(
                 ENV_ID, NEW_PROFILE, "", "b", null)))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("createProfile: Happy-Path (Sandbox ohne GKV) -> Profil + Audit-Eintrag")
+    void createProfileSandbox() {
+        given(profileRepo.findByProfileKey("CLAUDE_SANDBOX"))
+                .willReturn(Optional.empty());
+        given(profileRepo.save(any(LlmModelProfile.class))).willAnswer(inv -> {
+            LlmModelProfile p = inv.getArgument(0);
+            if (p.getId() == null) {
+                p.setId(UUID.randomUUID());
+            }
+            return p;
+        });
+
+        var view = service.createProfile(new CreateCommand(
+                "CLAUDE_SANDBOX", "CLAUDE_CLOUD",
+                "claude-sonnet-4-6", null,
+                new BigDecimal("50.00"), false,
+                "a.admin@ahs.test", null, "Sandbox fuer Entwickler"));
+
+        assertThat(view.profileKey()).isEqualTo("CLAUDE_SANDBOX");
+        assertThat(view.provider()).isEqualTo("CLAUDE_CLOUD");
+
+        ArgumentCaptor<ModelProfileChangeLog> captor =
+                ArgumentCaptor.forClass(ModelProfileChangeLog.class);
+        verify(logRepo).save(captor.capture());
+        ModelProfileChangeLog logged = captor.getValue();
+        assertThat(logged.getAction())
+                .isEqualTo(ModelProfileChangeLog.Action.PROFILE_CREATED);
+        assertThat(logged.getEnvironmentId()).isNull();
+        assertThat(logged.getPreviousProfileId()).isNull();
+        assertThat(logged.getChangedBy()).isEqualTo("a.admin@ahs.test");
+    }
+
+    @Test
+    @DisplayName("createProfile: GKV-freigegeben ohne Zweitfreigeber -> IllegalArgument")
+    void createProfileGkvOhneZweit() {
+        given(profileRepo.findByProfileKey("CLAUDE_GKV"))
+                .willReturn(Optional.empty());
+        assertThatThrownBy(() -> service.createProfile(new CreateCommand(
+                "CLAUDE_GKV", "CLAUDE_CLOUD",
+                "claude-sonnet-4-6", null,
+                new BigDecimal("100.00"), true,
+                "a.admin@ahs.test", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("fourEyesConfirmer");
+    }
+
+    @Test
+    @DisplayName("createProfile: gleicher User als approvedBy und fourEyesConfirmer -> Vier-Augen-Verstoss")
+    void createProfileVierAugen() {
+        given(profileRepo.findByProfileKey("CLAUDE_GKV"))
+                .willReturn(Optional.empty());
+        assertThatThrownBy(() -> service.createProfile(new CreateCommand(
+                "CLAUDE_GKV", "CLAUDE_CLOUD",
+                "claude-sonnet-4-6", null,
+                new BigDecimal("100.00"), true,
+                "a.admin@ahs.test", "a.admin@ahs.test", null)))
+                .isInstanceOf(VierAugenViolationException.class);
+    }
+
+    @Test
+    @DisplayName("createProfile: doppelter profileKey -> ProfileKeyConflictException")
+    void createProfileKeyKonflikt() {
+        LlmModelProfile bestehend = LlmModelProfile.builder()
+                .id(UUID.randomUUID()).profileKey("CLAUDE_SANDBOX")
+                .provider(Provider.CLAUDE_CLOUD).modelId("x")
+                .costBudgetEurMonthly(BigDecimal.ZERO).build();
+        given(profileRepo.findByProfileKey("CLAUDE_SANDBOX"))
+                .willReturn(Optional.of(bestehend));
+
+        assertThatThrownBy(() -> service.createProfile(new CreateCommand(
+                "CLAUDE_SANDBOX", "CLAUDE_CLOUD",
+                "claude-sonnet-4-6", null,
+                new BigDecimal("0.0"), false,
+                "a.admin@ahs.test", null, null)))
+                .isInstanceOf(ProfileKeyConflictException.class);
+    }
+
+    @Test
+    @DisplayName("createProfile: ungueltiger profileKey-Regex -> IllegalArgument")
+    void createProfileKeyRegex() {
+        assertThatThrownBy(() -> service.createProfile(new CreateCommand(
+                "lowercase", "CLAUDE_CLOUD",
+                "x", null, BigDecimal.ZERO, false,
+                "a@x", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("profileKey ungueltig");
+    }
+
+    @Test
+    @DisplayName("createProfile: negatives Budget -> IllegalArgument")
+    void createProfileBudgetNegativ() {
+        assertThatThrownBy(() -> service.createProfile(new CreateCommand(
+                "CLAUDE_NEG", "CLAUDE_CLOUD",
+                "x", null, new BigDecimal("-1"), false,
+                "a@x", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("costBudgetEurMonthly");
+    }
+
+    @Test
+    @DisplayName("createProfile: ungueltiger provider-String -> IllegalArgument")
+    void createProfileProviderInvalid() {
+        given(profileRepo.findByProfileKey("CLAUDE_X")).willReturn(Optional.empty());
+        assertThatThrownBy(() -> service.createProfile(new CreateCommand(
+                "CLAUDE_X", "AZURE_OPENAI",
+                "x", null, BigDecimal.ZERO, false,
+                "a@x", null, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("provider ungueltig");
     }
 }

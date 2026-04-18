@@ -6,11 +6,13 @@ import com.ahs.cvm.persistence.modelprofile.LlmModelProfile;
 import com.ahs.cvm.persistence.modelprofile.LlmModelProfileRepository;
 import com.ahs.cvm.persistence.modelprofile.ModelProfileChangeLog;
 import com.ahs.cvm.persistence.modelprofile.ModelProfileChangeLogRepository;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class ModelProfileService {
 
     private static final Logger log = LoggerFactory.getLogger(ModelProfileService.class);
+
+    private static final Pattern PROFILE_KEY_PATTERN =
+            Pattern.compile("^[A-Z0-9_]{2,64}$");
 
     private final EnvironmentRepository environmentRepository;
     private final LlmModelProfileRepository profileRepository;
@@ -89,6 +94,86 @@ public class ModelProfileService {
                 entry.getReason(), entry.getChangedAt());
     }
 
+    /**
+     * Legt ein neues LlmModelProfile an. Wenn das Profil fuer GKV-Daten
+     * freigegeben werden soll ({@code approvedForGkvData=true}), ist ein
+     * Vier-Augen-Freigeber zwingend; andernfalls wird auch bei abwesender
+     * Zweitperson akzeptiert (reiner Sandbox-/Fallback-Fall), das
+     * Vier-Augen-Tupel muss aber stets unterschiedlich sein.
+     */
+    @Transactional
+    public ModelProfileView createProfile(CreateCommand cmd) {
+        if (cmd == null) {
+            throw new IllegalArgumentException("CreateCommand darf nicht null sein.");
+        }
+        requireNotBlank(cmd.profileKey(), "profileKey");
+        requireNotBlank(cmd.modelId(), "modelId");
+        requireNotBlank(cmd.approvedBy(), "approvedBy");
+        requireNotBlank(cmd.provider(), "provider");
+        LlmModelProfile.Provider provider;
+        try {
+            provider = LlmModelProfile.Provider.valueOf(cmd.provider().trim());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(
+                    "provider ungueltig (erwartet CLAUDE_CLOUD|OLLAMA_ONPREM): "
+                            + cmd.provider());
+        }
+        if (cmd.costBudgetEurMonthly() == null
+                || cmd.costBudgetEurMonthly().signum() < 0) {
+            throw new IllegalArgumentException(
+                    "costBudgetEurMonthly muss >= 0 sein.");
+        }
+        String key = cmd.profileKey().trim();
+        if (!PROFILE_KEY_PATTERN.matcher(key).matches()) {
+            throw new IllegalArgumentException(
+                    "profileKey ungueltig (erwartet ^[A-Z0-9_]{2,64}$): " + key);
+        }
+        if (profileRepository.findByProfileKey(key).isPresent()) {
+            throw new ProfileKeyConflictException(key);
+        }
+        if (cmd.approvedForGkvData()) {
+            requireNotBlank(cmd.fourEyesConfirmer(),
+                    "fourEyesConfirmer (GKV-Freigabe erfordert Vier-Augen)");
+        }
+        if (cmd.fourEyesConfirmer() != null
+                && !cmd.fourEyesConfirmer().isBlank()
+                && Objects.equals(cmd.approvedBy(), cmd.fourEyesConfirmer())) {
+            throw new VierAugenViolationException(
+                    "Vier-Augen-Verstoss: approvedBy == fourEyesConfirmer ("
+                            + cmd.approvedBy() + ")");
+        }
+
+        LlmModelProfile saved = profileRepository.save(LlmModelProfile.builder()
+                .profileKey(key)
+                .provider(provider)
+                .modelId(cmd.modelId().trim())
+                .modelVersion(cmd.modelVersion() == null || cmd.modelVersion().isBlank()
+                        ? null
+                        : cmd.modelVersion().trim())
+                .costBudgetEurMonthly(cmd.costBudgetEurMonthly())
+                .approvedForGkvData(cmd.approvedForGkvData())
+                .build());
+
+        changeLogRepository.save(ModelProfileChangeLog.builder()
+                .environmentId(null)
+                .previousProfileId(null)
+                .newProfileId(saved.getId())
+                .changedBy(cmd.approvedBy().trim())
+                .fourEyesConfirmer(cmd.fourEyesConfirmer() == null
+                        || cmd.fourEyesConfirmer().isBlank()
+                        ? cmd.approvedBy().trim()
+                        : cmd.fourEyesConfirmer().trim())
+                .reason(cmd.reason())
+                .action(ModelProfileChangeLog.Action.PROFILE_CREATED)
+                .changedAt(Instant.now(clock))
+                .build());
+
+        log.info("Modell-Profil angelegt: {} ({}:{}), GKV-approved={}",
+                saved.getProfileKey(), saved.getProvider(), saved.getModelId(),
+                saved.isApprovedForGkvData());
+        return ModelProfileView.from(saved);
+    }
+
     @Transactional(readOnly = true)
     public List<ModelProfileChangeView> historieFuerEnvironment(UUID environmentId) {
         return changeLogRepository.findByEnvironmentIdOrderByChangedAtDesc(environmentId)
@@ -114,9 +199,31 @@ public class ModelProfileService {
             UUID newProfileId, String changedBy, String fourEyesConfirmer,
             String reason, Instant changedAt) {}
 
+    public record CreateCommand(
+            String profileKey,
+            String provider,
+            String modelId,
+            String modelVersion,
+            BigDecimal costBudgetEurMonthly,
+            boolean approvedForGkvData,
+            String approvedBy,
+            String fourEyesConfirmer,
+            String reason) {}
+
     public static class VierAugenViolationException extends RuntimeException {
         public VierAugenViolationException(String message) {
             super(message);
+        }
+    }
+
+    public static class ProfileKeyConflictException extends RuntimeException {
+        private final String profileKey;
+        public ProfileKeyConflictException(String key) {
+            super("profileKey '" + key + "' bereits vergeben.");
+            this.profileKey = key;
+        }
+        public String getProfileKey() {
+            return profileKey;
         }
     }
 }

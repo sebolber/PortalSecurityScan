@@ -23,11 +23,13 @@ import lombok.Setter;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ModelProfileChangeLog {
 
+    public enum Action { PROFILE_SWITCHED, PROFILE_CREATED }
+
     @Id
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "environment_id", nullable = false)
+    @Column(name = "environment_id")
     private UUID environmentId;
 
     @Column(name = "previous_profile_id")
@@ -45,6 +47,10 @@ public class ModelProfileChangeLog {
     @Column(name = "reason")
     private String reason;
 
+    @Column(name = "action", nullable = false)
+    @jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+    private Action action;
+
     @Column(name = "changed_at", nullable = false, updatable = false)
     private Instant changedAt;
 
@@ -55,6 +61,9 @@ public class ModelProfileChangeLog {
         }
         if (changedAt == null) {
             changedAt = Instant.now();
+        }
+        if (action == null) {
+            action = Action.PROFILE_SWITCHED;
         }
     }
 }

@@ -2,10 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
 
+export type LlmProvider = 'CLAUDE_CLOUD' | 'OLLAMA_ONPREM';
+
 export interface ModelProfileView {
   readonly id: string;
   readonly profileKey: string;
-  readonly provider: 'CLAUDE_CLOUD' | 'OLLAMA_ONPREM' | string;
+  readonly provider: LlmProvider | string;
   readonly modelId: string;
   readonly modelVersion: string | null;
   readonly costBudgetEurMonthly: number;
@@ -30,8 +32,20 @@ export interface ProfileSwitchResponse {
   readonly changedAt: string;
 }
 
+export interface ModelProfileCreateRequest {
+  readonly profileKey: string;
+  readonly provider: LlmProvider;
+  readonly modelId: string;
+  readonly modelVersion: string | null;
+  readonly costBudgetEurMonthly: number;
+  readonly approvedForGkvData: boolean;
+  readonly approvedBy: string;
+  readonly fourEyesConfirmer: string | null;
+  readonly reason: string | null;
+}
+
 /**
- * Modellprofile lesen (GET /api/v1/llm-model-profiles) und
+ * Modellprofile lesen (GET /api/v1/llm-model-profiles), anlegen (POST) und
  * pro Umgebung umschalten (POST /environments/{id}/model-profile/switch).
  */
 @Injectable({ providedIn: 'root' })
@@ -47,5 +61,14 @@ export class ModelProfileService {
       `/api/v1/environments/${environmentId}/model-profile/switch`,
       req
     ));
+  }
+
+  createProfile(req: ModelProfileCreateRequest): Promise<ModelProfileView> {
+    return firstValueFrom(
+      this.api.post<ModelProfileView, ModelProfileCreateRequest>(
+        '/api/v1/llm-model-profiles',
+        req
+      )
+    );
   }
 }

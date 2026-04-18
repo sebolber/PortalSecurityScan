@@ -51,6 +51,97 @@
   @if (isAdmin()) {
     <mat-card class="cvm-settings-card">
       <mat-card-header>
+        <mat-card-title>Neues Modell-Profil</mat-card-title>
+        <mat-card-subtitle>
+          Profil anlegen und in der Profil-Auswahl unten zuordnen.
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="cvm-settings-content">
+        <button mat-stroked-button type="button" (click)="toggleCreateForm()">
+          <mat-icon>{{ createForm().expanded ? 'expand_less' : 'add' }}</mat-icon>
+          {{ createForm().expanded ? 'Formular schliessen' : 'Profil anlegen' }}
+        </button>
+
+        @if (createForm().expanded) {
+          <div class="cvm-env-form">
+            <mat-form-field appearance="outline" class="cvm-settings-field">
+              <mat-label>profileKey (GROSSBUCHSTABEN_DIGITS)</mat-label>
+              <input matInput
+                     [ngModel]="createForm().profileKey"
+                     (ngModelChange)="updateCreateForm({ profileKey: $event })"
+                     placeholder="CLAUDE_SANDBOX">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="cvm-settings-field">
+              <mat-label>Provider</mat-label>
+              <mat-select
+                [ngModel]="createForm().provider"
+                (ngModelChange)="updateCreateForm({ provider: $event })">
+                <mat-option value="CLAUDE_CLOUD">CLAUDE_CLOUD</mat-option>
+                <mat-option value="OLLAMA_ONPREM">OLLAMA_ONPREM</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="cvm-settings-field">
+              <mat-label>modelId</mat-label>
+              <input matInput
+                     [ngModel]="createForm().modelId"
+                     (ngModelChange)="updateCreateForm({ modelId: $event })"
+                     placeholder="claude-sonnet-4-6">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="cvm-settings-field">
+              <mat-label>modelVersion (optional)</mat-label>
+              <input matInput
+                     [ngModel]="createForm().modelVersion"
+                     (ngModelChange)="updateCreateForm({ modelVersion: $event })">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="cvm-settings-field">
+              <mat-label>Budget EUR/Monat</mat-label>
+              <input matInput type="number" min="0" step="10"
+                     [ngModel]="createForm().costBudgetEurMonthly"
+                     (ngModelChange)="updateCreateForm({ costBudgetEurMonthly: +$event })">
+            </mat-form-field>
+
+            <div class="cvm-settings-row">
+              <mat-checkbox
+                [checked]="createForm().approvedForGkvData"
+                (change)="updateCreateForm({ approvedForGkvData: $event.checked })">
+                GKV-Daten freigegeben (erfordert Vier-Augen)
+              </mat-checkbox>
+            </div>
+
+            @if (createForm().approvedForGkvData) {
+              <mat-form-field appearance="outline" class="cvm-settings-field">
+                <mat-label>Vier-Augen-Freigeber (Mail)</mat-label>
+                <input matInput
+                       [ngModel]="createForm().fourEyesConfirmer"
+                       (ngModelChange)="updateCreateForm({ fourEyesConfirmer: $event })"
+                       placeholder="j.meyer@ahs.test">
+              </mat-form-field>
+            }
+
+            <mat-form-field appearance="outline" class="cvm-settings-field cvm-settings-field-wide">
+              <mat-label>Begruendung (optional)</mat-label>
+              <input matInput
+                     [ngModel]="createForm().reason"
+                     (ngModelChange)="updateCreateForm({ reason: $event })">
+            </mat-form-field>
+
+            <button mat-raised-button color="primary" type="button"
+                    [disabled]="createForm().pending"
+                    (click)="legeProfilAn()">
+              <mat-icon>save</mat-icon>
+              {{ createForm().pending ? 'Wird angelegt...' : 'Profil speichern' }}
+            </button>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cvm-settings-card">
+      <mat-card-header>
         <mat-card-title>Administration</mat-card-title>
         <mat-card-subtitle>
           Modell-Profil-Wechsel pro Umgebung (Vier-Augen-Prinzip).
