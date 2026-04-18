@@ -1,0 +1,1099 @@
+{
+  "generatedAt": "2026-04-18T19:02:24.563Z",
+  "target": "local",
+  "frontendUrl": "http://localhost:4200",
+  "user": "a.admin@ahs.test",
+  "outcomes": [
+    {
+      "path": "/dashboard",
+      "slug": "dashboard",
+      "requiredRoleHint": "public",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": true,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/dashboard.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/queue",
+      "slug": "queue",
+      "requiredRoleHint": "ASSESSOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "ERROR RuntimeError: NG0600: Writing to signals is not allowed in a `computed` or an `effect` by default. Use `allowSignalWrites` in the `CreateEffectOptions` to enable this inside effects.\n    at http://localhost:4200/@fs/Users/olberding/Projects/portalsecurityscan/cvm-frontend/.angular/cache/18.2.21/cvm-frontend/vite/deps/chunk-TAKSCWT4.js?v=68a04003:20176:11\n    at throwInvalidWriteToSignalError (http://localhost:4200/@fs/Users/olberding/Projects/portalsecurityscan/cvm-frontend/.angular/cache/18.2.21/cvm-frontend/vite/deps/chunk-TAKSCWT4.js?v=68a04003:267:3)\n    at signalSetFn (http://localhost:4200/@fs/Users/olberding/Projects/portalsecurityscan/cvm-frontend/.angular/cache/18.2.21/cvm-frontend/vite/deps/chunk-TAKSCWT4.js?v=68a04003:285:5)\n    at signalFn.set (http://localhost:4200/@fs/Users/olberding/Projects/portalsecurityscan/cvm-frontend/.angular/cache/18.2.21/cvm-frontend/vite/deps/chunk-TAKSCWT4.js?v=68a04003:12369:32)\n    at _QueueStore.<anonymous> (http://localhost:4200/chunk-IRFZX6TV.js:182:23)\n    at Generator.next (<anonymous>)\n    at http://localhost:4200/chunk-Y5RQAIA6.js:37:61\n    at new ZoneAwarePromise (http://localhost:4200/polyfills.js:2160:23)\n    at __async (http://localhost:4200/chunk-Y5RQAIA6.js:21:10)\n    at _QueueStore.reload (http://localhost:4200/chunk-IRFZX6TV.js:181:12)"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": true,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/queue.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/cves",
+      "slug": "cves",
+      "requiredRoleHint": "VIEWER",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/cves?kev=false&page=0&size=25",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "NG0303: Can't bind to 'matRowDefTrackBy' since it isn't a known property of 'tr' (used in the '_CvesComponent' component template).\n1. If 'tr' is an Angular component and it has the 'matRowDefTrackBy' input, then verify that it is included in the '@Component.imports' of this component.\n2. To allow any property add 'NO_ERRORS_SCHEMA' to the '@Component.schemas' of this component."
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": true,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/cves.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/components",
+      "slug": "components",
+      "requiredRoleHint": "VIEWER",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/products",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/products/2d6abe21-bef2-43de-9e6a-f5e29555c76a/versions",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": true,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/components.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/profiles",
+      "slug": "profiles",
+      "requiredRoleHint": "PROFILE_AUTHOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/environments",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/profiles.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/rules",
+      "slug": "rules",
+      "requiredRoleHint": "RULE_AUTHOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/rules",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/rules.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/reports",
+      "slug": "reports",
+      "requiredRoleHint": "REPORTER",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/reports.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/ai-audit",
+      "slug": "ai-audit",
+      "requiredRoleHint": "AI_AUDITOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/ai/audits?page=0&size=20",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/ai-audit.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/settings",
+      "slug": "settings",
+      "requiredRoleHint": "any",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/environments",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/llm-model-profiles",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/settings.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/admin/theme",
+      "slug": "admin-theme",
+      "requiredRoleHint": "ADMIN",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/admin-theme.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/admin/products",
+      "slug": "admin-products",
+      "requiredRoleHint": "ADMIN",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/products",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": true,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/admin-products.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/admin/environments",
+      "slug": "admin-environments",
+      "requiredRoleHint": "ADMIN",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/environments",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": true,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/admin-environments.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/scans/upload",
+      "slug": "scans-upload",
+      "requiredRoleHint": "ASSESSOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/products",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/environments",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": true,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/scans-upload.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/waivers",
+      "slug": "waivers",
+      "requiredRoleHint": "VIEWER",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/waivers?status=ACTIVE",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": true,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/waivers.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/alerts/history",
+      "slug": "alerts-history",
+      "requiredRoleHint": "VIEWER",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/history?limit=50",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": true,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/alerts-history.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/reachability",
+      "slug": "reachability",
+      "requiredRoleHint": "ASSESSOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/reachability?limit=50",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": true,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/reachability.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/fix-verification",
+      "slug": "fix-verification",
+      "requiredRoleHint": "ASSESSOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/fix-verification?limit=50",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": true,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/fix-verification.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/anomaly",
+      "slug": "anomaly",
+      "requiredRoleHint": "AI_AUDITOR",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/anomalies?hours=24",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": false,
+        "hasForm": false,
+        "hasChart": false,
+        "hasPlaceholder": false,
+        "hasEmptyState": true,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/anomaly.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    },
+    {
+      "path": "/tenant-kpi",
+      "slug": "tenant-kpi",
+      "requiredRoleHint": "ADMIN",
+      "navigationStatus": 200,
+      "verdict": "FEHLER",
+      "apiCalls": [
+        {
+          "method": "GET",
+          "url": "/api/v1/alerts/banner",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/theme",
+          "status": 200
+        },
+        {
+          "method": "GET",
+          "url": "/api/v1/kpis?window=90d",
+          "status": 200
+        }
+      ],
+      "consoleIssues": [
+        {
+          "type": "warning",
+          "text": "An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing."
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "Access to XMLHttpRequest at 'http://localhost:8080/realms/cvm-local/account' from origin 'http://localhost:4200' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource."
+        },
+        {
+          "type": "error",
+          "text": "Failed to load resource: net::ERR_FAILED"
+        },
+        {
+          "type": "error",
+          "text": "[ECharts] Component grid is used but not imported.\nimport { GridComponent } from 'echarts/components';\necharts.use([GridComponent]);"
+        },
+        {
+          "type": "error",
+          "text": "[ECharts] Series line is used but not imported.\nimport { LineChart } from 'echarts/charts';\necharts.use([LineChart]);"
+        }
+      ],
+      "dom": {
+        "mainChildren": 2,
+        "hasTable": true,
+        "hasForm": false,
+        "hasChart": true,
+        "hasPlaceholder": false,
+        "hasEmptyState": false,
+        "headingText": "Workflow"
+      },
+      "screenshot": "ui-exploration/screenshots/tenant-kpi.png",
+      "note": "Konsolen-Fehler oder HTTP 5xx in API-Antworten."
+    }
+  ]
+}
