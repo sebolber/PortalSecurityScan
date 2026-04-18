@@ -30,21 +30,23 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
 | 15 | `GET /api/v1/reachability/{id}` | `/reachability` | `ReachabilityComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
 | 16 | `GET /api/v1/fix-verification/{id}` | `/fix-verification` | `FixVerificationComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
 | 17 | `GET /api/v1/rule-suggestions` | `/rules` (Tab) | `RulesComponent` | ANGEBUNDEN | - |
-| 18 | `GET /api/v1/anomaly`, `POST /api/v1/profile-assistant` | `/anomaly` | `AnomalyComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
+| 18 | `GET /api/v1/anomalies` | `/anomaly` | `AnomalyComponent` | ANGEBUNDEN | - (seit 27d) |
 | 19 | `POST /api/v1/nl-query` | `/reports` (Exec) | `ReportsComponent` (Exec-Tab) | ANGEBUNDEN | - |
 | 20 | `GET /api/v1/waivers` | `/waivers` | `WaiversComponent` | ANGEBUNDEN | - (seit 27c) |
-| 21 | `GET /api/v1/kpi/tenant` (Cross-Tenant) | `/tenant-kpi` | `TenantKpiComponent` (Placeholder) | PLATZHALTER | (B) - Cross-Tenant-View folgt, Platzhalter aktiv seit 27b |
+| 21 | `GET /api/v1/kpis` | `/tenant-kpi` | `TenantKpiComponent` | ANGEBUNDEN | - (seit 27d) |
 
 ## Zusammenfassung
 
-- **ANGEBUNDEN**: 16 Bereiche (Dashboard, Queue, CVEs,
+- **ANGEBUNDEN**: 18 Bereiche (Dashboard, Queue, CVEs,
   Komponenten, Profile, Regeln, Reports, KI-Audit,
   Settings, Theme-Admin, Queue-Detail, Copilot,
-  Rule-Suggestions, NL-Query, Waiver-Liste seit 27c,
-  Alert-Historie seit 27c).
-- **PLATZHALTER** - 4 Bereiche (je mit aktiver Route und
+  Rule-Suggestions, NL-Query, Waiver-Liste, Alert-Historie,
+  Anomalie-Board seit 27d, Mandanten-KPIs seit 27d).
+- **PLATZHALTER** - 2 Bereiche (je mit aktiver Route und
   `<cvm-page-placeholder>`): Reachability-Board,
-  Fix-Verifikation, Anomalie-Board, Cross-Tenant-Dashboard.
+  Fix-Verifikation. Beide sind per-Finding-/per-Mitigation-
+  Views, die heute aus der Assessment-Queue gestartet werden;
+  die Uebersichtsseite folgt in 27e.
   `FullNavigationWalkThroughTest` darf dank des Platzhalters
   gruen bleiben.
 - **(A) Sofortanbindung in 27**: Theme-Admin. Die in 2.0.4

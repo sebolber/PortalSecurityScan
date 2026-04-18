@@ -8,9 +8,9 @@ import { PagePlaceholderComponent } from '../../shared/components/page-placehold
   template: `
     <cvm-page-placeholder
       title="Fix-Verifikation"
-      description="Quality-Grade A/B/C pro Fix-Pfad und Suspicious-Commit-Heuristik folgen hier."
-      iteration="Iteration 27b"
-      ticket="CVM-62"
+      description="Pro Mitigation existiert bereits GET /api/v1/mitigations/{id}/verification. Diese Uebersichtsseite fasst die Quality-Grades (A/B/C) aller offenen Fixes mandantenweit zusammen und wird in einer Folge-Iteration angebunden."
+      iteration="Iteration 27e"
+      ticket="CVM-65"
     ></cvm-page-placeholder>
   `
 })
