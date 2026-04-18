@@ -1,5 +1,18 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 18
+- **LLM-Zweitstufe fuer Anomalien** (`anomaly-review.st`): Prompt
+  vorbereitet, Service-Integration folgt bei realem Datenverkehr
+  (Flag `cvm.ai.anomaly.use-llm-second-stage`).
+- **Anomalie-Widget im Dashboard** + Anomalie-Liste im Frontend.
+- **Wizard-UI** im Profil-Bereich (3 Endpunkte stehen).
+- **RAG-Embedding fuer Muster 3** (SIMILAR_TO_REJECTED) statt
+  Jaccard-Heuristik.
+- **Session-Cleanup-Cron**: EXPIRED/FINALIZED-Sessions aus
+  `profile_assist_session` aufraeumen.
+- **Profil-Draft-YAML** an das echte Profil-Schema mappen (aktuell
+  reine `answers:`-Liste).
+
 ## Stand 2026-04-18 nach Iteration 17
 - **RAG-Embedding-Clustering** statt rein Feature-basierter
   Cluster-Keys. Nutzt die Retrieval-Pipeline aus Iteration 12.

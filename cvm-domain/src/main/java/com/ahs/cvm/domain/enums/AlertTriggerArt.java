@@ -25,5 +25,6 @@ public enum AlertTriggerArt {
     ASSESSMENT_APPROVED,
     ESKALATION_T1,
     ESKALATION_T2,
-    KEV_HIT
+    KEV_HIT,
+    KI_ANOMALIE
 }
