@@ -118,6 +118,13 @@ const MENU: readonly MenuEntry[] = [
       CVM_ROLES.AI_AUDITOR,
       CVM_ROLES.ADMIN
     ]
+  },
+  {
+    id: 'admin-theme',
+    label: 'Theme & Branding',
+    path: '/admin/theme',
+    icon: 'palette',
+    requiredRoles: [CVM_ROLES.ADMIN]
   }
 ];
 

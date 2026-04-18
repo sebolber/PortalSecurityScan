@@ -1,0 +1,207 @@
+<section class="cvm-admin-theme">
+  <header class="cvm-admin-theme__header">
+    <h1 class="text-title-lg">Theme &amp; Branding</h1>
+    <p class="text-body">
+      Konfiguriert Farben, Schriftart und Logo fuer alle Nutzer dieses
+      Mandanten. Aenderungen gelten sofort; ein Rollback ist innerhalb
+      von 24 Stunden moeglich.
+    </p>
+  </header>
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+  @if (contrastWarning()) {
+    <ahs-banner kind="warn" title="Barrierefreiheit">
+      {{ contrastWarning() }}
+    </ahs-banner>
+  }
+
+  <div class="cvm-admin-theme__grid">
+    <mat-card class="cvm-admin-theme__form">
+      <mat-card-header>
+        <mat-card-title>Konfiguration</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <form (submit)="$event.preventDefault(); save()">
+          <mat-form-field appearance="outline">
+            <mat-label>App-Titel</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().appTitle"
+              name="appTitle"
+              (ngModelChange)="update('appTitle', $event)"
+            />
+          </mat-form-field>
+
+          <div class="cvm-color-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Primaerfarbe (Hex)</mat-label>
+              <input
+                matInput
+                [ngModel]="draft().primaryColor"
+                name="primaryColor"
+                (ngModelChange)="update('primaryColor', $event)"
+                pattern="^#([0-9a-fA-F]{3}){1,2}$"
+              />
+            </mat-form-field>
+            <span
+              class="cvm-color-swatch"
+              [style.background]="draft().primaryColor"
+              aria-hidden="true"
+            ></span>
+          </div>
+
+          <div class="cvm-color-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Kontrastfarbe</mat-label>
+              <input
+                matInput
+                [ngModel]="draft().primaryContrastColor"
+                name="contrast"
+                (ngModelChange)="update('primaryContrastColor', $event)"
+                pattern="^#([0-9a-fA-F]{3}){1,2}$"
+              />
+            </mat-form-field>
+            <span
+              class="cvm-color-swatch"
+              [style.background]="draft().primaryContrastColor"
+              aria-hidden="true"
+            ></span>
+          </div>
+
+          <p class="text-caption" [class.cvm-contrast-fail]="!aaOk()">
+            WCAG-Kontrast: {{ contrastLabel() }}
+          </p>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Akzentfarbe</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().accentColor || ''"
+              name="accent"
+              (ngModelChange)="update('accentColor', $event || null)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Schriftart</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().fontFamilyName"
+              name="fontFamily"
+              (ngModelChange)="update('fontFamilyName', $event)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Logo-URL (SVG/PNG)</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().logoUrl || ''"
+              name="logoUrl"
+              (ngModelChange)="update('logoUrl', $event || null)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Logo-Alt-Text</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().logoAltText || ''"
+              name="logoAlt"
+              (ngModelChange)="update('logoAltText', $event || null)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Favicon-URL</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().faviconUrl || ''"
+              name="faviconUrl"
+              (ngModelChange)="update('faviconUrl', $event || null)"
+            />
+          </mat-form-field>
+
+          <div class="cvm-admin-theme__actions">
+            <button
+              type="button"
+              mat-stroked-button
+              (click)="preview()"
+            >
+              Live-Vorschau anwenden
+            </button>
+            <button
+              type="button"
+              mat-stroked-button
+              (click)="reset()"
+            >
+              Auf Default zuruecksetzen
+            </button>
+            <button
+              type="submit"
+              mat-flat-button
+              color="primary"
+              [disabled]="saving() || !aaOk()"
+            >
+              @if (saving()) {
+                Speichere...
+              } @else {
+                Speichern
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cvm-admin-theme__preview">
+      <mat-card-header>
+        <mat-card-title>Live-Vorschau</mat-card-title>
+        <mat-card-subtitle>
+          Version {{ draft().version }} - Beispielseite
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="cvm-preview-shell" [style.fontFamily]="draft().fontFamilyName">
+          <div
+            class="cvm-preview-header"
+            [style.background]="draft().primaryColor"
+            [style.color]="draft().primaryContrastColor"
+          >
+            <span>{{ draft().appTitle || 'CVE-Relevance-Manager' }}</span>
+            @if (draft().logoUrl) {
+              <img
+                class="cvm-preview-logo"
+                [src]="draft().logoUrl"
+                [alt]="draft().logoAltText || ''"
+              />
+            } @else {
+              <span class="cvm-preview-logo-fallback">LOGO</span>
+            }
+          </div>
+          <div class="cvm-preview-body">
+            <h3 class="text-title-sm">Beispielkarte</h3>
+            <p class="text-body">
+              Beispiel-Text: CVE-2017-18640 wurde bewertet.
+            </p>
+            <div class="cvm-preview-badges">
+              <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
+              <ahs-severity-badge severity="HIGH"></ahs-severity-badge>
+              <ahs-severity-badge severity="MEDIUM"></ahs-severity-badge>
+            </div>
+            <button
+              class="cvm-preview-button"
+              [style.background]="draft().primaryColor"
+              [style.color]="draft().primaryContrastColor"
+              type="button"
+            >
+              Bewerten
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</section>

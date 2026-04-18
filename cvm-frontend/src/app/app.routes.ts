@@ -101,6 +101,14 @@ export const APP_ROUTES: Routes = [
         loadComponent: () =>
           import('./features/settings/settings.component')
             .then((m) => m.SettingsComponent)
+      },
+      {
+        path: 'admin/theme',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/admin-theme/admin-theme.component')
+            .then((m) => m.AdminThemeComponent)
       }
     ]
   },

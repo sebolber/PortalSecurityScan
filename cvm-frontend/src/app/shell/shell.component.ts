@@ -19,6 +19,7 @@ import { CVM_ROLE_LABELS, CvmRole } from '../core/auth/cvm-roles';
 import { LocaleService } from '../core/i18n/locale.service';
 import { AlertBannerService } from '../core/alerts/alert-banner.service';
 import { ThemeService } from '../core/theme/theme.service';
+import { BrandingHttpService } from '../core/theme/branding.service';
 import { AlertBannerComponent } from './alert-banner.component';
 
 @Component({
@@ -50,12 +51,21 @@ export class ShellComponent implements OnInit {
   private readonly locale = inject(LocaleService);
   private readonly bannerService = inject(AlertBannerService);
   private readonly theme = inject(ThemeService);
+  private readonly branding = inject(BrandingHttpService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly texte = this.locale.messages;
   readonly username = this.auth.username;
   readonly loggedIn = this.auth.loggedIn;
   readonly themeMode = this.theme.mode;
+
+  readonly brandingTitle = computed(
+    () => this.theme.branding().appTitle ?? this.texte.app.title
+  );
+  readonly brandingLogoUrl = computed(() => this.theme.branding().logoUrl);
+  readonly brandingLogoAlt = computed(
+    () => this.theme.branding().logoAltText ?? 'CVM Dashboard'
+  );
 
   readonly menuEintraege = computed(() =>
     this.menu.visibleEntries(this.auth.userRoles())
@@ -79,12 +89,9 @@ export class ShellComponent implements OnInit {
   ngOnInit(): void {
     this.theme.init();
     this.auth.refreshFromKeycloak();
-    // Banner nur pollen, wenn ein Login besteht. Sonst produzieren die
-    // 401-Antworten Snackbar-Spam, ohne dass der Anwender etwas davon
-    // hat - und (vor dem Interceptor-Fix) trieben sie die App in eine
-    // Logout-Reload-Loop.
     if (this.auth.loggedIn()) {
       void this.bannerService.refresh();
+      void this.ladeBranding();
     }
     interval(60_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -93,6 +100,16 @@ export class ShellComponent implements OnInit {
           void this.bannerService.refresh();
         }
       });
+  }
+
+  private async ladeBranding(): Promise<void> {
+    try {
+      const config = await this.branding.load();
+      this.theme.applyBranding(config);
+    } catch {
+      // Default-Branding bleibt aktiv. Kein Banner-Spam beim
+      // anonymen Start.
+    }
   }
 
   toggleTheme(): void {

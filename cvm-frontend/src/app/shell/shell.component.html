@@ -1,10 +1,6 @@
 <cvm-alert-banner></cvm-alert-banner>
 <mat-toolbar color="primary" class="cvm-header">
-  <a routerLink="/dashboard" class="cvm-logo" aria-label="CVM Dashboard">
-    <mat-icon>shield</mat-icon>
-    <span>CVM</span>
-  </a>
-  <span class="cvm-title">{{ texte.app.title }}</span>
+  <span class="cvm-title">{{ brandingTitle() }}</span>
 
   <mat-form-field appearance="outline" class="cvm-product" subscriptSizing="dynamic">
     <mat-label>{{ texte.shell.productSelector }}</mat-label>
@@ -55,6 +51,19 @@
       <span>{{ texte.app.login }}</span>
     </button>
   }
+
+  <a routerLink="/dashboard" class="cvm-logo" [attr.aria-label]="brandingLogoAlt()">
+    @if (brandingLogoUrl()) {
+      <img
+        class="cvm-logo-image"
+        [src]="brandingLogoUrl()"
+        [alt]="brandingLogoAlt()"
+      />
+    } @else {
+      <mat-icon>shield</mat-icon>
+      <span>CVM</span>
+    }
+  </a>
 </mat-toolbar>
 
 <mat-sidenav-container class="cvm-container">
