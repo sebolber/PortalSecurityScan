@@ -13,9 +13,14 @@ import org.springframework.stereotype.Component;
  * tmpdir an, simuliert damit den Git-Checkout. Echter Clone ueber
  * JGit wird in einer Folge-Iteration ergaenzt, sobald die Vault-
  * Anbindung fuer SSH-Keys steht.
+ *
+ * <p>{@code @ConditionalOnMissingBean(name = ...)} prueft auf den
+ * benamten JGit-Adapter-Bean (z.&nbsp;B. {@code jgitGitCheckoutAdapter}),
+ * nicht auf die eigene Klasse - sonst wuerde sich die Bean selbst
+ * ausschliessen und es gaebe gar keinen {@link GitCheckoutPort}.
  */
 @Component
-@ConditionalOnMissingBean(GitCheckoutPort.class)
+@ConditionalOnMissingBean(name = "jgitGitCheckoutAdapter")
 public class NoopGitCheckoutAdapter implements GitCheckoutPort {
 
     private static final Logger log = LoggerFactory.getLogger(NoopGitCheckoutAdapter.class);
