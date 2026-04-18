@@ -21,7 +21,7 @@ import { QueueEntry } from './queue.types';
   styles: [
     `
       tr.ausgewaehlt {
-        background-color: rgba(226, 0, 26, 0.08);
+        background-color: var(--color-primary-muted);
       }
       tr.pending {
         opacity: 0.5;

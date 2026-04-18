@@ -1,0 +1,16 @@
+{
+  "_comment": "Iteration 27b (CVM-62): Token-Invarianten-Stub. Nicht in der CI scharfgeschaltet, bis die Feature-Migration (Queue/Dashboard/Reports/Rules/Profile/Settings/AI-Audit) abgeschlossen ist. Aktivierung: im CI-Job vor dem Build 'npx stylelint --config cvm-frontend/.stylelintrc.cvm27.json \"cvm-frontend/src/app/**/*.scss\"' ausfuehren.",
+  "rules": {
+    "color-no-hex": [true, { "severity": "error" }],
+    "declaration-property-value-disallowed-list": {
+      "font-family": ["/^(?!var\\()/"],
+      "font-size": ["/^(?!var\\()\\d+px/"]
+    },
+    "length-zero-no-unit": true,
+    "custom-property-pattern": "^(cvm|color|space|text|font-family|font-weight|line-height|letter-spacing|radius|shadow|duration|easing|bp)(-|$)"
+  },
+  "ignoreFiles": [
+    "cvm-frontend/src/styles/**/*.scss",
+    "cvm-frontend/src/styles.scss"
+  ]
+}
