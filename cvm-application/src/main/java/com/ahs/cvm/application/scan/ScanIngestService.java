@@ -152,7 +152,18 @@ public class ScanIngestService {
         });
     }
 
+    /**
+     * {@code @Transactional} ist notwendig, damit
+     * {@link org.springframework.transaction.event.TransactionalEventListener}
+     * das Event empfaengt. Ohne aktive Transaktion beim
+     * {@code publishEvent} verwirft Spring den Call als "no transaction
+     * active" - alle AFTER_COMMIT-Listener (CVE-Enrichment, OSV-Matching,
+     * Alert-Bus) bleiben stumm. {@code persistiere()} hat sein eigenes
+     * {@code @Transactional}, {@code REQUIRED} joined die aeussere
+     * Transaktion; das Event wird nach erfolgreichem Commit zugestellt.
+     */
     @Async(ScanIngestConfig.EXECUTOR_NAME)
+    @Transactional
     public CompletableFuture<Void> verarbeiteAsync(UUID scanId, byte[] rawSbom) {
         CycloneDxBom bom = parser.parse(rawSbom);
         ErgebnisZaehler zaehler = persistiere(scanId, bom);
