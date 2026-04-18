@@ -1,0 +1,69 @@
+# Frontend-Backend-Coverage-Matrix (Iteration 27)
+
+**Stand**: 2026-04-18
+**Jira**: CVM-61
+
+Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
+`BACKEND_FEHLT`. Aktion: `(A)` Anbinden, `(B)` Platzhalter,
+`(C)` aus Navigation entfernen.
+
+## Matrix
+
+| Iteration | Backend-Endpunkt | Frontend-Route | Komponente | Status | Aktion |
+|---|---|---|---|---|---|
+| 07 | `GET /api/v1/alerts/banners` | `/dashboard` | `DashboardComponent`, `AlertBannerComponent` | ANGEBUNDEN | - |
+| 21 | `GET /api/v1/kpi/tenant`, `GET /api/v1/kpi/trend` | `/dashboard` | `DashboardComponent` | ANGEBUNDEN | - |
+| 08 | `GET /api/v1/queue`, `POST /api/v1/assessments` | `/queue` | `QueueComponent` + Kinder | ANGEBUNDEN | - |
+| 03/04/11/26 | `GET /api/v1/cves` | `/cves` | `CvesComponent` | ANGEBUNDEN | - |
+| 02/26 | `GET /api/v1/products`, `GET /api/v1/products/{id}/versions` | `/components` | `ComponentsComponent` | ANGEBUNDEN | - |
+| 04 | `GET /api/v1/profiles/aktiv?...` | `/profiles` | `ProfilesComponent` | ANGEBUNDEN | - |
+| 05/17 | `GET /api/v1/rules`, `POST /api/v1/rules/dry-run` | `/rules` | `RulesComponent` | ANGEBUNDEN | - |
+| 10/19 | `GET /api/v1/reports`, `GET /api/v1/reports/{id}` | `/reports` | `ReportsComponent` | ANGEBUNDEN | - |
+| 11 | `GET /api/v1/ai-audit` | `/ai-audit` | `AiAuditComponent` | ANGEBUNDEN | - |
+| 22 | `GET /api/v1/settings/*` | `/settings` | `SettingsComponent` | ANGEBUNDEN | - |
+| 27 | `GET /api/v1/theme`, `PUT /api/v1/admin/theme` | `/admin/theme` | `AdminThemeComponent` | ANGEBUNDEN (diese Iteration) | - |
+| 06 | `GET /api/v1/assessments/findings/{id}` | `/queue` (Detail) | `QueueDetailComponent` | ANGEBUNDEN | - |
+| 09 | `GET /api/v1/alerts/history` | - | - | FEHLT_GANZ | (B) - Platzhalter in `/alerts/history`, folgt in 27b |
+| 10 | `GET /api/v1/reports/archive` | `/reports` | `ReportsComponent` | ANGEBUNDEN (Archiv-Sicht) | - |
+| 13 | `GET /api/v1/ai-queue` | - | - | BACKEND_FEHLT | (B) - Vorbewertungs-Queue nutzt zentrale Queue, eigene Ansicht in 27b |
+| 14 | `POST /api/v1/copilot/sessions` | `/queue` (Detail) | `QueueDetailComponent` (embedded) | ANGEBUNDEN | - |
+| 15 | `GET /api/v1/reachability/{id}` | - | - | NAV_OHNE_INHALT | (B) - Reachability-Board folgt |
+| 16 | `GET /api/v1/fix-verification/{id}` | - | - | NAV_OHNE_INHALT | (B) - Fix-Verifikation-Board folgt |
+| 17 | `GET /api/v1/rule-suggestions` | `/rules` (Tab) | `RulesComponent` | ANGEBUNDEN | - |
+| 18 | `GET /api/v1/anomaly`, `POST /api/v1/profile-assistant` | - | - | NAV_OHNE_INHALT | (B) - Anomalie-Board folgt |
+| 19 | `POST /api/v1/nl-query` | `/reports` (Exec) | `ReportsComponent` (Exec-Tab) | ANGEBUNDEN | - |
+| 20 | `GET /api/v1/waivers` | - | - | FEHLT_GANZ | (B) - Waiver-Liste folgt, Platzhalter ab 27b |
+| 21 | `GET /api/v1/kpi/tenant` (Cross-Tenant) | `/dashboard` | `DashboardComponent` | ANGEBUNDEN (single-tenant); Cross-Tenant-View (B) - folgt in 27b |
+
+## Zusammenfassung
+
+- **ANGEBUNDEN**: 14 Bereiche (Dashboard, Queue, CVEs,
+  Komponenten, Profile, Regeln, Reports, KI-Audit,
+  Settings, Theme-Admin, Queue-Detail, Copilot,
+  Rule-Suggestions, NL-Query).
+- **(B) Platzhalter** (in 27b umzusetzen): 6 Bereiche
+  (Alert-Historie, Reachability-Board, Fix-Verifikation,
+  Anomalie-Board, Waiver-Liste, Cross-Tenant-Dashboard).
+- **(A) Sofortanbindung in 27**: Theme-Admin (neu). Die in
+  2.0.4 priorisierten Basis-Listen (CVE-Browser,
+  Komponenten-Browser, Profile, Report-Archiv) waren
+  bereits durch Iteration 26 und fruehere Schritte
+  abgedeckt - keine weiteren (A)-Massnahmen noetig.
+- **(C) aus Navigation entfernen**: keine.
+
+## Konsequenz fuer `FullNavigationWalkThroughTest`
+
+Alle Menuepunkte in `role-menu.service.ts` fuehren aktuell
+auf angebundene Seiten. Platzhalter-Menuepunkte
+(Alert-Historie, Waiver, Reachability, Fix-Verifikation,
+Anomalie, Cross-Tenant) werden in 27b ergaenzt, sobald die
+jeweiligen Komponenten samt `<cvm-page-placeholder>`
+existieren - der Gate-Test muss bis dahin diese Routen nicht
+abdecken.
+
+## Konsequenz fuer Go-Live-Checkliste
+
+Abschnitt 1 der Checkliste wird um einen Prueftschritt
+erweitert: "Aktuelle `frontend-backend-coverage.md` liegt
+vor, alle `NAV_OHNE_INHALT`-Zeilen sind einer Aktion
+zugeordnet." - uebernommen in `offene-punkte.md`.
