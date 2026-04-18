@@ -102,8 +102,14 @@
               class="cvm-rules-editor-code"
             ></textarea>
             <mat-hint>
-              JSON-DSL: allOf / anyOf / not mit field/op/value -
-              z.B. <code>cve.kevListed eq true</code>.
+              Logik <code>all</code> / <code>any</code> / <code>not</code>,
+              Vergleiche <code>eq</code>, <code>ne</code>, <code>gt</code>,
+              <code>lt</code>, <code>matches</code>, <code>in</code>,
+              <code>containsAny</code>, <code>between</code>. Pfade:
+              <code>cve.*</code>, <code>profile.*</code>,
+              <code>component.*</code>.
+              Beispiel (fuer jeden Scan):
+              <code>&#123;"matches":&#123;"path":"cve.id","value":"^CVE-"&#125;&#125;</code>.
             </mat-hint>
           </mat-form-field>
 
@@ -181,7 +187,8 @@
         </p>
         <p class="text-caption">
           Eine Regel vergleicht CVE-Eigenschaften mit dem Profil der
-          Umgebung (z. B. <code>cve.kevListed eq true</code>) und schlaegt
+          Umgebung (z. B.
+          <code>&#123;"eq":&#123;"path":"cve.kevListed","value":true&#125;&#125;</code>) und schlaegt
           eine Severity plus Rationale vor. Jede aktive Regel bleibt
           bis zur Freigabe in DRAFT - aktiviert wird sie durch einen
           anderen User mit <code>CVM_RULE_APPROVER</code>.
