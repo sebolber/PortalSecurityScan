@@ -2,14 +2,36 @@
 <mat-toolbar color="primary" class="cvm-header">
   <span class="cvm-title">{{ brandingTitle() }}</span>
 
-  <mat-form-field appearance="outline" class="cvm-product" subscriptSizing="dynamic">
-    <mat-label>{{ texte.shell.productSelector }}</mat-label>
-    <mat-select [(ngModel)]="selectedProduct">
-      @for (p of produkte; track p.key) {
-        <mat-option [value]="p.key">{{ p.label }}</mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
+  <!--
+    UI-Fix HIGH-neu-1 (UI-Review 2): `mat-form-field appearance="outline"`
+    hat seine Floating-Label-Notch ueber die Toolbar-Oberkante
+    gezogen - auf jedem Screenshot sichtbar als
+    "Produkt / Umgebung waehlen"-Text ueber dem Header. Der
+    Produkt-Switcher ist jetzt ein Menue-Trigger-Button mit
+    klarer Chevron-Anzeige und ohne Floating-Label.
+  -->
+  <button
+    type="button"
+    mat-button
+    class="cvm-product-switcher"
+    [matMenuTriggerFor]="productMenu"
+    [attr.aria-label]="texte.shell.productSelector"
+  >
+    <mat-icon class="cvm-product-switcher__icon">layers</mat-icon>
+    <span class="cvm-product-switcher__label">{{ selectedProductLabel() }}</span>
+    <mat-icon class="cvm-product-switcher__chevron">arrow_drop_down</mat-icon>
+  </button>
+  <mat-menu #productMenu="matMenu">
+    <button
+      mat-menu-item
+      *ngFor="let p of produkte; trackBy: trackProduct"
+      (click)="selectedProduct = p.key"
+      [class.cvm-product-switcher__active]="p.key === selectedProduct"
+    >
+      <mat-icon>{{ p.key === selectedProduct ? 'check' : 'radio_button_unchecked' }}</mat-icon>
+      <span>{{ p.label }}</span>
+    </button>
+  </mat-menu>
 
   <span class="flex-1"></span>
 

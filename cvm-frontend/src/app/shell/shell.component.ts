@@ -135,6 +135,16 @@ export class ShellComponent implements OnInit {
 
   selectedProduct = this.produkte[0]?.key ?? '';
 
+  readonly selectedProductLabel = computed(
+    () =>
+      this.produkte.find((p) => p.key === this.selectedProduct)?.label
+        ?? this.texte.shell.productSelector
+  );
+
+  trackProduct(_: number, p: { key: string }): string {
+    return p.key;
+  }
+
   ngOnInit(): void {
     this.theme.init();
     this.auth.refreshFromKeycloak();

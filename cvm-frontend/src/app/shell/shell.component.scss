@@ -21,6 +21,42 @@
   width: 280px;
 }
 
+// UI-Fix HIGH-neu-1: Menu-Trigger-Button anstelle des alten
+// mat-form-field-basierten Switchers. Kein Floating-Label mehr.
+.cvm-product-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-sm);
+  color: var(--color-primary-contrast);
+  background: transparent;
+  max-width: 360px;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &__icon,
+  &__chevron {
+    opacity: 0.9;
+    flex: 0 0 auto;
+  }
+
+  &__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.cvm-product-switcher__active {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+}
+
 .cvm-logo {
   display: flex;
   align-items: center;

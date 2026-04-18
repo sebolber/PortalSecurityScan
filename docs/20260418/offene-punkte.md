@@ -6,6 +6,16 @@
 > Frontend-Build gruen, Backend alle Module gruen. Karma-Run bleibt
 > weiter Sandbox-geblockt (Chromium fehlt) - kein neuer Finding.
 
+## Stand 2026-04-18 nach Iteration 32c - offen
+
+- UI-Review 2 am 2026-04-18 hat 6 Neu-Findings ergeben (1 HIGH,
+  4 MEDIUM, 1 LOW). Alle behoben in Iteration 32c
+  (`docs/20260418/iteration-32c-fortschritt.md`).
+- Auto-Report kategorisiert `/cves` und `/tenant-kpi` weiter als
+  FEHLER (Konsolen-/API-Fehler, die Inhalt-Rendering aber nicht
+  blockieren) - Naechster Schritt: Backend-Logs pruefen.
+- Alte Backlog-Eintraege unveraendert (axe-core, Persistenz-IT).
+
 ## Stand 2026-04-18 nach Iteration 32b - offen
 
 - ~~Material-Icons offline haerten~~ erledigt in 32b
@@ -13,7 +23,6 @@
 - ~~Karma-Sandbox-Chromium~~ erledigt in 32b (Puppeteer-Chromium +
   `karma.conf.cjs`). `npx ng test` liefert jetzt 68 SUCCESS in der
   Sandbox.
-- Alte Backlog-Eintraege unveraendert (axe-core, Persistenz-IT).
 
 > Iteration 31 am 2026-04-18 hat `branding_config_history` (Flyway
 > V0027, Entity + Repository), `BrandingService#rollbackForCurrentTenant`

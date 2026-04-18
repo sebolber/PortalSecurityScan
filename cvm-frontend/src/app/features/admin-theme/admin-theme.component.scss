@@ -27,6 +27,13 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+
+  // UI-Fix MEDIUM-neu-4 (UI-Review 2): Begrenze die Input-Breite,
+  // damit das Material-Outline-Label nicht in einem ueberbreiten
+  // Feld "frei schwebt" und wie ein zweites leeres Feld aussieht.
+  mat-form-field {
+    max-width: 420px;
+  }
 }
 
 .cvm-color-row {

@@ -37,12 +37,42 @@
             }
           </mat-select>
         </mat-form-field>
-      } @else {
+      } @else if (katalogFehler()) {
+        <!--
+          UI-Fix MEDIUM-neu-3 (UI-Review 2): Bei echtem Katalog-Fehler
+          (HTTP 403, Netz) bleibt das UUID-Textfeld der einzig sinnvolle
+          Fallback. Bei leerem Katalog (Liste ist [], aber Call ok)
+          zeigen wir stattdessen einen Hinweis mit CTA, damit kein
+          UUID-Feld die UX verwirrt.
+        -->
         <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>Umgebung (UUID)</mat-label>
           <input matInput name="environmentId"
                  [(ngModel)]="environmentId" required />
         </mat-form-field>
+      } @else {
+        <div class="cvm-reports-empty-env">
+          <p class="text-body">
+            Noch keine Umgebungen angelegt. Ein Hardening-Report haengt
+            immer an einer konkreten Umgebung.
+          </p>
+          <a mat-stroked-button routerLink="/admin/environments">
+            <mat-icon>layers</mat-icon>
+            Umgebung anlegen
+          </a>
+        </div>
+      }
+
+      @if (produktVersionen().length === 0 && !katalogFehler()) {
+        <div class="cvm-reports-empty-env">
+          <p class="text-body">
+            Noch keine Produkt-Versionen vorhanden.
+          </p>
+          <a mat-stroked-button routerLink="/admin/products">
+            <mat-icon>inventory</mat-icon>
+            Produkt anlegen
+          </a>
+        </div>
       }
 
       @if (katalogFehler()) {

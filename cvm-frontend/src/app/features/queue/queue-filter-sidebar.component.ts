@@ -15,6 +15,73 @@ import { Severity } from '../../shared/components/severity-badge.component';
   standalone: true,
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: [
+    `
+      /* UI-Fix MEDIUM-neu-1: Severity-Filter mit Farbcodierung. */
+      .cvm-queue-sev-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.15rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        letter-spacing: 0.04em;
+        font-weight: 600;
+        border: 1px solid var(--color-border);
+        background: var(--color-surface);
+        color: var(--color-text);
+        cursor: pointer;
+        border-top-width: 3px;
+      }
+      .cvm-queue-sev-chip[data-sev='CRITICAL'] {
+        border-top-color: var(--color-severity-critical-bg);
+      }
+      .cvm-queue-sev-chip[data-sev='HIGH'] {
+        border-top-color: var(--color-severity-high-bg);
+      }
+      .cvm-queue-sev-chip[data-sev='MEDIUM'] {
+        border-top-color: var(--color-severity-medium-bg);
+      }
+      .cvm-queue-sev-chip[data-sev='LOW'] {
+        border-top-color: var(--color-severity-low-bg);
+      }
+      .cvm-queue-sev-chip[data-sev='INFORMATIONAL'] {
+        border-top-color: var(--color-severity-informational-bg);
+      }
+      .cvm-queue-sev-chip[data-sev='NOT_APPLICABLE'] {
+        border-top-color: var(--color-severity-not-applicable-bg);
+      }
+      .cvm-queue-sev-chip--active[data-sev='CRITICAL'] {
+        background: var(--color-severity-critical-bg);
+        color: var(--color-severity-critical-fg);
+        border-color: var(--color-severity-critical-bg);
+      }
+      .cvm-queue-sev-chip--active[data-sev='HIGH'] {
+        background: var(--color-severity-high-bg);
+        color: var(--color-severity-high-fg);
+        border-color: var(--color-severity-high-bg);
+      }
+      .cvm-queue-sev-chip--active[data-sev='MEDIUM'] {
+        background: var(--color-severity-medium-bg);
+        color: var(--color-severity-medium-fg);
+        border-color: var(--color-severity-medium-bg);
+      }
+      .cvm-queue-sev-chip--active[data-sev='LOW'] {
+        background: var(--color-severity-low-bg);
+        color: var(--color-severity-low-fg);
+        border-color: var(--color-severity-low-bg);
+      }
+      .cvm-queue-sev-chip--active[data-sev='INFORMATIONAL'] {
+        background: var(--color-severity-informational-bg);
+        color: var(--color-severity-informational-fg);
+        border-color: var(--color-severity-informational-bg);
+      }
+      .cvm-queue-sev-chip--active[data-sev='NOT_APPLICABLE'] {
+        background: var(--color-severity-not-applicable-bg);
+        color: var(--color-severity-not-applicable-fg);
+        border-color: var(--color-severity-not-applicable-bg);
+      }
+    `
+  ],
   template: `
     <aside class="flex w-72 shrink-0 flex-col gap-4 border-r bg-light p-4">
       <h2 class="text-sm font-semibold uppercase text-zinc-500">Filter</h2>
@@ -71,15 +138,19 @@ import { Severity } from '../../shared/components/severity-badge.component';
 
       <div class="text-sm">
         <span class="mb-1 block text-zinc-700">Severity</span>
-        <div class="flex flex-wrap gap-1">
+        <!--
+          UI-Fix MEDIUM-neu-1 (UI-Review 2): data-sev mappt auf die
+          Severity-Token aus colors.scss. Inaktive Filter zeigen einen
+          farbigen Top-Border, aktive Filter einen Full-Fill in der
+          Severity-Farbe.
+        -->
+        <div class="flex flex-wrap gap-1 cvm-queue-sev-filter">
           @for (s of severities; track s) {
             <button
               type="button"
-              class="rounded border px-2 py-0.5 text-xs"
-              [class.border-primary]="aktiv(s)"
-              [class.bg-primary]="aktiv(s)"
-              [class.text-white]="aktiv(s)"
-              [class.border-zinc-300]="!aktiv(s)"
+              class="cvm-queue-sev-chip"
+              [attr.data-sev]="s"
+              [class.cvm-queue-sev-chip--active]="aktiv(s)"
               (click)="toggle(s)"
             >
               {{ s }}
