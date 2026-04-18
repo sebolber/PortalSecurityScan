@@ -9,8 +9,11 @@ import { AppConfigService } from '../config/app-config.service';
  * <ul>
  *   <li>Setzt {@code Authorization: Bearer <token>} fuer Requests an die
  *       konfigurierte API-Base-URL.</li>
- *   <li>Bei 401 wird der KC-Logout angestossen, damit ein abgelaufener
- *       Token nicht stille Folgefehler nach sich zieht.</li>
+ *   <li>Bei 401 wird der KC-Logout NUR dann angestossen, wenn der User
+ *       zuvor eingeloggt war (abgelaufener Token). Wenn er gar nicht
+ *       eingeloggt ist, ist 401 erwartetes Verhalten und darf keinen
+ *       Logout-Redirect triggern - sonst entsteht eine Reload-Loop
+ *       (Shell -> Banner-Polling -> 401 -> Logout-Redirect -> Shell).</li>
  * </ul>
  *
  * Lokale Asset-Calls (z.&nbsp;B. {@code assets/config.json}) werden nicht
@@ -31,6 +34,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  // Wenn nicht eingeloggt, gar nicht erst auf einen Token warten -
+  // sonst hat KeycloakService.getToken() unter check-sso ein
+  // Promise, das nie resolvet und zu haengenden Requests fuehrt.
+  if (!auth.loggedIn()) {
+    return next(req).pipe(
+      catchError((err) => throwError(() => err))
+    );
+  }
+
   return from(auth.getToken()).pipe(
     switchMap((token) => {
       const authed = token
@@ -38,7 +50,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         : req;
       return next(authed).pipe(
         catchError((err) => {
-          if (err?.status === 401) {
+          if (err?.status === 401 && auth.loggedIn()) {
+            // Token war da, ist aber abgelaufen -> Logout.
             void auth.logout();
           }
           return throwError(() => err);

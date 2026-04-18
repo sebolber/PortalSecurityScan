@@ -64,10 +64,20 @@ export class ShellComponent implements OnInit {
 
   ngOnInit(): void {
     this.auth.refreshFromKeycloak();
-    void this.bannerService.refresh();
+    // Banner nur pollen, wenn ein Login besteht. Sonst produzieren die
+    // 401-Antworten Snackbar-Spam, ohne dass der Anwender etwas davon
+    // hat - und (vor dem Interceptor-Fix) trieben sie die App in eine
+    // Logout-Reload-Loop.
+    if (this.auth.loggedIn()) {
+      void this.bannerService.refresh();
+    }
     interval(60_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => void this.bannerService.refresh());
+      .subscribe(() => {
+        if (this.auth.loggedIn()) {
+          void this.bannerService.refresh();
+        }
+      });
   }
 
   async login(): Promise<void> {
