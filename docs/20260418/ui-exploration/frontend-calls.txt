@@ -1,0 +1,44 @@
+
+===== HTTP-Aufrufe (api.{get,post,put,delete,patch}) =====
+METHOD   URL                                                          SOURCE:LINE
+--------------------------------------------------------------------------------------------------------------
+GET      /api/v1/alerts/banner                                        cvm-frontend/src/app/core/alerts/alert-banner.service.ts:26
+GET      /api/v1/alerts/history?limit=${limit}                        cvm-frontend/src/app/core/alerts/alerts-history.service.ts:23
+GET      /api/v1/anomalies/count                                      cvm-frontend/src/app/core/anomaly/anomaly.service.ts:29
+GET      /api/v1/anomalies?hours=${hours}                             cvm-frontend/src/app/core/anomaly/anomaly.service.ts:24
+GET      /api/v1/cves?${query.toString()}                             cvm-frontend/src/app/core/cves/cves.service.ts:59
+GET      /api/v1/environments                                         cvm-frontend/src/app/core/environments/environments.service.ts:27
+GET      /api/v1/llm-model-profiles                                   cvm-frontend/src/app/core/modelprofile/model-profile.service.ts:56
+GET      /api/v1/products                                             cvm-frontend/src/app/core/products/products.service.ts:37
+GET      /api/v1/rules                                                cvm-frontend/src/app/core/rules/rules.service.ts:53
+GET      /api/v1/scans/${scanId}                                      cvm-frontend/src/app/core/scans/scans.service.ts:61
+GET      /api/v1/theme                                                cvm-frontend/src/app/core/theme/branding.service.ts:43
+GET      /api/v1/waivers${suffix}                                     cvm-frontend/src/app/core/waivers/waivers.service.ts:26
+GET      ?                                                            cvm-frontend/src/app/core/aiaudit/ai-audit.service.ts:69
+POST     /api/v1/products                                             cvm-frontend/src/app/core/products/products.service.ts:50
+POST     /api/v1/rules                                                cvm-frontend/src/app/core/rules/rules.service.ts:64
+POST     ?                                                            cvm-frontend/src/app/core/environments/environments.service.ts:32
+
+===== Angular-Routen (app.routes.ts) =====
+PATH                                COMPONENT
+-------------------------------------------------------------------------------------
+admin/environments                  AdminEnvironmentsComponent
+admin/products                      AdminProductsComponent
+admin/theme                         AdminThemeComponent
+ai-audit                            AiAuditComponent
+alerts/history                      AlertsHistoryComponent
+anomaly                             AnomalyComponent
+components                          ComponentsComponent
+cves                                CvesComponent
+dashboard                           DashboardComponent
+fix-verification                    FixVerificationComponent
+login-callback                      LoginCallbackComponent
+profiles                            ProfilesComponent
+queue                               QueueComponent
+reachability                        ReachabilityComponent
+reports                             ReportsComponent
+rules                               RulesComponent
+scans/upload                        ScanUploadComponent
+settings                            SettingsComponent
+tenant-kpi                          TenantKpiComponent
+waivers                             WaiversComponent
