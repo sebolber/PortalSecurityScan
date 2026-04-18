@@ -1,0 +1,134 @@
+<div class="cvm-settings-page">
+  <h1 class="cvm-settings-title">Einstellungen</h1>
+
+  <mat-card class="cvm-settings-card">
+    <mat-card-header>
+      <mat-card-title>Benutzer-Preferences</mat-card-title>
+      <mat-card-subtitle>Gelten nur fuer diesen Browser</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content class="cvm-settings-content">
+      <div class="cvm-settings-row">
+        <label class="cvm-settings-label">Farbschema</label>
+        <mat-slide-toggle
+          [checked]="themeMode() === 'dark'"
+          (change)="setTheme($event.checked)"
+        >
+          <ng-container *ngIf="themeMode() === 'dark'; else lightLabel">Dark-Mode</ng-container>
+          <ng-template #lightLabel>Light-Mode</ng-template>
+        </mat-slide-toggle>
+      </div>
+
+      <div class="cvm-settings-row">
+        <mat-form-field appearance="outline" class="cvm-settings-field">
+          <mat-label>Sprache</mat-label>
+          <mat-select
+            [value]="aktuellesLocale()"
+            (selectionChange)="setLocale($event.value)"
+          >
+            @for (l of locales; track l.value) {
+              <mat-option [value]="l.value">{{ l.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="cvm-settings-row">
+        <mat-form-field appearance="outline" class="cvm-settings-field">
+          <mat-label>Standard-Produkt</mat-label>
+          <mat-select
+            [(ngModel)]="defaultProduct"
+            (selectionChange)="setDefaultProduct($event.value)"
+          >
+            @for (p of products; track p.key) {
+              <mat-option [value]="p.key">{{ p.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  @if (isAdmin()) {
+    <mat-card class="cvm-settings-card">
+      <mat-card-header>
+        <mat-card-title>Administration</mat-card-title>
+        <mat-card-subtitle>
+          Modell-Profil-Wechsel pro Umgebung (Vier-Augen-Prinzip).
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content class="cvm-settings-content">
+        @if (loadingAdmin()) {
+          <p class="cvm-settings-muted">Daten werden geladen...</p>
+        } @else if (adminError()) {
+          <p class="cvm-settings-error">{{ adminError() }}</p>
+          <button mat-stroked-button (click)="ladeAdminDaten()">
+            <mat-icon>refresh</mat-icon>
+            Erneut laden
+          </button>
+        } @else if (environments().length === 0) {
+          <p class="cvm-settings-muted">Noch keine Umgebungen angelegt.</p>
+        } @else {
+          @for (env of environments(); track env.id) {
+            <div class="cvm-env-card">
+              <div class="cvm-env-head">
+                <h3>{{ env.key }} <span class="cvm-env-sub">({{ env.stage }})</span></h3>
+                <p class="cvm-settings-muted">{{ env.name }} &middot; Mandant: {{ env.tenant || 'default' }}</p>
+                <p class="cvm-settings-small">
+                  Aktuelles Profil:
+                  <strong>{{ profileKey(env.llmModelProfileId) }}</strong>
+                </p>
+              </div>
+
+              @if (switchForms()[env.id]; as form) {
+                <div class="cvm-env-form">
+                  <mat-form-field appearance="outline" class="cvm-settings-field">
+                    <mat-label>Neues Modellprofil</mat-label>
+                    <mat-select
+                      [ngModel]="form.newProfileId"
+                      (ngModelChange)="updateForm(env.id, { newProfileId: $event })"
+                    >
+                      @for (p of profiles(); track p.id) {
+                        <mat-option [value]="p.id">
+                          {{ p.profileKey }} ({{ p.provider }}, {{ p.modelId }})
+                        </mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="cvm-settings-field">
+                    <mat-label>Vier-Augen-Freigeber (Mail)</mat-label>
+                    <input
+                      matInput
+                      [ngModel]="form.fourEyesConfirmer"
+                      (ngModelChange)="updateForm(env.id, { fourEyesConfirmer: $event })"
+                      placeholder="j.meyer@ahs.test"
+                    >
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="cvm-settings-field cvm-settings-field-wide">
+                    <mat-label>Begruendung</mat-label>
+                    <input
+                      matInput
+                      [ngModel]="form.reason"
+                      (ngModelChange)="updateForm(env.id, { reason: $event })"
+                      placeholder="z.B. Budgetanpassung"
+                    >
+                  </mat-form-field>
+
+                  <button
+                    mat-raised-button color="primary"
+                    [disabled]="form.pending"
+                    (click)="wechsleProfil(env.id)"
+                  >
+                    <mat-icon>swap_horiz</mat-icon>
+                    {{ form.pending ? 'Wird gewechselt...' : 'Profil wechseln' }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        }
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

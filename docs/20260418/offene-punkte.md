@@ -1,9 +1,20 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 24 am 2026-04-18 hat die Angular-Shell an den neuen
-> Realm angepasst, einen Light-/Dark-Theme-Toggle verdrahtet und
-> rollenbasierte Navigation/Guards ergaenzt.  Details:
-> `docs/20260418/iteration-24-fortschritt.md`.
+> Iteration 26 am 2026-04-18 hat das CVE- und Komponenten-Inventar
+> mit eigenen Backend-Read-Endpunkten und Angular-Seiten
+> umgesetzt (`/api/v1/cves`, `/api/v1/products`).  Details:
+> `docs/20260418/iteration-26-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 26 - offen
+
+- **CVE-Detailseite** mit verknuepften Findings und Assessments.
+- **Criteria-basiertes Server-Paging** fuer CVE-Listen
+  (Stream-Filter reicht bis wenige tausend CVEs).
+- **Produkt-/Versions-Verwaltung** (Create/Update, aktuell nur
+  Read - Anlage via SBOM-Import).
+- **Rules-Editor im Frontend** (Create/Update Rule).
+- **Profil-YAML-Editor** im Frontend (Monaco + Diff-Viewer).
+- **Tenant-Verwaltungs-UI** (Liste/Create/Deaktivieren).
 
 ## Stand 2026-04-18 nach Iteration 24 - offen
 

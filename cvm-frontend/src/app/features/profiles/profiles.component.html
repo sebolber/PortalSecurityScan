@@ -1,0 +1,57 @@
+<div class="cvm-profiles-page">
+  <div class="cvm-profiles-head">
+    <h1 class="cvm-profiles-title">Kontextprofile</h1>
+    <button mat-stroked-button (click)="laden()" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>
+      Neu laden
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="cvm-profiles-muted">Daten werden geladen...</p>
+  }
+  @if (error()) {
+    <p class="cvm-profiles-error">{{ error() }}</p>
+  }
+  @if (!loading() && !error() && rows().length === 0) {
+    <p class="cvm-profiles-muted">Noch keine Umgebungen angelegt.</p>
+  }
+
+  <mat-accordion multi>
+    @for (row of rows(); track row.env.id) {
+      <mat-expansion-panel class="cvm-profile-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            <span class="cvm-env-name">{{ row.env.key }}</span>
+            <span class="cvm-env-stage">({{ row.env.stage }})</span>
+          </mat-panel-title>
+          <mat-panel-description>
+            @if (row.profile) {
+              <span class="cvm-profile-ver">Version {{ row.profile.versionNumber }} &middot; {{ row.profile.state }}</span>
+            } @else {
+              <span class="cvm-profile-muted">Kein aktives Profil</span>
+            }
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        @if (row.profile) {
+          <div class="cvm-profile-meta">
+            @if (row.profile.approvedBy) {
+              <span><strong>Freigabe:</strong> {{ row.profile.approvedBy }} am {{ row.profile.approvedAt | date:'yyyy-MM-dd HH:mm' }}</span>
+            }
+            @if (row.profile.proposedBy) {
+              <span><strong>Antrag:</strong> {{ row.profile.proposedBy }}</span>
+            }
+          </div>
+          <h4 class="cvm-profile-sub">YAML-Quelle</h4>
+          <pre class="cvm-profile-yaml">{{ row.profile.yamlSource }}</pre>
+        } @else {
+          <p class="cvm-profile-muted">
+            Fuer diese Umgebung wurde noch kein Profil angelegt.
+            Profile-Author kann ueber <code>PUT /api/v1/environments/{{ row.env.id }}/profile</code> einen Draft einstellen.
+          </p>
+        }
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+</div>

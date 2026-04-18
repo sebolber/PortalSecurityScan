@@ -94,6 +94,13 @@ export const APP_ROUTES: Routes = [
         loadComponent: () =>
           import('./features/ai-audit/ai-audit.component')
             .then((m) => m.AiAuditComponent)
+      },
+      {
+        path: 'settings',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/settings/settings.component')
+            .then((m) => m.SettingsComponent)
       }
     ]
   },

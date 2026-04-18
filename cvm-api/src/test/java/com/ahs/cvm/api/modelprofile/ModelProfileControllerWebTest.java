@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.ahs.cvm.application.modelprofile.ModelProfileQueryService;
 import com.ahs.cvm.application.modelprofile.ModelProfileService;
 import com.ahs.cvm.application.modelprofile.ModelProfileService.ModelProfileChangeView;
 import com.ahs.cvm.application.modelprofile.ModelProfileService.VierAugenViolationException;
@@ -36,6 +37,9 @@ class ModelProfileControllerWebTest {
 
     @Autowired MockMvc mockMvc;
     @MockBean ModelProfileService service;
+    // Seit Iteration 25 lebt ein zweiter Controller im gleichen Package;
+    // sein Read-Service muss gemockt werden, damit der Kontext aufgeht.
+    @MockBean ModelProfileQueryService queryService;
 
     private ModelProfileChangeView view() {
         return new ModelProfileChangeView(
