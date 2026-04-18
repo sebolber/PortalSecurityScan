@@ -124,6 +124,20 @@
       [trackBy]="trackId"
       class="cvm-admin-envs__table"
     >
+      <!--
+        UUID-Spalte: Skripte brauchen die Umgebungs-UUID als
+        --environment-id. Chip kopiert die volle UUID per Klick.
+      -->
+      <ng-container matColumnDef="uuid">
+        <th mat-header-cell *matHeaderCellDef>
+          Umgebungs-ID
+          <span class="cvm-admin-uuid-hint">(fuer SBOM-Upload)</span>
+        </th>
+        <td mat-cell *matCellDef="let env">
+          <cvm-uuid-chip [value]="env.id"></cvm-uuid-chip>
+        </td>
+      </ng-container>
+
       <ng-container matColumnDef="key">
         <th mat-header-cell *matHeaderCellDef>Key</th>
         <td mat-cell *matCellDef="let env" class="text-code">

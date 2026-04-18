@@ -15,6 +15,7 @@ import {
   ProductView,
   ProductsService
 } from '../../core/products/products.service';
+import { UuidChipComponent } from '../../shared/components/uuid-chip.component';
 
 interface ProductCreateForm {
   key: string;
@@ -44,7 +45,8 @@ interface VersionCreateForm {
     MatFormFieldModule,
     MatIconModule,
     MatInputModule,
-    MatTableModule
+    MatTableModule,
+    UuidChipComponent
   ],
   templateUrl: './admin-products.component.html',
   styleUrls: ['./admin-products.component.scss']
@@ -73,8 +75,8 @@ export class AdminProductsComponent implements OnInit {
   });
   readonly versionPending = signal<boolean>(false);
 
-  readonly produktSpalten = ['key', 'name', 'description', 'aktion'];
-  readonly versionSpalten = ['version', 'gitCommit', 'releasedAt'];
+  readonly produktSpalten = ['uuid', 'key', 'name', 'description', 'aktion'];
+  readonly versionSpalten = ['uuid', 'version', 'gitCommit', 'releasedAt'];
 
   async ngOnInit(): Promise<void> {
     await this.ladeProdukte();

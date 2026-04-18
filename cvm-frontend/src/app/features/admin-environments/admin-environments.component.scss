@@ -62,3 +62,13 @@
   background: var(--color-primary-muted);
   color: var(--color-primary);
 }
+
+.cvm-admin-uuid-hint {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  text-transform: none;
+}
+

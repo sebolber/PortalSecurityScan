@@ -16,6 +16,7 @@ import {
 } from '../../core/environments/environments.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { UuidChipComponent } from '../../shared/components/uuid-chip.component';
 
 const STAGES = ['DEV', 'TEST', 'REF', 'ABN', 'PROD'] as const;
 
@@ -51,7 +52,8 @@ function initialForm(): EnvFormState {
     MatSelectModule,
     MatTableModule,
     AhsBannerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    UuidChipComponent
   ],
   templateUrl: './admin-environments.component.html',
   styleUrls: ['./admin-environments.component.scss']
@@ -61,7 +63,7 @@ export class AdminEnvironmentsComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly stages = STAGES;
-  readonly columns = ['key', 'name', 'stage', 'tenant'] as const;
+  readonly columns = ['uuid', 'key', 'name', 'stage', 'tenant'] as const;
 
   readonly loading = signal(false);
   readonly saving = signal(false);
