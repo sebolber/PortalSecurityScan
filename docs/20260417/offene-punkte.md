@@ -1,5 +1,24 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 11
+- **Resilience4j** um `ClaudeApiClient` und `OllamaClient` fehlt noch
+  (Retry, Circuit-Breaker, Timeout-Feintuning). Sollte nachgezogen
+  werden, sobald das Feature-Flag in einer Umgebung real auf
+  `true` steht.
+- **Rolle `AI_AUDITOR`** + Lese-Endpunkt fuer `ai_call_audit` sind
+  nicht implementiert. RLS/Query-Filter folgt mit der Security-
+  Iteration.
+- **`modelVersion`** wird aktuell nicht vom Adapter ausgelesen (die
+  Anthropic-API liefert sie nicht explizit). Audit-Spalte bleibt
+  `null`.
+- **Postgres-Trigger fuer Audit-Immutability**: Aktuell nur
+  JPA-Listener. Fuer harte DB-seitige Sperre braucht es einen Trigger.
+- **Persistenz-Integrationstest fuer V0013** (ai_call_audit-Tabelle)
+  bleibt Docker-skipped bis CI Postgres anbietet.
+- **Prompt-Template-Versionsverwaltung**: Aktuell liegt die Version
+  im Template-Quelltext. Ein Review-/Freigabe-Workflow analog zu
+  Kontextprofil fehlt.
+
 ## Stand 2026-04-18 nach Iteration 10
 - **Query-Effizienz**: `HardeningReportDataLoader` faellt fuer die
   Liste aller aktiven Assessments einer (ProduktVersion, Umgebung)

@@ -12,7 +12,10 @@
 
     <artifactId>cvm-ai-services</artifactId>
     <name>cvm-ai-services</name>
-    <description>KI-Anwendungsfaelle. Implementierung ab Iteration 13.</description>
+    <description>
+        KI-Anwendungsfaelle. Ab Iteration 11 enthaelt das Modul auch den
+        JPA-Adapter fuer den Audit-Port des LLM-Gateways.
+    </description>
 
     <dependencies>
         <dependency>
@@ -31,6 +34,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
