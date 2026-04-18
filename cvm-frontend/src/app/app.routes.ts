@@ -119,6 +119,14 @@ export const APP_ROUTES: Routes = [
             .then((m) => m.AdminProductsComponent)
       },
       {
+        path: 'admin/environments',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/admin-environments/admin-environments.component')
+            .then((m) => m.AdminEnvironmentsComponent)
+      },
+      {
         path: 'scans/upload',
         canActivate: [authGuard],
         data: {

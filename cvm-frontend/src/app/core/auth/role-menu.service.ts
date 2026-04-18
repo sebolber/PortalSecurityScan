@@ -196,6 +196,13 @@ const MENU: readonly MenuEntry[] = [
     requiredRoles: [CVM_ROLES.ADMIN]
   },
   {
+    id: 'admin-environments',
+    label: 'Umgebungen',
+    path: '/admin/environments',
+    icon: 'layers',
+    requiredRoles: [CVM_ROLES.ADMIN]
+  },
+  {
     id: 'scan-upload',
     label: 'Scan hochladen',
     path: '/scans/upload',

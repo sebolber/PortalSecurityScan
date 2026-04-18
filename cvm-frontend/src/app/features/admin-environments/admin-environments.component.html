@@ -1,0 +1,155 @@
+<section class="cvm-admin-envs">
+  <header class="cvm-admin-envs__header">
+    <div>
+      <h1 class="text-title-lg">Umgebungen</h1>
+      <p class="text-body">
+        Umgebungen definieren die Stages (DEV, TEST, REF, ABN, PROD)
+        und tragen den Tenant-Scope. Pro Umgebung gibt es ein aktives
+        Kontextprofil unter <code>/profiles</code>.
+      </p>
+    </div>
+    <div class="cvm-admin-envs__actions">
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="formularUmschalten()"
+      >
+        <mat-icon>{{ formOpen() ? 'close' : 'add' }}</mat-icon>
+        {{ formOpen() ? 'Formular schliessen' : 'Neue Umgebung' }}
+      </button>
+      <button
+        type="button"
+        mat-stroked-button
+        (click)="laden()"
+        [disabled]="loading()"
+      >
+        <mat-icon>refresh</mat-icon>
+        Neu laden
+      </button>
+    </div>
+  </header>
+
+  @if (formOpen()) {
+    <mat-card class="cvm-admin-envs__form-card">
+      <mat-card-header>
+        <mat-card-title>Neue Umgebung anlegen</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (saveError()) {
+          <ahs-banner kind="critical" title="Fehler">
+            {{ saveError() }}
+          </ahs-banner>
+        }
+        <form (submit)="$event.preventDefault(); anlegen()">
+          <div class="cvm-admin-envs__form-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Key</mat-label>
+              <input
+                matInput
+                [ngModel]="form().key"
+                name="key"
+                (ngModelChange)="update('key', $event)"
+                required
+              />
+              <mat-hint>z.B. CI, REF-TEST, PROD-BKK-NORD</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Name</mat-label>
+              <input
+                matInput
+                [ngModel]="form().name"
+                name="name"
+                (ngModelChange)="update('name', $event)"
+                required
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Stage</mat-label>
+              <mat-select
+                [ngModel]="form().stage"
+                name="stage"
+                (ngModelChange)="update('stage', $event)"
+              >
+                @for (s of stages; track s) {
+                  <mat-option [value]="s">{{ s }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Tenant (optional)</mat-label>
+              <input
+                matInput
+                [ngModel]="form().tenant"
+                name="tenant"
+                (ngModelChange)="update('tenant', $event)"
+              />
+            </mat-form-field>
+          </div>
+
+          <div class="cvm-admin-envs__form-actions">
+            <button
+              type="submit"
+              mat-flat-button
+              color="primary"
+              [disabled]="saving()"
+            >
+              @if (saving()) {
+                Speichere...
+              } @else {
+                Anlegen
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+
+  @if (loading()) {
+    <mat-spinner diameter="36"></mat-spinner>
+  } @else if (rows().length === 0) {
+    <ahs-empty-state
+      icon="layers"
+      title="Keine Umgebungen"
+      hint="Lege die erste Umgebung an (z.B. CI, stage DEV)."
+    ></ahs-empty-state>
+  } @else {
+    <table
+      mat-table
+      [dataSource]="rows()"
+      [trackBy]="trackId"
+      class="cvm-admin-envs__table"
+    >
+      <ng-container matColumnDef="key">
+        <th mat-header-cell *matHeaderCellDef>Key</th>
+        <td mat-cell *matCellDef="let env" class="text-code">
+          {{ env.key }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let env">{{ env.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="stage">
+        <th mat-header-cell *matHeaderCellDef>Stage</th>
+        <td mat-cell *matCellDef="let env">
+          <span class="cvm-admin-envs__stage">{{ env.stage }}</span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="tenant">
+        <th mat-header-cell *matHeaderCellDef>Tenant</th>
+        <td mat-cell *matCellDef="let env">{{ env.tenant || '–' }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+</section>
