@@ -13,10 +13,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cascade-Stufen in der Reihenfolge aus Konzept v0.2 Abschnitt 4.3:
- * REUSE &rarr; RULE &rarr; (AI-Platzhalter) &rarr; MANUAL.
+ * REUSE &rarr; RULE &rarr; AI &rarr; MANUAL.
  *
- * <p>Der Service schreibt <em>nichts</em> &mdash; er liefert nur den
- * Outcome. Die Persistenz-Anbindung folgt in Iteration 06.
+ * <p>Stufe&nbsp;3 (AI) wird ueber den optionalen
+ * {@link AiAssessmentSuggesterPort} angesprochen. Ist keine Bean
+ * registriert (Default in Tests / im Stand vor Iteration 13), bleibt
+ * der Service auf MANUAL. So bleibt die Modulgrenze
+ * {@code application -&gt; domain, persistence} (CLAUDE.md
+ * Abschnitt 3) gewahrt.
  */
 @Service
 public class CascadeService {
@@ -25,10 +29,15 @@ public class CascadeService {
 
     private final AssessmentLookupService lookupService;
     private final RuleEngine ruleEngine;
+    private final Optional<AiAssessmentSuggesterPort> aiSuggester;
 
-    public CascadeService(AssessmentLookupService lookupService, RuleEngine ruleEngine) {
+    public CascadeService(
+            AssessmentLookupService lookupService,
+            RuleEngine ruleEngine,
+            Optional<AiAssessmentSuggesterPort> aiSuggester) {
         this.lookupService = lookupService;
         this.ruleEngine = ruleEngine;
+        this.aiSuggester = aiSuggester;
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +60,20 @@ public class CascadeService {
             return CascadeOutcome.rule(r.ruleId(), r.severity(), r.rationale(), r.sourceFields());
         }
 
-        // Stufe 3: AI (Platzhalter, Iteration 13)
+        // Stufe 3: AI (optional, Iteration 13)
+        if (aiSuggester.isPresent()) {
+            try {
+                Optional<CascadeOutcome> ai = aiSuggester.get().suggest(input);
+                if (ai.isPresent()) {
+                    log.debug("Cascade: AI-Vorschlag fuer CVE {}", input.cveId());
+                    return ai.get();
+                }
+            } catch (RuntimeException ex) {
+                log.warn("Cascade-AI-Stufe fehlgeschlagen, faellt auf MANUAL: {}",
+                        ex.getMessage());
+            }
+        }
+
         // Stufe 4: MANUAL
         return CascadeOutcome.manual();
     }

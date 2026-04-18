@@ -255,6 +255,7 @@ public class HardeningReportDataLoader {
             case REJECTED -> "abgelehnt";
             case EXPIRED -> "abgelaufen - Re-Bewertung noetig";
             case NEEDS_REVIEW -> "wartet auf Re-Review";
+            case NEEDS_VERIFICATION -> "wartet auf Verifikation (KI-Halluzinations-Check)";
             case PROPOSED -> "offen";
             case SUPERSEDED -> "ueberholt";
         };

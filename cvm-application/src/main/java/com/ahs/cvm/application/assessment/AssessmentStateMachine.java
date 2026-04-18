@@ -40,6 +40,13 @@ public class AssessmentStateMachine {
         map.put(
                 AssessmentStatus.NEEDS_REVIEW,
                 EnumSet.of(AssessmentStatus.PROPOSED, AssessmentStatus.SUPERSEDED));
+        map.put(
+                AssessmentStatus.NEEDS_VERIFICATION,
+                EnumSet.of(
+                        AssessmentStatus.APPROVED,
+                        AssessmentStatus.REJECTED,
+                        AssessmentStatus.PROPOSED,
+                        AssessmentStatus.SUPERSEDED));
         map.put(AssessmentStatus.REJECTED, EnumSet.noneOf(AssessmentStatus.class));
         map.put(AssessmentStatus.SUPERSEDED, EnumSet.noneOf(AssessmentStatus.class));
         map.put(AssessmentStatus.EXPIRED, EnumSet.noneOf(AssessmentStatus.class));

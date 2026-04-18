@@ -80,7 +80,9 @@ public class FindingsCreatedListener {
                         outcome.rationale(),
                         outcome.sourceFields(),
                         outcome.ruleId(),
-                        outcome.reusedAssessmentId()));
+                        outcome.reusedAssessmentId(),
+                        outcome.aiSuggestionId(),
+                        outcome.targetStatus()));
             } catch (RuntimeException ex) {
                 log.warn("Cascade fuer Finding {} fehlgeschlagen: {}",
                         f.getId(), ex.getMessage());

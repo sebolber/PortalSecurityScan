@@ -1,5 +1,22 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 13
+- **Audit-Id-Rueckgabe vom AiCallAuditService**: aktuell liefert
+  `execute(...)` nur den `LlmResponse`. Der Orchestrator findet die
+  Audit-Id ueber Repository-Lookup (letzter OK-Eintrag mit
+  useCase=AUTO_ASSESSMENT). Sauberer waere ein
+  `AuditedLlmResponse(response, auditId)`.
+- **Batch-/Bucket-Verarbeitung pro Scan**: aktuell sequenziell. Konzept-
+  Vorgabe (10 parallel + Bucket4j) bleibt offen bis Performance-
+  Iteration.
+- **Halluzinations-Check**: nur `proposedFixVersion` geprueft. URL-,
+  CWE- und Sources-Konsistenz koennte folgen.
+- **Mandanten-Filter im RAG-Lookup**: aktuell ohne Filter; hier
+  ergaenzen, sobald Mandanten-Schluessel im Embedding stehen.
+- **`AssessmentApprovedRagListener`** indiziert nur APPROVED-Eintraege
+  - die KI-Vorschlaege selbst werden noch nicht indiziert. Sobald
+  Iteration 14 (Delta-Summary) kommt, sollte das aufgenommen werden.
+
 ## Stand 2026-04-18 nach Iteration 12
 - **Embedding-Calls ohne Audit**: `IndexingService` ruft den
   `EmbeddingClient` derzeit direkt; wenn der Embedding-Pfad

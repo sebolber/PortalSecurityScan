@@ -92,7 +92,8 @@ public class AssessmentWriteService {
                 .severity(cmd.severity())
                 .proposalSource(cmd.source())
                 .rationale(cmd.rationale())
-                .rationaleSourceFields(cmd.sourceFields());
+                .rationaleSourceFields(cmd.sourceFields())
+                .aiSuggestionId(cmd.aiSuggestionId());
 
         if (cmd.source() == ProposalSource.REUSE) {
             Instant now = Instant.now();
@@ -100,6 +101,8 @@ public class AssessmentWriteService {
                     .decidedBy("system:reuse")
                     .decidedAt(now)
                     .validUntil(standardValidUntil(now));
+        } else if (cmd.targetStatus() != null) {
+            builder.status(cmd.targetStatus());
         } else {
             builder.status(AssessmentStatus.PROPOSED);
         }
@@ -190,7 +193,8 @@ public class AssessmentWriteService {
                 .orElseThrow(() -> new AssessmentNotFoundException(assessmentId));
 
         if (bestehend.getStatus() != AssessmentStatus.PROPOSED
-                && bestehend.getStatus() != AssessmentStatus.NEEDS_REVIEW) {
+                && bestehend.getStatus() != AssessmentStatus.NEEDS_REVIEW
+                && bestehend.getStatus() != AssessmentStatus.NEEDS_VERIFICATION) {
             throw new InvalidAssessmentTransitionException(
                     bestehend.getStatus(), AssessmentStatus.APPROVED);
         }
@@ -261,7 +265,8 @@ public class AssessmentWriteService {
         Assessment bestehend = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new AssessmentNotFoundException(assessmentId));
         if (bestehend.getStatus() != AssessmentStatus.PROPOSED
-                && bestehend.getStatus() != AssessmentStatus.NEEDS_REVIEW) {
+                && bestehend.getStatus() != AssessmentStatus.NEEDS_REVIEW
+                && bestehend.getStatus() != AssessmentStatus.NEEDS_VERIFICATION) {
             throw new InvalidAssessmentTransitionException(
                     bestehend.getStatus(), AssessmentStatus.REJECTED);
         }
@@ -381,7 +386,31 @@ public class AssessmentWriteService {
             String rationale,
             List<String> sourceFields,
             UUID ruleId,
-            UUID reusedAssessmentId) {}
+            UUID reusedAssessmentId,
+            UUID aiSuggestionId,
+            AssessmentStatus targetStatus) {
+
+        /**
+         * Backwards-kompatibler Konstruktor fuer Iterationen 06-12,
+         * die den AI-Pfad noch nicht kannten. Setzt {@code aiSuggestionId}
+         * und {@code targetStatus} auf {@code null}.
+         */
+        public ProposeCommand(
+                UUID findingId,
+                UUID cveId,
+                UUID productVersionId,
+                UUID environmentId,
+                ProposalSource source,
+                AhsSeverity severity,
+                String rationale,
+                List<String> sourceFields,
+                UUID ruleId,
+                UUID reusedAssessmentId) {
+            this(findingId, cveId, productVersionId, environmentId, source,
+                    severity, rationale, sourceFields, ruleId,
+                    reusedAssessmentId, null, null);
+        }
+    }
 
     /** Manueller Vorschlag ueber REST. */
     public record ManualProposeCommand(

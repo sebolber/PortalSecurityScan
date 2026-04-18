@@ -35,7 +35,7 @@ class CascadeServiceTest {
     void setUp() {
         lookupService = mock(AssessmentLookupService.class);
         ruleEngine = mock(RuleEngine.class);
-        cascadeService = new CascadeService(lookupService, ruleEngine);
+        cascadeService = new CascadeService(lookupService, ruleEngine, java.util.Optional.empty());
     }
 
     @Test
