@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -51,9 +52,16 @@ public class ComponentCveMatchingOnScanIngestedListener {
         this.lookup = lookup;
     }
 
+    /**
+     * Spring verlangt {@code REQUIRES_NEW} (oder {@code NOT_SUPPORTED})
+     * auf einer @TransactionalEventListener-Methode mit @Transactional:
+     * Der Listener feuert nach dem Commit der Ur-Transaktion, eine
+     * Default-Propagation wuerde eine bereits geschlossene Transaktion
+     * wiederaufnehmen wollen und den Context-Start verhindern.
+     */
     @Async("sbom-ingest")
     @TransactionalEventListener
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onScanIngested(ScanIngestedEvent event) {
         if (!lookup.isEnabled()) {
             return;

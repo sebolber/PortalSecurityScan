@@ -47,6 +47,33 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
     }
 
     @Test
+    @DisplayName(
+        "Reflection-Guard: onScanIngested hat "
+            + "@TransactionalEventListener + @Transactional(REQUIRES_NEW)")
+    void annotationPropagationWieVonSpringVerlangt() throws Exception {
+        java.lang.reflect.Method m = ComponentCveMatchingOnScanIngestedListener
+                .class
+                .getMethod("onScanIngested", ScanIngestedEvent.class);
+
+        assertThat(m.isAnnotationPresent(
+                org.springframework.transaction.event.TransactionalEventListener.class))
+                .as("@TransactionalEventListener muss vorhanden sein")
+                .isTrue();
+
+        org.springframework.transaction.annotation.Transactional tx = m
+                .getAnnotation(org.springframework.transaction.annotation.Transactional.class);
+        assertThat(tx).as("@Transactional muss vorhanden sein").isNotNull();
+        // Sonst: Spring lehnt den Context-Start ab mit
+        // "must not be annotated with @Transactional unless declared
+        //  as REQUIRES_NEW or NOT_SUPPORTED".
+        assertThat(tx.propagation())
+                .as("Propagation muss REQUIRES_NEW oder NOT_SUPPORTED sein")
+                .isIn(
+                        org.springframework.transaction.annotation.Propagation.REQUIRES_NEW,
+                        org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED);
+    }
+
+    @Test
     @DisplayName("Listener skippt alles, wenn OSV-Lookup deaktiviert ist")
     void skipWennDeaktiviert() {
         given(lookup.isEnabled()).willReturn(false);
