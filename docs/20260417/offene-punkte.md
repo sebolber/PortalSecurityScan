@@ -1,5 +1,18 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 17
+- **RAG-Embedding-Clustering** statt rein Feature-basierter
+  Cluster-Keys. Nutzt die Retrieval-Pipeline aus Iteration 12.
+- **Rule-Id am Assessment**: Fuer praezise Override-Tracker-Logik
+  muss das Assessment wissen, welche Rule es erzeugt hat. Aktuell
+  Approximation ueber SUPERSEDED-RULE-Vorgaenger.
+- **Override-Tracker als @Scheduled**: aktuell nur `evaluate()`.
+  Cron-Hook folgt, sobald Heuristik stabil ist.
+- **Testcontainers-Integrationstest**: 180 synthetische Assessments
+  -&gt; Nightly-Lauf -&gt; Vorschlag in Queue.
+- **UI-Tab "Vorschlaege"** im Admin-Bereich (Regeln-Editor aus
+  Iteration 05 erweitert).
+
 ## Stand 2026-04-18 nach Iteration 16
 - **Watchdog-Mapping `cveKey -> repoUrl`**: aktuell Map aus
   Admin-/Test-Input. Fuer automatischen Tageslauf braucht es einen

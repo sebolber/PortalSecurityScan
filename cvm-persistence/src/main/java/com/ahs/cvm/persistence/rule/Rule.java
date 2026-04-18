@@ -79,6 +79,9 @@ public class Rule {
     @Column(name = "retired_at")
     private Instant retiredAt;
 
+    @Column(name = "extracted_from_ai_suggestion_id")
+    private UUID extractedFromAiSuggestionId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
