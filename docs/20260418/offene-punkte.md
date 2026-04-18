@@ -1,9 +1,32 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 26 am 2026-04-18 hat das CVE- und Komponenten-Inventar
-> mit eigenen Backend-Read-Endpunkten und Angular-Seiten
-> umgesetzt (`/api/v1/cves`, `/api/v1/products`).  Details:
-> `docs/20260418/iteration-26-fortschritt.md`.
+> Iteration 27 am 2026-04-18 hat den Token-Layer, die Branding-API
+> (`/api/v1/theme`, `/api/v1/admin/theme`) und die Theme-Admin-UI
+> (`/admin/theme`) ausgeliefert. Details:
+> `docs/20260418/iteration-27-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 27 - offen
+
+- **Feature-Bereichs-Migration** auf `Ahs*`-Komponenten
+  (Queue, Dashboard, CVEs, Komponenten, Profile, Rules, Reports,
+  KI-Audit, Settings) - geplant als Iteration 27b.
+- **Asset-Upload-Endpunkt** `POST /api/v1/admin/theme/assets`
+  (Multipart, SVG-Sanitizer bereits vorhanden, Font-Upload mit
+  woff2-Whitelist).
+- **Stylelint-Guard**: harter CI-Check gegen hex-Farben und
+  `font-family:` in Komponenten-SCSS - erst nach 27b aktivieren,
+  sonst waere die Pipeline sofort rot.
+- **FontAwesome-Thin**-Umstellung (Styleguide S. 34, Lizenz offen).
+- **Mandanten-Platzhalter** (Waiver, Alert-Historie,
+  Reachability, Fix-Verifikation, Anomalie-Board,
+  Cross-Tenant-Dashboard) mit `<cvm-page-placeholder>` anbinden.
+- **Severity-Farbentscheidung** formell dokumentieren
+  (`docs/konzept/severity-farbentscheidung.md`).
+- **FullNavigationWalkThroughTest + axe-core** in Playwright
+  (Sandbox ohne Chromium).
+- **branding_config_history**-Tabelle fuer One-Click-Rollback.
+
+## Stand 2026-04-18 nach Iteration 26 - offen
 
 ## Stand 2026-04-18 nach Iteration 26 - offen
 
