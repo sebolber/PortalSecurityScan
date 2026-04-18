@@ -1,5 +1,20 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 15
+- **JGit-Adapter** + Cache pro Commit + SSH-Key aus Vault. Aktuell
+  liefert `NoopGitCheckoutAdapter` nur ein Tmp-Verzeichnis.
+- **UI-Trigger fuer Reachability**: Button in Queue-Detail mit
+  Rate-Limit pro Bewerter.
+- **Network-Sandboxing fuer Subprocess**: Konzept verlangt
+  Network-Namespace/Seccomp; Implementierung lebt auf Deployment-
+  Ebene (OpenShift `NetworkPolicy`). Dokumentation in
+  `docs/konzept/llm-gateway-invarianten.md` ergaenzen, sobald
+  Vault-Adapter da ist.
+- **Auto-Trigger der Reachability** wenn AI-Vorschlag-Confidence
+  unter Schwelle.
+- **JGit-Cache-Wartung**: alte Working-Copies aufraeumen, sobald
+  echte Checkouts laufen.
+
 ## Stand 2026-04-18 nach Iteration 14
 - **Auto-Trigger der DeltaSummary**: Listener auf
   `ScanIngestedEvent` (rufe `summarize(...)` automatisch nach
