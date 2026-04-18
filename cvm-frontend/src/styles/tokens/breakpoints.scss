@@ -1,0 +1,13 @@
+// Iteration 27 (CVM-61): Breakpoint-Tokens.
+//
+// Carbon v11 Breakpoints (sm 320 / md 672 / lg 1056 / xl 1312 /
+// max 1584 px), an CVM-Raster leicht angepasst: wir verwenden
+// 640 / 960 / 1280 / 1600 fuer das bestehende CSS-Grid, das ist
+// mobilfreundlich und in Mehrzweck-Utility-Klassen etabliert.
+
+:root {
+  --bp-sm: 640px;
+  --bp-md: 960px;
+  --bp-lg: 1280px;
+  --bp-xl: 1600px;
+}

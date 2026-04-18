@@ -1,0 +1,102 @@
+// Iteration 27 (CVM-61): Farbtokens.
+//
+// Rohwerte an Carbon v11 Gray-Skala und adesso Corporate Design
+// (Styleguide Maerz 2026) orientiert. Semantische Tokens werden
+// ueberall im Code verwendet; Rohwerte NIE direkt.
+//
+// Die Werte liegen als CSS-Custom-Properties vor, damit der
+// ThemeService sie zur Laufzeit ueberschreiben kann (Branding
+// pro Mandant, siehe core/theme/theme.service.ts).
+
+:root {
+  // Carbon Gray-Skala (10-100) als technische Grundlage
+  --cvm-gray-10: #f4f4f4;
+  --cvm-gray-20: #e0e0e0;
+  --cvm-gray-30: #c6c6c6;
+  --cvm-gray-40: #a8a8a8;
+  --cvm-gray-50: #8d8d8d;
+  --cvm-gray-60: #6f6f6f;
+  --cvm-gray-70: #525252;
+  --cvm-gray-80: #393939;
+  --cvm-gray-90: #262626;
+  --cvm-gray-100: #161616;
+
+  // adesso Corporate-Design (Styleguide Maerz 2026)
+  --cvm-adesso-blue: #006ec7;       // Primaer, keine Abstufungen
+  --cvm-adesso-grey: #887d75;       // Sekundaer
+  --cvm-adesso-accent-yellow: #ffff00;
+  --cvm-adesso-accent-orange: #ff9868;
+  --cvm-adesso-accent-pink: #f566ba;
+  --cvm-adesso-accent-violet: #461ebe;
+  --cvm-adesso-accent-teal: #28dcaa;
+  --cvm-adesso-accent-green: #76c800;
+
+  // Semantische Farbtokens - Light-Theme
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-muted: var(--cvm-gray-10);
+  --color-border: var(--cvm-gray-20);
+  --color-border-strong: var(--cvm-gray-30);
+  --color-text: var(--cvm-gray-100);
+  --color-text-muted: var(--cvm-gray-70);
+  --color-text-inverse: #ffffff;
+
+  --color-primary: var(--cvm-adesso-blue);
+  --color-primary-contrast: #ffffff;
+  --color-primary-hover: rgba(0, 110, 199, 0.88);
+  --color-primary-pressed: rgba(0, 110, 199, 0.72);
+  --color-primary-muted: rgba(0, 110, 199, 0.08);
+
+  --color-accent: var(--cvm-adesso-grey);
+  --color-focus: #0f62fe;
+
+  // Severity - WCAG-AA-kontrastoptimiert, CVM-spezifische Skala
+  --color-severity-critical-bg: #da1e28;
+  --color-severity-critical-fg: #ffffff;
+  --color-severity-high-bg: #ff9868;
+  --color-severity-high-fg: #161616;
+  --color-severity-medium-bg: #f1c21b;
+  --color-severity-medium-fg: #161616;
+  --color-severity-low-bg: #28dcaa;
+  --color-severity-low-fg: #161616;
+  --color-severity-informational-bg: #006ec7;
+  --color-severity-informational-fg: #ffffff;
+  --color-severity-not-applicable-bg: var(--cvm-gray-30);
+  --color-severity-not-applicable-fg: var(--cvm-gray-100);
+
+  // Banner-/Alert-Farben
+  --color-banner-info-bg: rgba(0, 110, 199, 0.12);
+  --color-banner-info-fg: #003a68;
+  --color-banner-warn-bg: rgba(241, 194, 27, 0.18);
+  --color-banner-warn-fg: #4a3d00;
+  --color-banner-critical-bg: rgba(218, 30, 40, 0.12);
+  --color-banner-critical-fg: #750e13;
+  --color-banner-success-bg: rgba(40, 220, 170, 0.18);
+  --color-banner-success-fg: #0e4f3c;
+}
+
+// Dark-Mode-Skizze. Standardmaessig bleibt das Light-Theme aktiv;
+// die Tokens werden lediglich vorbereitet, Toggle ist bereits in
+// Iteration 24 ausgeliefert (ThemeService).
+[data-theme='dark'] {
+  --color-surface: var(--cvm-gray-90);
+  --color-surface-raised: var(--cvm-gray-80);
+  --color-surface-muted: var(--cvm-gray-100);
+  --color-border: var(--cvm-gray-70);
+  --color-border-strong: var(--cvm-gray-60);
+  --color-text: #f4f4f4;
+  --color-text-muted: var(--cvm-gray-30);
+  --color-text-inverse: var(--cvm-gray-100);
+
+  --color-primary-muted: rgba(120, 169, 255, 0.16);
+  --color-focus: #78a9ff;
+
+  --color-banner-info-bg: rgba(120, 169, 255, 0.18);
+  --color-banner-info-fg: #c6e0ff;
+  --color-banner-warn-bg: rgba(241, 194, 27, 0.22);
+  --color-banner-warn-fg: #ffe89a;
+  --color-banner-critical-bg: rgba(255, 131, 137, 0.22);
+  --color-banner-critical-fg: #ffd6d6;
+  --color-banner-success-bg: rgba(66, 190, 101, 0.22);
+  --color-banner-success-fg: #c6f3d8;
+}

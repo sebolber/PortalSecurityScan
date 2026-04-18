@@ -1,0 +1,10 @@
+// Iteration 27 (CVM-61): Radius-Tokens.
+// Werte aus Carbon v11 (0 / 4 / 8 px) plus Pill-Variante fuer Badges/Chips.
+
+:root {
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+}

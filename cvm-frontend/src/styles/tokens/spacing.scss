@@ -1,0 +1,21 @@
+// Iteration 27 (CVM-61): Spacing-Tokens.
+//
+// 8-Punkt-Skala, Rohwerte aus Carbon v11 Spacing-Skala uebernommen
+// und um die in der Iteration geforderten feineren Stufen
+// (`--space-1` = 4px) ergaenzt. Jeder Abstand im Code muss eines
+// dieser Tokens referenzieren.
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+  --space-10: 64px;
+  --space-11: 80px;
+  --space-12: 96px;
+}

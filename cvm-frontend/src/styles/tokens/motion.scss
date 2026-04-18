@@ -1,0 +1,22 @@
+// Iteration 27 (CVM-61): Motion-Tokens.
+//
+// Ziel: ruhige Bewegungen. `prefers-reduced-motion` wird an der
+// globalen Utility-Stelle (`styles.scss` bzw. Feature-SCSS)
+// respektiert: Dauern auf 0 gesetzt.
+
+:root {
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 320ms;
+
+  --easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --easing-emphasized: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+  }
+}

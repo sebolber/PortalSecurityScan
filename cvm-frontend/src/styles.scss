@@ -1,10 +1,11 @@
 @use '@angular/material' as mat;
+@use './styles/tokens';
 
 @include mat.core();
 
-$cvm-primary: mat.m2-define-palette(mat.$m2-red-palette, 700);
-$cvm-accent: mat.m2-define-palette(mat.$m2-grey-palette, 800);
-$cvm-warn: mat.m2-define-palette(mat.$m2-amber-palette, 700);
+$cvm-primary: mat.m2-define-palette(mat.$m2-blue-palette, 800);
+$cvm-accent: mat.m2-define-palette(mat.$m2-grey-palette, 700);
+$cvm-warn: mat.m2-define-palette(mat.$m2-red-palette, 700);
 
 $cvm-light-theme: mat.m2-define-light-theme((
   color: (
@@ -36,39 +37,65 @@ html[data-theme='dark'] {
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Iteration 24: globale CSS-Variablen, damit Light- und Dark-Theme
- * ueber einen einzigen data-theme-Switch umschalten. Komponenten
- * referenzieren die Variablen in ihrer SCSS-Datei.
- */
+// Iteration 24: Legacy-Alias-Variablen, damit bestehende
+// Feature-Komponenten weiter ihre `--cvm-*`-Referenzen nutzen
+// koennen. Die Werte werden ab Iteration 27 aus dem
+// semantischen Token-Layer (`styles/tokens/colors.scss`)
+// abgeleitet und bei Branding-Wechseln vom ThemeService
+// aktualisiert.
 :root {
-  --cvm-bg: #f5f5f5;
-  --cvm-surface: #ffffff;
-  --cvm-surface-alt: #ffffff;
-  --cvm-border: #e6e6e6;
-  --cvm-text: #1c1c1c;
-  --cvm-text-muted: #606060;
-  --cvm-primary: #e2001a;
-  --cvm-primary-dark: #b00015;
-  --cvm-active-bg: rgba(226, 0, 26, 0.08);
-}
-
-html[data-theme='dark'] {
-  --cvm-bg: #1c1c1c;
-  --cvm-surface: #242424;
-  --cvm-surface-alt: #2d2d2d;
-  --cvm-border: #3a3a3a;
-  --cvm-text: #f0f0f0;
-  --cvm-text-muted: #a5a5a5;
-  --cvm-primary: #ff4062;
-  --cvm-primary-dark: #e2001a;
-  --cvm-active-bg: rgba(255, 64, 98, 0.16);
+  --cvm-bg: var(--color-surface-muted);
+  --cvm-surface: var(--color-surface);
+  --cvm-surface-alt: var(--color-surface-raised);
+  --cvm-border: var(--color-border);
+  --cvm-text: var(--color-text);
+  --cvm-text-muted: var(--color-text-muted);
+  --cvm-primary: var(--color-primary);
+  --cvm-primary-dark: var(--color-primary-pressed);
+  --cvm-active-bg: var(--color-primary-muted);
 }
 
 html, body {
   height: 100%;
   margin: 0;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-family: var(--font-family-sans);
   background: var(--cvm-bg);
   color: var(--cvm-text);
+}
+
+// Iteration 27: Typografie-Utility-Klassen. Komponenten nutzen
+// diese, statt `font-size` direkt zu setzen.
+.text-title-lg {
+  font-size: var(--text-3xl);
+  line-height: var(--line-height-tight);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-tight);
+}
+
+.text-title-md {
+  font-size: var(--text-2xl);
+  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-title-sm {
+  font-size: var(--text-xl);
+  line-height: var(--line-height-snug);
+  font-weight: var(--font-weight-medium);
+}
+
+.text-body {
+  font-size: var(--text-base);
+  line-height: var(--line-height-normal);
+}
+
+.text-caption {
+  font-size: var(--text-xs);
+  line-height: var(--line-height-snug);
+  color: var(--color-text-muted);
+}
+
+.text-code {
+  font-family: var(--font-family-mono);
+  font-size: var(--text-sm);
 }

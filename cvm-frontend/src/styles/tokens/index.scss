@@ -1,0 +1,12 @@
+// Iteration 27 (CVM-61): Token-Layer-Einstieg.
+// Wird aus `styles.scss` geforwarded und von Feature-Komponenten
+// nicht direkt referenziert (Tokens liegen auf `:root` als
+// CSS-Custom-Properties).
+
+@use './colors';
+@use './spacing';
+@use './typography';
+@use './radius';
+@use './elevation';
+@use './motion';
+@use './breakpoints';

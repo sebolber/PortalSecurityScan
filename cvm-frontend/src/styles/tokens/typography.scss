@@ -1,0 +1,38 @@
+// Iteration 27 (CVM-61): Typografie-Tokens.
+//
+// Default-Schrift: "Fira Sans" als adesso-freigegebene Alternative
+// zu Klavika (Styleguide Maerz 2026 S. 28). Wird lokal ausgeliefert
+// und via `font-family: var(--font-family-sans)` referenziert.
+// Der ThemeService kann `--font-family-sans` zur Laufzeit auf eine
+// mandantenspezifische Schriftart umstellen.
+
+:root {
+  --font-family-sans: 'Fira Sans', 'Inter', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-family-mono: 'Fira Code', 'Fira Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  // Font-Size-Skala aus Carbon v11 (Helper -> Heading-07)
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  // Zeilenhoehen
+  --line-height-tight: 1.2;
+  --line-height-snug: 1.35;
+  --line-height-normal: 1.5;
+  --line-height-loose: 1.7;
+
+  // Font-Weights
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  // Letter-Spacing
+  --letter-spacing-tight: -0.01em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-wide: 0.02em;
+}
