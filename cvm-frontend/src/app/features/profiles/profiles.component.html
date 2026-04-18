@@ -1,57 +1,196 @@
-<div class="cvm-profiles-page">
-  <div class="cvm-profiles-head">
-    <h1 class="cvm-profiles-title">Kontextprofile</h1>
-    <button mat-stroked-button (click)="laden()" [disabled]="loading()">
+<section class="cvm-profiles">
+  <header class="cvm-profiles__header">
+    <div>
+      <h1 class="text-title-lg">Kontextprofile</h1>
+      <p class="text-body">
+        Pro Umgebung ein Profil. Draft-Anlage durch Rolle
+        <code>CVM_PROFILE_AUTHOR</code>, Freigabe im Vier-Augen-Prinzip
+        durch <code>CVM_PROFILE_APPROVER</code> (Autor != Approver).
+      </p>
+    </div>
+    <button
+      type="button"
+      mat-stroked-button
+      (click)="laden()"
+      [disabled]="loading()"
+    >
       <mat-icon>refresh</mat-icon>
       Neu laden
     </button>
-  </div>
+  </header>
 
   @if (loading()) {
-    <p class="cvm-profiles-muted">Daten werden geladen...</p>
+    <mat-spinner diameter="36"></mat-spinner>
   }
   @if (error()) {
-    <p class="cvm-profiles-error">{{ error() }}</p>
-  }
-  @if (!loading() && !error() && rows().length === 0) {
-    <p class="cvm-profiles-muted">Noch keine Umgebungen angelegt.</p>
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
   }
 
   <mat-accordion multi>
     @for (row of rows(); track row.env.id) {
-      <mat-expansion-panel class="cvm-profile-panel">
+      <mat-expansion-panel class="cvm-profiles__panel">
         <mat-expansion-panel-header>
           <mat-panel-title>
-            <span class="cvm-env-name">{{ row.env.key }}</span>
-            <span class="cvm-env-stage">({{ row.env.stage }})</span>
+            <span class="cvm-profiles__env">{{ row.env.key }}</span>
+            <span class="cvm-profiles__stage">({{ row.env.stage }})</span>
           </mat-panel-title>
           <mat-panel-description>
             @if (row.profile) {
-              <span class="cvm-profile-ver">Version {{ row.profile.versionNumber }} &middot; {{ row.profile.state }}</span>
+              Version {{ row.profile.versionNumber }} &middot;
+              {{ row.profile.state }}
             } @else {
-              <span class="cvm-profile-muted">Kein aktives Profil</span>
+              Kein aktives Profil
             }
           </mat-panel-description>
         </mat-expansion-panel-header>
 
+        @if (row.meldung) {
+          <ahs-banner kind="success" title="OK">{{ row.meldung }}</ahs-banner>
+        }
+        @if (row.fehler) {
+          <ahs-banner kind="critical" title="Fehler">{{ row.fehler }}</ahs-banner>
+        }
+
         @if (row.profile) {
-          <div class="cvm-profile-meta">
-            @if (row.profile.approvedBy) {
-              <span><strong>Freigabe:</strong> {{ row.profile.approvedBy }} am {{ row.profile.approvedAt | date:'yyyy-MM-dd HH:mm' }}</span>
-            }
-            @if (row.profile.proposedBy) {
-              <span><strong>Antrag:</strong> {{ row.profile.proposedBy }}</span>
-            }
-          </div>
-          <h4 class="cvm-profile-sub">YAML-Quelle</h4>
-          <pre class="cvm-profile-yaml">{{ row.profile.yamlSource }}</pre>
+          <dl class="cvm-profiles__meta">
+            <dt>Freigabe</dt>
+            <dd>
+              {{ row.profile.approvedBy || 'offen' }}
+              @if (row.profile.approvedAt) {
+                am {{ row.profile.approvedAt | date: 'yyyy-MM-dd HH:mm' }}
+              }
+            </dd>
+            <dt>Antrag</dt>
+            <dd>{{ row.profile.proposedBy || '–' }}</dd>
+          </dl>
+          <h3 class="text-title-sm">Aktive YAML-Quelle</h3>
+          <pre class="cvm-profiles__yaml">{{ row.profile.yamlSource }}</pre>
         } @else {
-          <p class="cvm-profile-muted">
-            Fuer diese Umgebung wurde noch kein Profil angelegt.
-            Profile-Author kann ueber <code>PUT /api/v1/environments/{{ row.env.id }}/profile</code> einen Draft einstellen.
+          <p class="text-caption">
+            Fuer diese Umgebung wurde noch kein Profil angelegt. Nutze den
+            Button unten, um einen ersten Draft zu schreiben.
           </p>
+        }
+
+        <div class="cvm-profiles__actions">
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="editorUmschalten(row)"
+            [disabled]="!darfAutor()"
+          >
+            <mat-icon>{{ row.editorOffen ? 'close' : 'edit' }}</mat-icon>
+            {{ row.editorOffen ? 'Editor schliessen' : 'Neuen Draft anlegen' }}
+          </button>
+          @if (!darfAutor()) {
+            <span class="text-caption">
+              Rolle <code>CVM_PROFILE_AUTHOR</code> fehlt.
+            </span>
+          }
+        </div>
+
+        @if (row.editorOffen) {
+          <div class="cvm-profiles__editor">
+            <mat-form-field appearance="outline" class="cvm-profiles__editor-field">
+              <mat-label>YAML-Quelle</mat-label>
+              <textarea
+                matInput
+                rows="14"
+                [ngModel]="row.editorYaml"
+                (ngModelChange)="editorInhalt(row, $event)"
+                spellcheck="false"
+                class="cvm-profiles__textarea"
+              ></textarea>
+              <mat-hint>
+                Schema v1: schemaVersion, umgebung, architecture, network,
+                hardening, compliance.frameworks
+              </mat-hint>
+            </mat-form-field>
+            <div class="cvm-profiles__editor-actions">
+              <button
+                type="button"
+                mat-stroked-button
+                (click)="zuruecksetzen(row)"
+              >
+                Auf aktive Version zuruecksetzen
+              </button>
+              <button
+                type="button"
+                mat-flat-button
+                color="primary"
+                (click)="draftSpeichern(row)"
+                [disabled]="row.saving"
+              >
+                @if (row.saving) {
+                  Speichere...
+                } @else {
+                  Draft speichern
+                }
+              </button>
+            </div>
+          </div>
+        }
+
+        @if (row.draft) {
+          <section class="cvm-profiles__draft">
+            <h3 class="text-title-sm">
+              Draft v{{ row.draft.versionNumber }} - wartet auf Freigabe
+            </h3>
+            <p class="text-caption">
+              Antragsteller: <strong>{{ row.draft.proposedBy }}</strong>.
+              Freigabe muss durch einen anderen User mit Rolle
+              <code>CVM_PROFILE_APPROVER</code> erfolgen.
+            </p>
+
+            @if (row.diff && row.diff.length > 0) {
+              <h4 class="text-title-sm">Diff zur aktiven Version</h4>
+              <table class="cvm-profiles__diff">
+                <thead>
+                  <tr>
+                    <th>Pfad</th>
+                    <th>Alt</th>
+                    <th>Neu</th>
+                    <th>Aenderung</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (entry of row.diff; track entry.path) {
+                    <tr>
+                      <td class="text-code">{{ entry.path }}</td>
+                      <td>{{ entry.oldValue || '–' }}</td>
+                      <td>{{ entry.newValue || '–' }}</td>
+                      <td>{{ entry.changeKind }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            } @else {
+              <p class="text-caption">Kein Diff verfuegbar.</p>
+            }
+
+            <div class="cvm-profiles__approve">
+              <button
+                type="button"
+                mat-flat-button
+                color="primary"
+                (click)="draftFreigeben(row)"
+                [disabled]="row.approving || !darfApprove()"
+              >
+                @if (row.approving) {
+                  Aktiviere...
+                } @else {
+                  Draft aktivieren (Vier-Augen)
+                }
+              </button>
+              @if (!darfApprove()) {
+                <span class="text-caption">
+                  Rolle <code>CVM_PROFILE_APPROVER</code> fehlt.
+                </span>
+              }
+            </div>
+          </section>
         }
       </mat-expansion-panel>
     }
   </mat-accordion>
-</div>
+</section>

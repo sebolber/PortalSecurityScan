@@ -15,7 +15,18 @@ export interface ProfileResponse {
   readonly validFrom: string | null;
 }
 
-/** Liest die aktive Profil-Version pro Umgebung. */
+export interface ProfileDiffEntry {
+  readonly path: string;
+  readonly oldValue: string | null;
+  readonly newValue: string | null;
+  readonly changeKind: string;
+}
+
+/**
+ * HTTP-Wrapper um die Profil-Endpunkte. Neben der Lese-Fassung aus
+ * Iteration 04 bietet der Service in Iteration 28b auch
+ * Draft-Anlage, Approve und Diff fuer den YAML-Editor.
+ */
 @Injectable({ providedIn: 'root' })
 export class ProfilesService {
   private readonly api = inject(ApiClient);
@@ -36,6 +47,49 @@ export class ProfilesService {
             throw err;
           })
         )
+    );
+  }
+
+  /**
+   * Legt eine neue Draft-Version fuer die Umgebung an. Der Backend-
+   * Service validiert das YAML gegen {@code profile-schema-v1.json};
+   * bei Fehlern liefert er HTTP 400.
+   */
+  draftAnlegen(
+    environmentId: string,
+    yamlSource: string,
+    proposedBy: string
+  ): Promise<ProfileResponse> {
+    return firstValueFrom(
+      this.api.put<ProfileResponse, { yamlSource: string; proposedBy: string }>(
+        `/api/v1/environments/${environmentId}/profile`,
+        { yamlSource, proposedBy }
+      )
+    );
+  }
+
+  /** Aktiviert einen Draft im Vier-Augen-Prinzip. */
+  freigeben(
+    profileVersionId: string,
+    approverId: string
+  ): Promise<ProfileResponse> {
+    return firstValueFrom(
+      this.api.post<ProfileResponse, { approverId: string }>(
+        `/api/v1/profiles/${profileVersionId}/approve`,
+        { approverId }
+      )
+    );
+  }
+
+  /**
+   * Feldweiser Diff gegen die aktuell aktive Version
+   * ({@code against=latest}).
+   */
+  diffGegenAktiv(profileVersionId: string): Promise<ProfileDiffEntry[]> {
+    return firstValueFrom(
+      this.api.get<ProfileDiffEntry[]>(
+        `/api/v1/profiles/${profileVersionId}/diff?against=latest`
+      )
     );
   }
 }
