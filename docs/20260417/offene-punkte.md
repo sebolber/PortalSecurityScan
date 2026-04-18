@@ -1,5 +1,18 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 19
+- **Delta-Historie** im Executive-Report: Werte aktuell auf 0
+  gesetzt; sobald Executive-Reports archiviert werden,
+  berechnen gegen den letzten.
+- **UI** fuer NL-Query-Eingabezeile und Executive-Download-Button.
+- **JPA-Criteria-Filter** statt Stream-Filter bei grossen
+  Assessment-Mengen.
+- **Goldmaster-PDF** fuer Board-Report (aktuell nur Text-Marker-Tests).
+- **Plattform-Lead-Freigabe** vor Board-PDF (Konzept-Wunsch, noch
+  nicht verdrahtet).
+- **HTML-Entities in openhtmltopdf-Templates**: nur numerische
+  Entities (`&#183;`) verwenden, nicht named (`&middot;`).
+
 ## Stand 2026-04-18 nach Iteration 18
 - **LLM-Zweitstufe fuer Anomalien** (`anomaly-review.st`): Prompt
   vorbereitet, Service-Integration folgt bei realem Datenverkehr

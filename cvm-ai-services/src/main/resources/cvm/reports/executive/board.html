@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Executive-Report</title>
+    <style>
+        @page { size: A4; margin: 18mm; }
+        body { font-family: "Helvetica","Arial",sans-serif; font-size: 11pt; color: #1c1c1c; }
+        h1 { color: #00205b; font-size: 20pt; margin: 0 0 4pt 0; }
+        .meta { color: #444; font-size: 9.5pt; margin-bottom: 12pt; }
+        .ampel { display: inline-block; padding: 4pt 14pt; border-radius: 4pt;
+                 font-weight: bold; font-size: 12pt; color: #fff; }
+        .ampel-GREEN  { background: #3c8d3c; }
+        .ampel-YELLOW { background: #d9a441; color: #000; }
+        .ampel-RED    { background: #8b0000; }
+        ul.bullets { margin-top: 12pt; line-height: 1.5; }
+        ul.bullets li { margin-bottom: 4pt; }
+        .footer { position: fixed; bottom: 10mm; font-size: 8pt; color: #666; }
+    </style>
+</head>
+<body>
+<h1 th:text="${headline}">Headline</h1>
+<div class="meta">
+    <span th:text="${produkt}">Produkt</span>
+    <span th:text="${produktVersion}">Version</span>
+    &#183; <span th:text="${umgebung}">Umgebung</span>
+    &#183; Stichtag <span th:text="${stichtag}">-</span>
+</div>
+
+<div>
+    <span class="ampel" th:classappend="'ampel-' + ${ampel}"
+          th:text="${ampel}">AMPEL</span>
+</div>
+
+<ul class="bullets">
+    <li th:each="b : ${bullets}" th:text="${b}">Bullet</li>
+</ul>
+
+<div class="footer">adesso health solutions GmbH - Executive Summary</div>
+</body>
+</html>

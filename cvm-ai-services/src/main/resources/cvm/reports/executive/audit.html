@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Audit-Variante des Executive-Reports</title>
+    <style>
+        @page { size: A4; margin: 20mm 18mm; }
+        body { font-family: "Helvetica","Arial",sans-serif; font-size: 10.5pt; }
+        h1 { color: #00205b; font-size: 18pt; }
+        h2 { color: #00205b; font-size: 12pt; margin-top: 16pt;
+             border-bottom: 0.5pt solid #00205b; padding-bottom: 2pt; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 0.5pt solid #888; padding: 3pt 5pt;
+                 text-align: left; font-size: 9.5pt; }
+        th { background: #e8eef7; }
+        .ampel { display: inline-block; padding: 2pt 10pt; border-radius: 3pt;
+                 font-weight: bold; color: #fff; }
+        .ampel-GREEN  { background: #3c8d3c; }
+        .ampel-YELLOW { background: #d9a441; color: #000; }
+        .ampel-RED    { background: #8b0000; }
+    </style>
+</head>
+<body>
+<h1 th:text="${headline}">Headline</h1>
+<p>
+    <span class="ampel" th:classappend="'ampel-' + ${ampel}"
+          th:text="${ampel}">AMPEL</span>
+</p>
+<p>
+    <strong>Produkt:</strong> <span th:text="${produkt}">Produkt</span>
+    <span th:text="${produktVersion}">Version</span><br/>
+    <strong>Umgebung:</strong> <span th:text="${umgebung}">Umgebung</span><br/>
+    <strong>Stichtag:</strong> <span th:text="${stichtag}">-</span>
+</p>
+
+<h2>Kernaussagen</h2>
+<ul>
+    <li th:each="b : ${bullets}" th:text="${b}">Bullet</li>
+</ul>
+
+<h2>Kennzahlen</h2>
+<table>
+    <tr><th>Severity</th><th>Offen</th></tr>
+    <tr><td>CRITICAL</td><td th:text="${critical}">0</td></tr>
+    <tr><td>HIGH</td><td th:text="${high}">0</td></tr>
+    <tr><td>MEDIUM</td><td th:text="${medium}">0</td></tr>
+    <tr><td>KEV-Hits</td><td th:text="${kev}">0</td></tr>
+</table>
+
+<h2>Offene kritische Punkte</h2>
+<ul>
+    <li th:each="p : ${offenePunkte}" th:text="${p}">Punkt</li>
+    <li th:if="${#lists.isEmpty(offenePunkte)}">Keine.</li>
+</ul>
+
+<h2>Delta zum letzten Bericht</h2>
+<ul>
+    <li>Neue CVEs: <span th:text="${neu}">0</span></li>
+    <li>Entfallen: <span th:text="${entfallen}">0</span></li>
+    <li>Severity-Shifts: <span th:text="${shifts}">0</span></li>
+</ul>
+</body>
+</html>
