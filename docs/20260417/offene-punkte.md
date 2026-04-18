@@ -1,5 +1,22 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 14
+- **Auto-Trigger der DeltaSummary**: Listener auf
+  `ScanIngestedEvent` (rufe `summarize(...)` automatisch nach
+  Cascade-Run). Aktuell nur on-demand via REST-GET.
+- **Streaming-UI**: Angular-Komponente fuer den NDJSON-Copilot-
+  Stream (zeilenweise Token-Anzeige) fehlt. Backend-Vertrag steht.
+- **Slack-Webhook fuer Delta-Summary**: kurzes Snippet kann jetzt
+  ueber REST abgerufen werden - automatischer Webhook-Versand
+  steht aus.
+- **Cost-Cap pro Umgebung**: nur globaler Rate-Limiter heute;
+  Kostenobergrenze pro Tenant noch nicht.
+- **"Vorschlag uebernehmen"-Endpoint** fuer Copilot-Texte: aktuell
+  uebernimmt das Frontend selbst per PUT auf das Assessment.
+- **DeltaSummary-Persistenz**: Summary wird derzeit nicht
+  archiviert (kein `scan_delta_summary`-Eintrag). Sobald Audit
+  oder Audit-Trail eine Pflicht wird, hier ergaenzen.
+
 ## Stand 2026-04-18 nach Iteration 13
 - **Audit-Id-Rueckgabe vom AiCallAuditService**: aktuell liefert
   `execute(...)` nur den `LlmResponse`. Der Orchestrator findet die
