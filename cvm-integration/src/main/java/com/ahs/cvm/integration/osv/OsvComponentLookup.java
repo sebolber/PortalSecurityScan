@@ -2,6 +2,7 @@ package com.ahs.cvm.integration.osv;
 
 import com.ahs.cvm.application.cve.ComponentVulnerabilityLookup;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,6 +41,28 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
     public OsvComponentLookup(OsvProperties props, RestClient.Builder builder) {
         this.props = props;
         this.restClient = builder.baseUrl(props.getBaseUrl()).build();
+    }
+
+    /**
+     * Einmalige Log-Zeile beim App-Start, damit Admins ohne den Weg
+     * ueber {@code /actuator/env} sehen, ob OSV aktiv ist. Ohne
+     * diese Meldung wuerde man im Fehlerfall "findingCount bleibt 0"
+     * nicht unterscheiden koennen, ob der Flag aus ist oder OSV
+     * nichts gefunden hat.
+     */
+    @PostConstruct
+    void logStartupStatus() {
+        if (isEnabled()) {
+            log.info(
+                    "OSV-Enrichment aktiv: base-url={}, batch-size={}, timeout-ms={}",
+                    props.getBaseUrl(),
+                    props.getBatchSize(),
+                    props.getTimeoutMs());
+        } else {
+            log.info(
+                    "OSV-Enrichment DEAKTIVIERT (cvm.enrichment.osv.enabled=false oder leere base-url). "
+                    + "Setze CVM_OSV_ENABLED=true, um PURL->CVE-Matching zu nutzen.");
+        }
     }
 
     @Override
