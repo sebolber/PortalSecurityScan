@@ -126,10 +126,6 @@ export class QueueComponent implements OnInit {
     this.banner.set('Reject erfordert einen Kommentar. Siehe Detail-Panel.');
   }
 
-  onShortcutOverride(): void {
-    this.banner.set('Override im Detail-Panel setzen (Severity-Dropdown).');
-  }
-
   onApproveFromDetail(
     entry: QueueEntry,
     payload: {
@@ -148,10 +144,6 @@ export class QueueComponent implements OnInit {
     const approverId = this.auth.username() || 'unknown';
     const command: RejectCommand = { approverId, comment: kommentar };
     void this.store.reject(entry.id, command);
-  }
-
-  onOverrideFromDetail(): void {
-    this.banner.set('Override: Severity im Dropdown aendern, dann Freigeben.');
   }
 
   onCloseDetail(): void {

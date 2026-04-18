@@ -4,7 +4,6 @@
   (next)="onNext()"
   (previous)="onPrevious()"
   (approve)="onShortcutApprove()"
-  (override)="onShortcutOverride()"
   (reject)="onShortcutReject()"
   (help)="openHelp()"
 >
@@ -84,7 +83,6 @@
         (close)="onCloseDetail()"
         (approve)="onApproveFromDetail(s, $event)"
         (reject)="onRejectFromDetail(s, $event)"
-        (override)="onOverrideFromDetail()"
       ></cvm-queue-detail>
     }
   </div>

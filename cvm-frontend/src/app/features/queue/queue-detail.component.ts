@@ -71,6 +71,11 @@ import { braucheZweitfreigabe } from './vier-augen';
                 <option [value]="s">{{ s }}</option>
               }
             </select>
+            <span class="mt-1 block text-xs text-zinc-500">
+              Aenderung wird beim Klick auf <strong>Freigeben</strong>
+              uebernommen. Ein Downgrade auf INFORMATIONAL oder
+              NOT_APPLICABLE erfordert Zweitfreigabe.
+            </span>
           </label>
 
           <label class="block">
@@ -148,14 +153,6 @@ import { braucheZweitfreigabe } from './vier-augen';
           </button>
           <button
             type="button"
-            class="rounded border border-zinc-300 px-3 py-1 text-sm"
-            [disabled]="pending"
-            (click)="onOverride()"
-          >
-            Override
-          </button>
-          <button
-            type="button"
             class="rounded border border-red-400 px-3 py-1 text-sm text-red-700"
             [disabled]="pending"
             (click)="toggleRejectKommentar()"
@@ -196,7 +193,6 @@ export class QueueDetailComponent {
     zweitfreigabe: boolean;
   }>();
   @Output() readonly reject = new EventEmitter<string>();
-  @Output() readonly override = new EventEmitter<void>();
 
   readonly severities = SEVERITY_REIHENFOLGE;
 
@@ -233,10 +229,6 @@ export class QueueDetailComponent {
       plannedFor: this.plannedFor || undefined,
       zweitfreigabe: this.zweitfreigabe
     });
-  }
-
-  onOverride(): void {
-    this.override.emit();
   }
 
   toggleRejectKommentar(): void {
