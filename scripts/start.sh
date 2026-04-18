@@ -47,6 +47,7 @@ SKIP_BACKEND=false
 SKIP_FRONTEND=false
 NO_TAIL=false
 ALLOW_DIRTY=false
+FORCE_FREE_PORTS=false
 BRANCH=""
 
 # --- Farben fuer Log-Ausgabe --------------------------------------------------
@@ -72,12 +73,16 @@ Usage:
   $(basename "$0") <git-branch> [optionen]
 
 Optionen:
-  --skip-docker      Docker-Compose-Stack nicht starten (postgres muss laufen)
-  --skip-backend     Spring-Boot-Backend nicht starten
-  --skip-frontend    Angular-Frontend nicht starten
-  --no-tail          Log am Ende nicht via tail -f anzeigen
-  --allow-dirty      Branch-Wechsel auch bei unsauberem Working-Tree erzwingen
-  -h | --help        Diese Hilfe anzeigen
+  --skip-docker       Docker-Compose-Stack nicht starten (postgres muss laufen)
+  --skip-backend      Spring-Boot-Backend nicht starten
+  --skip-frontend     Angular-Frontend nicht starten
+  --no-tail           Log am Ende nicht via tail -f anzeigen
+  --allow-dirty       Branch-Wechsel auch bei unsauberem Working-Tree erzwingen
+  --force-free-ports  Belegte Ports (5432/8080/8025/1025/8081/4200) automatisch
+                      freiraeumen: alte cvm-*-Docker-Container entfernen und
+                      lokale Listener per SIGTERM beenden (nach 5s SIGKILL).
+                      Ohne dieses Flag werden fremde Prozesse nur gemeldet.
+  -h | --help         Diese Hilfe anzeigen
 
 Beispiele:
   $(basename "$0") main
@@ -89,12 +94,13 @@ EOF
 # --- Argumente parsen ---------------------------------------------------------
 while (( "$#" )); do
     case "$1" in
-        --skip-docker)   SKIP_DOCKER=true; shift ;;
-        --skip-backend)  SKIP_BACKEND=true; shift ;;
-        --skip-frontend) SKIP_FRONTEND=true; shift ;;
-        --no-tail)       NO_TAIL=true; shift ;;
-        --allow-dirty)   ALLOW_DIRTY=true; shift ;;
-        -h|--help)       usage; exit 0 ;;
+        --skip-docker)       SKIP_DOCKER=true; shift ;;
+        --skip-backend)      SKIP_BACKEND=true; shift ;;
+        --skip-frontend)     SKIP_FRONTEND=true; shift ;;
+        --no-tail)           NO_TAIL=true; shift ;;
+        --allow-dirty)       ALLOW_DIRTY=true; shift ;;
+        --force-free-ports)  FORCE_FREE_PORTS=true; shift ;;
+        -h|--help)           usage; exit 0 ;;
         --*)             fail "Unbekannte Option: $1"; usage; exit 64 ;;
         *)
             if [[ -z "${BRANCH}" ]]; then
@@ -148,6 +154,161 @@ cleanup() {
 
 trap cleanup EXIT
 trap 'exit 130' INT TERM
+
+# --- Port-Management ---------------------------------------------------------
+# Wenn ein frueherer Lauf seine Prozesse oder Container nicht sauber
+# aufgeraeumt hat, bricht `docker compose up` bzw. Spring Boot spaeter mit
+# "Port already allocated" ab. Diese Helfer pruefen vor jedem Start, ob der
+# Port frei ist, und raeumen ggf. auf.
+
+# Gibt die PIDs zurueck, die auf dem angegebenen Port lauschen.
+pids_on_port() {
+    local port="$1"
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -nP -iTCP:"${port}" -sTCP:LISTEN -t 2>/dev/null || true
+    elif command -v ss >/dev/null 2>&1; then
+        # Linux-Fallback. ss -tlnp -> "users:(("name",pid=1234,..."
+        ss -tlnpH "sport = :${port}" 2>/dev/null \
+            | awk -F'pid=' '{for (i=2;i<=NF;i++){split($i,a,",");print a[1]}}' \
+            | sort -u || true
+    else
+        # Ohne lsof/ss geht kein Port-Check; nicht raten.
+        echo ""
+    fi
+}
+
+# Stoppt/entfernt Docker-Container, die den Port blocken. CVM-eigene
+# Container (Name beginnt mit "cvm-") werden immer entfernt, weil sie
+# eindeutig Altlasten eines frueheren Laufs sind. Fremde Container
+# stoppen wir nur, wenn --force-free-ports gesetzt ist; sonst geben
+# wir eine klare Anleitung aus und liefern 1 zurueck, damit der Caller
+# abbrechen kann.
+# $1 Port
+# Return: 0 = Port ist jetzt frei von Docker-Containern,
+#         1 = ein fremder Container blockiert den Port weiterhin
+remove_container_on_port() {
+    local port="$1"
+    if ! command -v docker >/dev/null 2>&1; then
+        return 0
+    fi
+    local offenders
+    offenders="$(docker ps -a --format '{{.Names}}	{{.Ports}}' 2>/dev/null \
+        | awk -v p=":${port}->" 'index($0, p) { print $1 }' || true)"
+    [[ -z "${offenders}" ]] && return 0
+
+    local rc=0
+    local name
+    while IFS= read -r name; do
+        [[ -z "${name}" ]] && continue
+        if [[ "${name}" == cvm-* ]]; then
+            warn "Entferne alten CVM-Container '${name}' (blockiert Port ${port})."
+            docker rm -f "${name}" >/dev/null 2>&1 || true
+        elif "${FORCE_FREE_PORTS}"; then
+            warn "Stoppe fremden Container '${name}' auf Port ${port} (--force-free-ports)."
+            docker rm -f "${name}" >/dev/null 2>&1 || true
+        else
+            fail "Fremder Docker-Container '${name}' blockiert Port ${port}."
+            fail "Loesung: '--force-free-ports' setzen oder manuell beenden:"
+            fail "    docker stop '${name}'   # oder: docker rm -f '${name}'"
+            rc=1
+        fi
+    done <<< "${offenders}"
+    return "${rc}"
+}
+
+# Stellt sicher, dass der Port frei ist. Verhalten:
+#   1. Raeumt einen evtl. vorhandenen cvm-*-Container weg.
+#   2. Wenn dann noch ein Listener existiert, entscheidet FORCE_FREE_PORTS:
+#      - true  -> SIGTERM, nach 5s SIGKILL, erneuter Check.
+#      - false -> Warnung mit Anleitung und Fehler zurueckgeben.
+# $1: Port  $2: Servicename fuer die Log-Ausgabe
+ensure_port_free() {
+    local port="$1"
+    local svc="$2"
+
+    if ! remove_container_on_port "${port}"; then
+        return 1
+    fi
+
+    local pids
+    pids="$(pids_on_port "${port}")"
+    if [[ -z "${pids}" ]]; then
+        return 0
+    fi
+
+    if ! "${FORCE_FREE_PORTS}"; then
+        fail "Port ${port} (${svc}) wird bereits von PID(s) belegt: ${pids//$'\n'/ }"
+        if command -v ps >/dev/null 2>&1; then
+            fail "Prozess-Details:"
+            # shellcheck disable=SC2086
+            ps -o pid=,user=,command= -p ${pids} 2>/dev/null | sed 's/^/        /' >&2 || true
+        fi
+        fail "Loesung: '--force-free-ports' setzen, oder manuell beenden:"
+        fail "    kill ${pids//$'\n'/ }"
+        return 1
+    fi
+
+    warn "Beende PID(s) auf Port ${port} (${svc}): ${pids//$'\n'/ }"
+    # SIGTERM zuerst.
+    local pid
+    while IFS= read -r pid; do
+        [[ -z "${pid}" ]] && continue
+        kill -TERM "${pid}" 2>/dev/null || true
+    done <<< "${pids}"
+
+    # Bis zu 5s Ruhephase abwarten.
+    local waited=0
+    while (( waited < 5 )); do
+        pids="$(pids_on_port "${port}")"
+        [[ -z "${pids}" ]] && break
+        sleep 1
+        waited=$((waited + 1))
+    done
+
+    if [[ -n "${pids}" ]]; then
+        warn "SIGTERM reichte nicht - SIGKILL auf ${pids//$'\n'/ }."
+        while IFS= read -r pid; do
+            [[ -z "${pid}" ]] && continue
+            kill -KILL "${pid}" 2>/dev/null || true
+        done <<< "${pids}"
+        sleep 1
+    fi
+
+    pids="$(pids_on_port "${port}")"
+    if [[ -n "${pids}" ]]; then
+        fail "Port ${port} konnte nicht freigeraeumt werden (noch: ${pids//$'\n'/ })."
+        return 1
+    fi
+    ok "Port ${port} (${svc}) ist jetzt frei."
+}
+
+# Sammelt alle Ports, die die jeweils gewaehlten Services brauchen, und
+# raeumt sie bei Bedarf frei. Bricht das Skript ab, falls ein Port nicht
+# freigemacht werden kann.
+prepare_ports() {
+    info "Pruefe belegte Ports..."
+    local had_error=0
+
+    if ! "${SKIP_DOCKER}"; then
+        # Postgres, Keycloak, MailHog (smtp + web).
+        ensure_port_free 5432 "postgres" || had_error=1
+        ensure_port_free 8080 "keycloak" || had_error=1
+        ensure_port_free 1025 "mailhog-smtp" || had_error=1
+        ensure_port_free 8025 "mailhog-web" || had_error=1
+    fi
+    if ! "${SKIP_BACKEND}"; then
+        ensure_port_free "${BACKEND_PORT}" "backend" || had_error=1
+    fi
+    if ! "${SKIP_FRONTEND}"; then
+        ensure_port_free "${FRONTEND_PORT}" "frontend" || had_error=1
+    fi
+
+    if (( had_error != 0 )); then
+        fail "Mindestens ein Port ist belegt. Abbruch."
+        exit 80
+    fi
+    ok "Alle benoetigten Ports sind frei."
+}
 
 # --- Voraussetzungen pruefen --------------------------------------------------
 require_cmd() {
@@ -420,6 +581,7 @@ info "Log-Verzeichnis: ${LOG_DIR}"
 
 check_prereqs
 checkout_branch
+prepare_ports
 start_docker
 start_backend
 start_frontend
