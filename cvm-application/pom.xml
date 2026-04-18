@@ -35,6 +35,21 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <!--
+            Iteration 10: PDF-Abschlussbericht (CVM-19).
+            openhtmltopdf bringt Apache PDFBox als transitive Dependency
+            und wird zur PDF-Erzeugung aus HTML verwendet. Thymeleaf
+            rendert die HTML-Vorlage. Beide Dependencies sind auf das
+            Application-Modul beschraenkt.
+        -->
+        <dependency>
+            <groupId>com.openhtmltopdf</groupId>
+            <artifactId>openhtmltopdf-pdfbox</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.thymeleaf</groupId>
+            <artifactId>thymeleaf</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

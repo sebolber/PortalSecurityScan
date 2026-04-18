@@ -1,5 +1,37 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 10
+- **Query-Effizienz**: `HardeningReportDataLoader` faellt fuer die
+  Liste aller aktiven Assessments einer (ProduktVersion, Umgebung)
+  auf `findAll()` + Stream-Filter zurueck, weil das
+  `AssessmentRepository` noch keine passende Methode hat
+  (`findActiveByProductVersionAndEnvironment`). Fuer mittlere
+  Datenmengen OK, fuer 5-stellige CVE-Listen ineffizient. Sollte
+  parallel zu Iteration 13 (KI-Clustering) eine dedizierte Query
+  bekommen.
+- **Encryption-at-rest fuer PDF-Bytes**: Spalte ist `BYTEA`, Integritaet
+  via SHA-256-Hash abgesichert. Jasypt-Binding folgt, sobald der
+  Vault-Key in OpenShift hinterlegt ist.
+- **Goldmaster-PDF als Artefakt**: Iteration 10 verifiziert
+  Determinismus ueber Live-Vergleich. Ein reales Golden-PDF unter
+  `cvm-application/src/test/resources/reports/hardening-golden.pdf`
+  waere schoener, sobald die Layout-Abstimmung mit dem adesso-CI
+  abgeschlossen ist (aktuell Platzhalter-Logo / Default-Font).
+- **Async-Generierung**: Reports rendern in < 100 ms. Sollte ein
+  Mandant grosse Scopes (> 10&nbsp;000 CVEs) exportieren, braucht es
+  einen Async-Job inkl. Status-Polling-Endpoint.
+- **Security-Rollen** (`CVM_REPORTER`, `CVM_APPROVER`) fuer
+  `/api/v1/reports/*` sind noch nicht verdrahtet; aktueller Guard ist
+  `authenticated()` ueber die Default-WebSecurity. Folgt mit den
+  Role-Iterationen ab 11.
+- **Persistenz-Integrationstest fuer V0012**: Docker-skipped bis CI
+  Postgres anbietet.
+- **VEX-Anhang**: Bleibt Platzhalter bis Iteration 20 (VEX + Waiver).
+- **Gesamteinstufungs-Vorstufe**: Der Konzept-Prompt beschreibt einen
+  Checkbox-Endpunkt vor der PDF-Erzeugung. Umgesetzt direkt als
+  Request-Feld `gesamteinstufung`; UI-Schritt (Vorauswahl + manuelle
+  Bestaetigung) folgt mit der Frontend-Erweiterung.
+
 ## Stand 2026-04-18 nach Iteration 09
 - **AssessmentExpiredEvent** noch nicht eingefuehrt. Re-Vorschlag-
   Pfad sollte parallel zu `AlertEscalationJob` laufen, damit

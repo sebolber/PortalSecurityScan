@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="de">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:text="'Hardening-Report ' + ${kopf.produkt} + ' ' + ${kopf.produktVersion}">Hardening-Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 24mm 18mm 22mm 18mm;
+            @top-right { content: "CVM - Hardening-Report"; font-size: 9pt; color: #555; }
+            @bottom-left { content: "adesso health solutions GmbH"; font-size: 8pt; color: #555; }
+            @bottom-right { content: "Seite " counter(page) " / " counter(pages); font-size: 8pt; color: #555; }
+        }
+        body { font-family: "Helvetica", "Arial", sans-serif; font-size: 10pt; color: #1c1c1c; }
+        h1 { font-size: 18pt; margin: 0 0 4pt 0; color: #00205b; }
+        h2 { font-size: 13pt; margin: 18pt 0 6pt 0; color: #00205b;
+             border-bottom: 0.5pt solid #00205b; padding-bottom: 2pt; }
+        h3 { font-size: 11pt; margin: 12pt 0 4pt 0; }
+        table { border-collapse: collapse; width: 100%; margin-top: 4pt; }
+        th, td { border: 0.5pt solid #888; padding: 3pt 4pt; text-align: left;
+                 vertical-align: top; font-size: 9.5pt; }
+        th { background: #e8eef7; }
+        .ampel { display: inline-block; padding: 2pt 10pt; border-radius: 3pt;
+                 font-weight: bold; }
+        .ampel-CRITICAL { background: #8b0000; color: #fff; }
+        .ampel-HIGH { background: #d9534f; color: #fff; }
+        .ampel-MEDIUM { background: #f0ad4e; color: #fff; }
+        .ampel-LOW { background: #f7e463; color: #000; }
+        .ampel-INFORMATIONAL { background: #5bc0de; color: #fff; }
+        .ampel-NOT_APPLICABLE { background: #bbb; color: #000; }
+        .kopf { margin-bottom: 12pt; }
+        .kopf table { width: 100%; }
+        .kopf td { border: none; padding: 1pt 4pt; font-size: 9.5pt; }
+        .kopf td.label { font-weight: bold; width: 34%; color: #333; }
+        .kommentar { font-style: italic; margin-top: 6pt; color: #333; }
+        pre { background: #f7f7f7; padding: 6pt; border: 0.5pt solid #ccc;
+              white-space: pre-wrap; font-size: 8.5pt; }
+        .platzhalter { color: #888; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<h1>Hardening-Report</h1>
+<div class="kopf">
+    <table>
+        <tr><td class="label">Produkt</td><td th:text="${kopf.produkt}">Produkt</td></tr>
+        <tr><td class="label">Version</td><td th:text="${kopf.produktVersion}">-</td></tr>
+        <tr><td class="label">Git-Commit</td><td th:text="${kopf.gitCommit}">-</td></tr>
+        <tr><td class="label">Umgebung</td>
+            <td><span th:text="${kopf.umgebung}">-</span>
+                <span th:text="' (' + ${kopf.umgebungStage} + ')'">(-)</span></td></tr>
+        <tr><td class="label">Stichtag</td><td th:text="${kopf.stichtag}">-</td></tr>
+        <tr><td class="label">Freigeber / Erzeugt von</td><td th:text="${kopf.erzeugtVon}">-</td></tr>
+        <tr><td class="label">Kontextprofil</td><td th:text="${kopf.profilVersion}">-</td></tr>
+    </table>
+</div>
+
+<h2>Gesamteinstufung</h2>
+<p>
+    <span class="ampel" th:classappend="'ampel-' + ${gesamteinstufung}"
+          th:text="${gesamteinstufung}">AMPEL</span>
+</p>
+<p class="kommentar" th:if="${freigeberKommentar != null and !freigeberKommentar.isEmpty()}"
+   th:text="${freigeberKommentar}">Kommentar</p>
+
+<h2>Kennzahlen</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Kategorie</th>
+        <th>CRITICAL</th>
+        <th>HIGH</th>
+        <th>MEDIUM</th>
+        <th>LOW</th>
+        <th>INFO</th>
+        <th>Gesamt</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="k : ${kennzahlen}">
+        <td th:text="${k.kategorie}">Kat</td>
+        <td th:text="${k.critical}">0</td>
+        <td th:text="${k.high}">0</td>
+        <td th:text="${k.medium}">0</td>
+        <td th:text="${k.low}">0</td>
+        <td th:text="${k.informational}">0</td>
+        <td th:text="${k.gesamt}">0</td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>CVE-Liste</h2>
+<p class="platzhalter" th:if="${cveListe.isEmpty()}">
+    Keine bewerteten CVEs im Scope.
+</p>
+<table th:unless="${cveListe.isEmpty()}">
+    <thead>
+    <tr>
+        <th>Kategorie</th>
+        <th>CVE</th>
+        <th>CVSS</th>
+        <th>ahs-Einstufung</th>
+        <th>Geplante Behebung</th>
+        <th>Hinweise</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${cveListe}">
+        <td th:text="${c.kategorie}">Kat</td>
+        <td><a th:href="${c.cveUrl}" th:text="${c.cveKey}">CVE</a></td>
+        <td th:text="${c.originalSeverity}">0</td>
+        <td>
+            <span class="ampel" th:classappend="'ampel-' + ${c.ahsSeverity}"
+                  th:text="${c.ahsSeverity}">-</span>
+        </td>
+        <td th:text="${c.geplanteBehebung}">-</td>
+        <td th:text="${c.hinweise}">-</td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>Offene kritische Punkte</h2>
+<p class="platzhalter" th:if="${offenePunkte.isEmpty()}">
+    Keine offenen Punkte.
+</p>
+<table th:unless="${offenePunkte.isEmpty()}">
+    <thead>
+    <tr><th>CVE</th><th>Severity</th><th>Status</th><th>Hinweis</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="o : ${offenePunkte}">
+        <td th:text="${o.cveKey}">CVE</td>
+        <td>
+            <span class="ampel" th:classappend="'ampel-' + ${o.severity}"
+                  th:text="${o.severity}">-</span>
+        </td>
+        <td th:text="${o.status}">-</td>
+        <td th:text="${o.hinweis}">-</td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>Anhang - Kontextprofil</h2>
+<p class="platzhalter" th:if="${anhang.profilYamlAuszug.isEmpty()}">
+    Kein aktives Profil hinterlegt.
+</p>
+<pre th:unless="${anhang.profilYamlAuszug.isEmpty()}"
+     th:text="${anhang.profilYamlAuszug}">yaml</pre>
+
+<h2>Anhang - Verwendete Regeln</h2>
+<p class="platzhalter" th:if="${anhang.verwendeteRegeln.isEmpty()}">
+    Keine aktiven Regeln.
+</p>
+<table th:unless="${anhang.verwendeteRegeln.isEmpty()}">
+    <thead>
+    <tr><th>Regel-Key</th><th>Name</th><th>Severity</th><th>Treffer</th></tr>
+    </thead>
+    <tbody>
+    <tr th:each="r : ${anhang.verwendeteRegeln}">
+        <td th:text="${r.ruleKey}">key</td>
+        <td th:text="${r.name}">-</td>
+        <td th:text="${r.proposedSeverity}">-</td>
+        <td th:text="${r.treffer}">0</td>
+    </tr>
+    </tbody>
+</table>
+
+<h2>Anhang - VEX</h2>
+<p class="platzhalter" th:text="${anhang.vexPlatzhalter['vex']}">
+    Platzhalter - Ausgabe folgt.
+</p>
+
+</body>
+</html>
