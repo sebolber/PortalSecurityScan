@@ -1,5 +1,16 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-19 nach Iteration 33 - offen
+
+- Iteration 33 (CVM-77) liefert PURL->CVE-Matching ueber OSV.
+  `CVM_OSV_ENABLED=true` aktiviert den Listener, SBOMs ohne
+  `vulnerabilities`-Section fuehren dann zu echten Findings.
+  Details: `docs/20260418/iteration-33-fortschritt.md`.
+- Rate-Limit/Retry-After fuer OSV noch nicht umgesetzt.
+- OSV-Mirror fuer air-gapped-Installationen offen (Iteration 34).
+- PURL-Canonicalization ggf. noetig, falls Trefferquote in Prod
+  zu gering.
+
 > Iteration 32 am 2026-04-18 hat alle 15 Findings aus der
 > UI-Exploration behoben (4 HIGH, 6 MEDIUM, 5 LOW).
 > Details: `docs/20260418/iteration-32-fortschritt.md`.

@@ -43,6 +43,16 @@ cvm:
   security:
     cors:
       allowed-origins: ${CVM_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  # Iteration 33 (CVM-77): OSV-Matching fuer Scan-Ingest. Opt-In, damit
+  # Offline-Installationen keinen Outbound-Traffic erzeugen. Aktiviert
+  # werden ueber Environment-Variable CVM_OSV_ENABLED=true, z.B. im
+  # Dev-Setup per `CVM_OSV_ENABLED=true ./mvnw -pl cvm-app spring-boot:run`.
+  enrichment:
+    osv:
+      enabled: ${CVM_OSV_ENABLED:false}
+      base-url: ${CVM_OSV_BASE_URL:https://api.osv.dev}
+      batch-size: ${CVM_OSV_BATCH_SIZE:500}
+      timeout-ms: ${CVM_OSV_TIMEOUT_MS:15000}
 
 server:
   port: ${CVM_SERVER_PORT:8081}

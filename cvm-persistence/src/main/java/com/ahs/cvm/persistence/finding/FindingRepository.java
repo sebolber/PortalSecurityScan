@@ -16,4 +16,13 @@ public interface FindingRepository extends JpaRepository<Finding, UUID> {
     List<String> findCveIdsByScanId(UUID scanId);
 
     List<Finding> findByDetectedAtBetween(Instant start, Instant end);
+
+    /**
+     * Dedup-Helfer fuer Iteration 33: ein OSV-Matching-Run darf bei
+     * wiederholtem Aufruf keine doppelten Findings anlegen. Primary
+     * Key ist (scan, componentOccurrence, cve). Die Query nutzt den
+     * bestehenden BTree-Index auf diesen drei Spalten.
+     */
+    boolean existsByScanIdAndComponentOccurrenceIdAndCveCveId(
+            UUID scanId, UUID componentOccurrenceId, String cveId);
 }
