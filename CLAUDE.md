@@ -260,9 +260,33 @@ Claude Code arbeitet in dieser Reihenfolge:
 4. **Produktionscode**: minimal implementieren bis Test grün.
 5. **Refaktor**: nur mit grünen Tests, immer mit erneutem Lauf.
 6. **Architekturprüfung**: ArchUnit, Sonar lokal. Bei Verletzung stoppen.
-7. **Abschluss**: Fortschritts- und Test-Summary-Report schreiben,
+7. **UI-Exploration** *(bei Frontend-relevanten Iterationen Pflicht)*:
+   `scripts/explore-ui/` laufen lassen, Screenshots **selbst ansehen**
+   mit `view`-Tool, Findings-Liste schreiben. Details siehe
+   `docs/prompts/ui-exploration.md`. Skippen nur bei reinen
+   Backend-/Infrastruktur-Iterationen, und muss begründet werden.
+8. **Abschluss**: Fortschritts- und Test-Summary-Report schreiben,
    offene Punkte kumulativ ergänzen. Git-Status prüfen, Commit-Vorschlag
    mit Conventional Commit + Jira-Key. **Nicht automatisch pushen.**
+
+### Eigenverantwortung beim Bewerten der Oberfläche
+
+**Tests grün bedeutet nicht Oberfläche gut.** Wenn beim Durchsehen
+der Screenshots nichts auffällt, ist das ein Warnsignal, kein
+Erfolg. Die Exploration zeigt nur, was das Skript sieht; die
+Bewertung, ob ein Bildschirm **funktional** und **verständlich**
+ist, macht Claude selbst, indem die Screenshots mit dem `view`-Tool
+geöffnet werden.
+
+Vier Leitfragen bei jeder Route:
+
+1. Würde ein Admin wissen, was auf dieser Seite zu tun ist?
+2. Ist erkennbar, ob eine Aktion erfolgreich war?
+3. Sind Daten sichtbar, die im Backend existieren?
+4. Gibt es einen Weg zurück/weiter?
+
+Wenn die Antwort auf eine der vier Fragen "nein" ist, gehört das
+Finding in den Report – auch wenn das Skript `INHALT` gemeldet hat.
 
 ### Stopp-Kriterien (Claude Code bricht ab und meldet)
 
@@ -272,6 +296,10 @@ Claude Code arbeitet in dieser Reihenfolge:
 - Ein Secret müsste im Klartext abgelegt werden.
 - Ein KI-Call müsste ohne Audit-Eintrag erfolgen.
 - Eine Downgrade-Logik würde das Vier-Augen-Prinzip umgehen.
+- `scripts/explore-ui/` läuft wegen Infrastruktur nicht durch
+  (Docker-Compose nicht oben, Keycloak-Realm nicht geseedet,
+  Frontend-Build fehlgeschlagen). Claude meldet den Fehler, statt
+  zu raten oder das Skript zu umgehen.
 
 ---
 
