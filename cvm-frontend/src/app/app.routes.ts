@@ -23,7 +23,12 @@ export const APP_ROUTES: Routes = [
         path: 'queue',
         canActivate: [authGuard],
         data: {
-          requiredRoles: [CVM_ROLES.ASSESSOR, CVM_ROLES.APPROVER, CVM_ROLES.ADMIN]
+          requiredRoles: [
+            CVM_ROLES.ASSESSOR,
+            CVM_ROLES.REVIEWER,
+            CVM_ROLES.APPROVER,
+            CVM_ROLES.ADMIN
+          ]
         },
         loadComponent: () =>
           import('./features/queue/queue.component').then((m) => m.QueueComponent)
@@ -44,7 +49,13 @@ export const APP_ROUTES: Routes = [
       {
         path: 'profiles',
         canActivate: [authGuard],
-        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        data: {
+          requiredRoles: [
+            CVM_ROLES.PROFILE_AUTHOR,
+            CVM_ROLES.PROFILE_APPROVER,
+            CVM_ROLES.ADMIN
+          ]
+        },
         loadComponent: () =>
           import('./features/profiles/profiles.component')
             .then((m) => m.ProfilesComponent)
@@ -52,13 +63,26 @@ export const APP_ROUTES: Routes = [
       {
         path: 'rules',
         canActivate: [authGuard],
-        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        data: {
+          requiredRoles: [
+            CVM_ROLES.RULE_AUTHOR,
+            CVM_ROLES.RULE_APPROVER,
+            CVM_ROLES.ADMIN
+          ]
+        },
         loadComponent: () =>
           import('./features/rules/rules.component').then((m) => m.RulesComponent)
       },
       {
         path: 'reports',
         canActivate: [authGuard],
+        data: {
+          requiredRoles: [
+            CVM_ROLES.VIEWER,
+            CVM_ROLES.REPORTER,
+            CVM_ROLES.ADMIN
+          ]
+        },
         loadComponent: () =>
           import('./features/reports/reports.component')
             .then((m) => m.ReportsComponent)

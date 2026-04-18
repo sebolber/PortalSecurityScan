@@ -1,8 +1,9 @@
 <cvm-alert-banner></cvm-alert-banner>
 <mat-toolbar color="primary" class="cvm-header">
-  <button mat-icon-button aria-label="CVM" routerLink="/dashboard">
+  <a routerLink="/dashboard" class="cvm-logo" aria-label="CVM Dashboard">
     <mat-icon>shield</mat-icon>
-  </button>
+    <span>CVM</span>
+  </a>
   <span class="cvm-title">{{ texte.app.title }}</span>
 
   <mat-form-field appearance="outline" class="cvm-product" subscriptSizing="dynamic">
@@ -16,18 +17,38 @@
 
   <span class="flex-1"></span>
 
+  <button
+    mat-icon-button
+    type="button"
+    (click)="toggleTheme()"
+    [attr.aria-label]="themeMode() === 'dark' ? 'Zum Light-Mode wechseln' : 'Zum Dark-Mode wechseln'"
+    matTooltip="{{ themeMode() === 'dark' ? 'Light-Mode' : 'Dark-Mode' }}"
+  >
+    <mat-icon>{{ themeMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
+
   @if (loggedIn()) {
-    <button mat-button [matMenuTriggerFor]="userMenu">
-      <mat-icon>account_circle</mat-icon>
-      <span>{{ username() || 'Benutzer' }}</span>
-      <mat-icon>arrow_drop_down</mat-icon>
-    </button>
-    <mat-menu #userMenu="matMenu">
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span>{{ texte.app.logout }}</span>
+    <div class="cvm-user-panel">
+      <div class="cvm-user-info">
+        <span class="cvm-user-name">{{ username() || 'Benutzer' }}</span>
+        @if (rollenChips().length > 0) {
+          <div class="cvm-role-chips">
+            @for (r of rollenChips(); track r.key) {
+              <span class="cvm-role-chip">{{ r.label }}</span>
+            }
+          </div>
+        }
+      </div>
+      <button mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Benutzer-Menue">
+        <mat-icon>account_circle</mat-icon>
       </button>
-    </mat-menu>
+      <mat-menu #userMenu="matMenu">
+        <button mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>{{ texte.app.logout }}</span>
+        </button>
+      </mat-menu>
+    </div>
   } @else {
     <button mat-button (click)="login()">
       <mat-icon>login</mat-icon>

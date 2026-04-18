@@ -6,7 +6,7 @@ $cvm-primary: mat.m2-define-palette(mat.$m2-red-palette, 700);
 $cvm-accent: mat.m2-define-palette(mat.$m2-grey-palette, 800);
 $cvm-warn: mat.m2-define-palette(mat.$m2-amber-palette, 700);
 
-$cvm-theme: mat.m2-define-light-theme((
+$cvm-light-theme: mat.m2-define-light-theme((
   color: (
     primary: $cvm-primary,
     accent: $cvm-accent,
@@ -16,10 +16,59 @@ $cvm-theme: mat.m2-define-light-theme((
   density: 0
 ));
 
-@include mat.all-component-themes($cvm-theme);
+$cvm-dark-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $cvm-primary,
+    accent: $cvm-accent,
+    warn: $cvm-warn
+  ),
+  typography: mat.m2-define-typography-config(),
+  density: 0
+));
+
+@include mat.all-component-themes($cvm-light-theme);
+
+html[data-theme='dark'] {
+  @include mat.all-component-colors($cvm-dark-theme);
+}
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body { height: 100%; margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/*
+ * Iteration 24: globale CSS-Variablen, damit Light- und Dark-Theme
+ * ueber einen einzigen data-theme-Switch umschalten. Komponenten
+ * referenzieren die Variablen in ihrer SCSS-Datei.
+ */
+:root {
+  --cvm-bg: #f5f5f5;
+  --cvm-surface: #ffffff;
+  --cvm-surface-alt: #ffffff;
+  --cvm-border: #e6e6e6;
+  --cvm-text: #1c1c1c;
+  --cvm-text-muted: #606060;
+  --cvm-primary: #e2001a;
+  --cvm-primary-dark: #b00015;
+  --cvm-active-bg: rgba(226, 0, 26, 0.08);
+}
+
+html[data-theme='dark'] {
+  --cvm-bg: #1c1c1c;
+  --cvm-surface: #242424;
+  --cvm-surface-alt: #2d2d2d;
+  --cvm-border: #3a3a3a;
+  --cvm-text: #f0f0f0;
+  --cvm-text-muted: #a5a5a5;
+  --cvm-primary: #ff4062;
+  --cvm-primary-dark: #e2001a;
+  --cvm-active-bg: rgba(255, 64, 98, 0.16);
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background: var(--cvm-bg);
+  color: var(--cvm-text);
+}

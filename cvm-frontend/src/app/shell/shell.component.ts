@@ -11,11 +11,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/auth/auth.service';
 import { RoleMenuService } from '../core/auth/role-menu.service';
+import { CVM_ROLE_LABELS, CvmRole } from '../core/auth/cvm-roles';
 import { LocaleService } from '../core/i18n/locale.service';
 import { AlertBannerService } from '../core/alerts/alert-banner.service';
+import { ThemeService } from '../core/theme/theme.service';
 import { AlertBannerComponent } from './alert-banner.component';
 
 @Component({
@@ -35,6 +38,7 @@ import { AlertBannerComponent } from './alert-banner.component';
     MatMenuModule,
     MatSelectModule,
     MatFormFieldModule,
+    MatTooltipModule,
     AlertBannerComponent
   ],
   templateUrl: './shell.component.html',
@@ -45,15 +49,25 @@ export class ShellComponent implements OnInit {
   private readonly menu = inject(RoleMenuService);
   private readonly locale = inject(LocaleService);
   private readonly bannerService = inject(AlertBannerService);
+  private readonly theme = inject(ThemeService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly texte = this.locale.messages;
   readonly username = this.auth.username;
   readonly loggedIn = this.auth.loggedIn;
+  readonly themeMode = this.theme.mode;
 
   readonly menuEintraege = computed(() =>
     this.menu.visibleEntries(this.auth.userRoles())
   );
+
+  readonly rollenChips = computed(() => {
+    const labels = CVM_ROLE_LABELS as Readonly<Record<string, string>>;
+    return this.auth
+      .userRoles()
+      .filter((r): r is CvmRole => r in labels)
+      .map((r) => ({ key: r, label: labels[r] }));
+  });
 
   readonly produkte: readonly { key: string; label: string }[] = [
     { key: 'PortalCore-Test', label: 'PortalCore-Test (1.14.2-test)' },
@@ -63,6 +77,7 @@ export class ShellComponent implements OnInit {
   selectedProduct = this.produkte[0]?.key ?? '';
 
   ngOnInit(): void {
+    this.theme.init();
     this.auth.refreshFromKeycloak();
     // Banner nur pollen, wenn ein Login besteht. Sonst produzieren die
     // 401-Antworten Snackbar-Spam, ohne dass der Anwender etwas davon
@@ -78,6 +93,10 @@ export class ShellComponent implements OnInit {
           void this.bannerService.refresh();
         }
       });
+  }
+
+  toggleTheme(): void {
+    this.theme.toggle();
   }
 
   async login(): Promise<void> {

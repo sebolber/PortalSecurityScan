@@ -10,22 +10,96 @@ export interface MenuEntry {
 }
 
 const MENU: readonly MenuEntry[] = [
-  { id: 'dashboard', label: 'Dashboard', path: '/dashboard', icon: 'dashboard',
-    requiredRoles: [CVM_ROLES.VIEWER, CVM_ROLES.ASSESSOR, CVM_ROLES.APPROVER, CVM_ROLES.ADMIN] },
-  { id: 'queue', label: 'Bewertungs-Queue', path: '/queue', icon: 'rule',
-    requiredRoles: [CVM_ROLES.ASSESSOR, CVM_ROLES.APPROVER, CVM_ROLES.ADMIN] },
-  { id: 'cves', label: 'CVEs', path: '/cves', icon: 'bug_report',
-    requiredRoles: [CVM_ROLES.VIEWER, CVM_ROLES.ASSESSOR, CVM_ROLES.APPROVER, CVM_ROLES.ADMIN] },
-  { id: 'components', label: 'Komponenten', path: '/components', icon: 'inventory_2',
-    requiredRoles: [CVM_ROLES.VIEWER, CVM_ROLES.PRODUCT_OWNER, CVM_ROLES.ADMIN] },
-  { id: 'profiles', label: 'Profile', path: '/profiles', icon: 'tune',
-    requiredRoles: [CVM_ROLES.ADMIN] },
-  { id: 'rules', label: 'Regeln', path: '/rules', icon: 'gavel',
-    requiredRoles: [CVM_ROLES.ADMIN] },
-  { id: 'reports', label: 'Berichte', path: '/reports', icon: 'description',
-    requiredRoles: [CVM_ROLES.VIEWER, CVM_ROLES.PRODUCT_OWNER, CVM_ROLES.ADMIN] },
-  { id: 'ai-audit', label: 'KI-Audit', path: '/ai-audit', icon: 'fact_check',
-    requiredRoles: [CVM_ROLES.AI_AUDITOR, CVM_ROLES.ADMIN] }
+  {
+    id: 'dashboard',
+    label: 'Dashboard',
+    path: '/dashboard',
+    icon: 'dashboard',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.REPORTER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'queue',
+    label: 'Bewertungs-Queue',
+    path: '/queue',
+    icon: 'rule',
+    requiredRoles: [
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'cves',
+    label: 'CVEs',
+    path: '/cves',
+    icon: 'bug_report',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'components',
+    label: 'Komponenten',
+    path: '/components',
+    icon: 'inventory_2',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.REPORTER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'profiles',
+    label: 'Profile',
+    path: '/profiles',
+    icon: 'tune',
+    requiredRoles: [
+      CVM_ROLES.PROFILE_AUTHOR,
+      CVM_ROLES.PROFILE_APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'rules',
+    label: 'Regeln',
+    path: '/rules',
+    icon: 'gavel',
+    requiredRoles: [
+      CVM_ROLES.RULE_AUTHOR,
+      CVM_ROLES.RULE_APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'reports',
+    label: 'Berichte',
+    path: '/reports',
+    icon: 'description',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.REPORTER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'ai-audit',
+    label: 'KI-Audit',
+    path: '/ai-audit',
+    icon: 'fact_check',
+    requiredRoles: [CVM_ROLES.AI_AUDITOR, CVM_ROLES.ADMIN]
+  }
 ];
 
 /**

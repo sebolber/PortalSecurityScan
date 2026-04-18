@@ -1,18 +1,26 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 23 am 2026-04-18 hat die Rollen-Verdrahtung zwischen
-> Keycloak-Realm und Spring-Security scharf geschaltet
-> (`KeycloakJwtAuthoritiesConverter` + `@PreAuthorize`-Annotationen
-> an allen fachlichen Endpunkten).  Details:
-> `docs/20260418/iteration-23-fortschritt.md`.
+> Iteration 24 am 2026-04-18 hat die Angular-Shell an den neuen
+> Realm angepasst, einen Light-/Dark-Theme-Toggle verdrahtet und
+> rollenbasierte Navigation/Guards ergaenzt.  Details:
+> `docs/20260418/iteration-24-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 24 - offen
+
+- **Einzelseiten-Redesign** (Queue-Tabelle, Dashboard-Widgets,
+  Profile-/Regel-Editor) - pro Feature separate Iteration.
+- **Keycloak-Login-Theme** (adesso-CI-Skin auf Keycloak-Seite).
+- **Bundle-Budget-Reduktion** (Initial > 1.05 MB, Alt-Last).
+- **Playwright-E2E** fuer Theme-Toggle + rollenbasierte Navigation
+  (Sandbox ohne Chromium).
+- **i18n-EN-Texte** + echter Locale-Switch.
+- **Karma-Lauf in CI** (Headless-Chrome verfuegbar machen).
 
 ## Stand 2026-04-18 nach Iteration 23 - offen
 
 - **Security-Integrationstest** mit echtem JWT-Flow (Testcontainers
   oder Fake-Authorization-Server, der `realm_access.roles`-Claim
   liefert).
-- **Rollen-gefilterte Navigation im Angular-Frontend**
-  (landet in Iteration 24, UI-Ueberarbeitung + Theming).
 - **Tenant-Scope der Rollen** (z.&nbsp;B. `CVM_ADMIN@bkk-nord`).
   Aktuell flaches Modell.
 - **Rollen-/Realm-Rollout** pro Tenant (Modell-Profil-Seed liegt
