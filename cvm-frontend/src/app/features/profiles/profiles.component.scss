@@ -1,0 +1,77 @@
+.cvm-profiles-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 1100px;
+}
+
+.cvm-profiles-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cvm-profiles-title {
+  margin: 0;
+  color: var(--cvm-text);
+}
+
+.cvm-profiles-muted {
+  color: var(--cvm-text-muted);
+}
+
+.cvm-profiles-error {
+  color: #d32f2f;
+}
+
+.cvm-profile-panel {
+  background: var(--cvm-surface);
+}
+
+.cvm-env-name {
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.cvm-env-stage {
+  color: var(--cvm-text-muted);
+  font-size: 0.85rem;
+}
+
+.cvm-profile-ver {
+  color: var(--cvm-text-muted);
+  font-size: 0.85rem;
+}
+
+.cvm-profile-muted {
+  color: var(--cvm-text-muted);
+  font-size: 0.9rem;
+}
+
+.cvm-profile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  color: var(--cvm-text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.cvm-profile-sub {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.9rem;
+  color: var(--cvm-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cvm-profile-yaml {
+  background: var(--cvm-surface-alt);
+  color: var(--cvm-text);
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+}

@@ -1,9 +1,16 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 24 am 2026-04-18 hat die Angular-Shell an den neuen
-> Realm angepasst, einen Light-/Dark-Theme-Toggle verdrahtet und
-> rollenbasierte Navigation/Guards ergaenzt.  Details:
-> `docs/20260418/iteration-24-fortschritt.md`.
+> Iteration 25 am 2026-04-18 hat die Einstellungen-Seite plus
+> funktionale Regeln- und Profile-Seiten gebaut (Backend-GETs fuer
+> Environments und LLM-Model-Profiles).  Details:
+> `docs/20260418/iteration-25-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 25 - offen
+
+- **Rules-Editor im Frontend** (Create/Update Rule).
+- **Profil-YAML-Editor** im Frontend (Monaco + Diff-Viewer).
+- **Tenant-Verwaltungs-UI** (Liste/Create/Deaktivieren).
+- **CVE- und Komponenten-UIs** (Iteration 26).
 
 ## Stand 2026-04-18 nach Iteration 24 - offen
 

@@ -4,12 +4,13 @@ import { CVM_ROLES } from './cvm-roles';
 describe('RoleMenuService', () => {
   const service = new RoleMenuService();
 
-  it('Viewer sieht Dashboard, CVEs, Komponenten, Berichte (keine Autor-/Admin-Eintraege)', () => {
+  it('Viewer sieht Dashboard, CVEs, Komponenten, Berichte, Einstellungen (keine Autor-/Admin-Eintraege)', () => {
     const ids = service.visibleEntries([CVM_ROLES.VIEWER]).map((e) => e.id);
     expect(ids).toContain('dashboard');
     expect(ids).toContain('cves');
     expect(ids).toContain('components');
     expect(ids).toContain('reports');
+    expect(ids).toContain('settings');
     expect(ids).not.toContain('profiles');
     expect(ids).not.toContain('rules');
     expect(ids).not.toContain('queue');
@@ -48,9 +49,11 @@ describe('RoleMenuService', () => {
     expect(ids).not.toContain('queue');
   });
 
-  it('AI-Auditor sieht ausschliesslich KI-Audit', () => {
+  it('AI-Auditor sieht KI-Audit und Einstellungen', () => {
     const ids = service.visibleEntries([CVM_ROLES.AI_AUDITOR]).map((e) => e.id);
-    expect(ids).toEqual(['ai-audit']);
+    expect(ids).toContain('ai-audit');
+    expect(ids).toContain('settings');
+    expect(ids).not.toContain('profiles');
   });
 
   it('Admin sieht alle Menue-Eintraege', () => {

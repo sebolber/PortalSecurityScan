@@ -1,0 +1,111 @@
+<div class="cvm-rules-page">
+  <div class="cvm-rules-head">
+    <h1 class="cvm-rules-title">Regeln</h1>
+    <button mat-stroked-button (click)="laden()" [disabled]="loading()">
+      <mat-icon>refresh</mat-icon>
+      Neu laden
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="cvm-rules-muted">Regeln werden geladen...</p>
+  }
+  @if (error()) {
+    <p class="cvm-rules-error">{{ error() }}</p>
+  }
+  @if (!loading() && !error() && rules().length === 0) {
+    <p class="cvm-rules-muted">
+      Es sind noch keine Regeln angelegt. Rule-Author kann ueber den
+      REST-Endpunkt POST /api/v1/rules einen Draft anlegen (UI-Editor folgt).
+    </p>
+  }
+
+  <mat-accordion multi>
+    @for (rule of rules(); track rule.id) {
+      <mat-expansion-panel class="cvm-rule-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title class="cvm-rule-title-row">
+            <span class="cvm-rule-name">{{ rule.name }}</span>
+            <span class="cvm-rule-key">{{ rule.ruleKey }}</span>
+          </mat-panel-title>
+          <mat-panel-description class="cvm-rule-desc-row">
+            <span
+              class="cvm-status-chip"
+              [class.cvm-status-active]="rule.status === 'ACTIVE'"
+              [class.cvm-status-draft]="rule.status === 'DRAFT'"
+              [class.cvm-status-retired]="rule.status === 'RETIRED'"
+            >{{ rule.status }}</span>
+            <span class="cvm-rule-sev">{{ rule.proposedSeverity }}</span>
+            <span class="cvm-rule-ver">v{{ rule.version }}</span>
+          </mat-panel-description>
+        </mat-expansion-panel-header>
+
+        <div class="cvm-rule-body">
+          @if (rule.description) {
+            <p class="cvm-rule-desc">{{ rule.description }}</p>
+          }
+          <div class="cvm-rule-meta">
+            <span><strong>Angelegt:</strong> {{ rule.createdBy }} am {{ rule.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
+            @if (rule.activatedBy) {
+              <span><strong>Aktiviert:</strong> {{ rule.activatedBy }} am {{ rule.activatedAt | date:'yyyy-MM-dd HH:mm' }}</span>
+            }
+            @if (rule.origin) {
+              <span><strong>Quelle:</strong> {{ rule.origin }}</span>
+            }
+          </div>
+
+          <h4 class="cvm-rule-sub">Condition</h4>
+          <pre class="cvm-rule-code">{{ rule.conditionJson }}</pre>
+
+          @if (rule.rationaleTemplate) {
+            <h4 class="cvm-rule-sub">Rationale-Template</h4>
+            <pre class="cvm-rule-code">{{ rule.rationaleTemplate }}</pre>
+          }
+
+          <div class="cvm-rule-actions">
+            @if (canAuthor()) {
+              <button
+                mat-stroked-button
+                [disabled]="isPending(rule.id)"
+                (click)="dryRun(rule)"
+              >
+                <mat-icon>play_arrow</mat-icon>
+                Dry-Run (180 Tage)
+              </button>
+            }
+            @if (canActivate() && rule.status === 'DRAFT') {
+              <button
+                mat-raised-button color="primary"
+                [disabled]="isPending(rule.id)"
+                (click)="aktivieren(rule)"
+              >
+                <mat-icon>check_circle</mat-icon>
+                Aktivieren
+              </button>
+            }
+          </div>
+
+          @if (dryRuns()[rule.id]; as r) {
+            <div class="cvm-dryrun-result">
+              <h4 class="cvm-rule-sub">Dry-Run-Ergebnis ({{ r.fensterTage }} Tage)</h4>
+              <ul>
+                <li>Wuerde greifen: <strong>{{ r.wuerdeGreifen }}</strong></li>
+                <li>Kollisionen mit aktiven Bewertungen: <strong>{{ r.kollidiertMitAktivBewertung }}</strong></li>
+              </ul>
+              @if (r.beispiele.length > 0) {
+                <details>
+                  <summary>Beispiele ({{ r.beispiele.length }})</summary>
+                  <ul>
+                    @for (b of r.beispiele; track b) {
+                      <li>{{ b }}</li>
+                    }
+                  </ul>
+                </details>
+              }
+            </div>
+          }
+        </div>
+      </mat-expansion-panel>
+    }
+  </mat-accordion>
+</div>

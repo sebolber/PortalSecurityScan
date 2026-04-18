@@ -99,6 +99,25 @@ const MENU: readonly MenuEntry[] = [
     path: '/ai-audit',
     icon: 'fact_check',
     requiredRoles: [CVM_ROLES.AI_AUDITOR, CVM_ROLES.ADMIN]
+  },
+  {
+    id: 'settings',
+    label: 'Einstellungen',
+    path: '/settings',
+    icon: 'settings',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.PROFILE_AUTHOR,
+      CVM_ROLES.PROFILE_APPROVER,
+      CVM_ROLES.RULE_AUTHOR,
+      CVM_ROLES.RULE_APPROVER,
+      CVM_ROLES.REPORTER,
+      CVM_ROLES.AI_AUDITOR,
+      CVM_ROLES.ADMIN
+    ]
   }
 ];
 
