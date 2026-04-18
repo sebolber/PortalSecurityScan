@@ -1,5 +1,23 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 12
+- **Embedding-Calls ohne Audit**: `IndexingService` ruft den
+  `EmbeddingClient` derzeit direkt; wenn der Embedding-Pfad
+  produktiv wird, sollte er ueber den `AiCallAuditService` mit
+  `useCase=EMBEDDING` laufen.
+- **`indexAll()` ohne Pageable**: voller `findAll()` ueber
+  Assessments und CVEs. Streaming-Variante einbauen, sobald die
+  Datenmenge ueber ein paar tausend hinaus geht.
+- **Anthropic-Embedding-Adapter**: erst sobald die offizielle API
+  raus aus Beta ist.
+- **pgvector-Integrationstest** (Testcontainers + ivfflat) bleibt
+  Docker-skipped.
+- **Locale-Vorbehandlung** (Umlaute, Stop-Words) optional - aktuell
+  nur Roh-String an Modell.
+- **`ai_call_audit`-Eintrag fuer Re-Index-Endpunkt**: Der Admin-
+  Re-Index ist bisher nicht audit-pflichtig (kein KI-Call im engen
+  Sinne, aber ggf. relevant fuer Compliance-Logging).
+
 ## Stand 2026-04-18 nach Iteration 11
 - **Resilience4j** um `ClaudeApiClient` und `OllamaClient` fehlt noch
   (Retry, Circuit-Breaker, Timeout-Feintuning). Sollte nachgezogen
