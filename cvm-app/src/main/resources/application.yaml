@@ -36,6 +36,9 @@ cvm:
     eskalation:
       t1-minutes: ${CVM_ALERTS_T1:120}
       t2-minutes: ${CVM_ALERTS_T2:360}
+  security:
+    cors:
+      allowed-origins: ${CVM_CORS_ALLOWED_ORIGINS:http://localhost:4200}
 
 server:
   port: ${CVM_SERVER_PORT:8081}
