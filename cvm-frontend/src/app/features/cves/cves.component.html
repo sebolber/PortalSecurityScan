@@ -1,0 +1,138 @@
+<div class="cvm-cves-page">
+  <div class="cvm-cves-head">
+    <h1 class="cvm-cves-title">CVE-Inventar</h1>
+    <button mat-stroked-button (click)="resetFilter()" [disabled]="loading()">
+      <mat-icon>clear</mat-icon>
+      Filter zuruecksetzen
+    </button>
+  </div>
+
+  <mat-card class="cvm-filter-card">
+    <mat-card-content class="cvm-filter-row">
+      <mat-form-field appearance="outline" class="cvm-search-field">
+        <mat-label>CVE-Schluessel oder Summary</mat-label>
+        <input
+          matInput
+          [(ngModel)]="searchText"
+          (keyup.enter)="sucheAusloesen()"
+          placeholder="z.B. CVE-2025 oder spring"
+        >
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+
+      <mat-button-toggle-group
+        [(ngModel)]="severityFilter"
+        (change)="sucheAusloesen()"
+        class="cvm-sev-toggle"
+      >
+        <mat-button-toggle [value]="null">Alle</mat-button-toggle>
+        @for (s of severities; track s) {
+          <mat-button-toggle [value]="s">{{ s }}</mat-button-toggle>
+        }
+      </mat-button-toggle-group>
+
+      <mat-slide-toggle
+        [(ngModel)]="onlyKev"
+        (change)="sucheAusloesen()"
+      >
+        Nur KEV
+      </mat-slide-toggle>
+
+      <button mat-raised-button color="primary" (click)="sucheAusloesen()">
+        <mat-icon>search</mat-icon>
+        Suchen
+      </button>
+    </mat-card-content>
+  </mat-card>
+
+  @if (loading()) {
+    <div class="cvm-cves-muted">
+      <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+      <span>Laedt...</span>
+    </div>
+  }
+  @if (error()) {
+    <p class="cvm-cves-error">{{ error() }}</p>
+  }
+
+  @if (!loading() && !error() && page()) {
+    <mat-card class="cvm-table-card">
+      <mat-card-content>
+        <table mat-table [dataSource]="page()!.items" class="cvm-cves-table">
+          <ng-container matColumnDef="cveId">
+            <th mat-header-cell *matHeaderCellDef>CVE</th>
+            <td mat-cell *matCellDef="let row">
+              <span class="cvm-cell-key">{{ row.cveId }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="severity">
+            <th mat-header-cell *matHeaderCellDef>Severity</th>
+            <td mat-cell *matCellDef="let row">
+              <span
+                class="cvm-sev-chip"
+                [attr.data-sev]="schwereVonCvss(row.cvssBaseScore)"
+              >{{ schwereVonCvss(row.cvssBaseScore) }}</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="cvss">
+            <th mat-header-cell *matHeaderCellDef>CVSS</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.cvssBaseScore === null ? '-' : (row.cvssBaseScore | number:'1.1-1') }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="kev">
+            <th mat-header-cell *matHeaderCellDef>KEV</th>
+            <td mat-cell *matCellDef="let row">
+              @if (row.kevListed) {
+                <mat-icon class="cvm-kev-icon" matTooltip="CISA KEV">
+                  warning
+                </mat-icon>
+              } @else {
+                <span class="cvm-cves-muted-inline">-</span>
+              }
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="epss">
+            <th mat-header-cell *matHeaderCellDef>EPSS</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.epssScore === null ? '-' : (row.epssScore * 100 | number:'1.1-1') + '%' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="publishedAt">
+            <th mat-header-cell *matHeaderCellDef>Veroeffentlicht</th>
+            <td mat-cell *matCellDef="let row">
+              {{ row.publishedAt ? (row.publishedAt | date:'yyyy-MM-dd') : '-' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="summary">
+            <th mat-header-cell *matHeaderCellDef>Summary</th>
+            <td mat-cell *matCellDef="let row" class="cvm-cell-summary">
+              {{ row.summary || '-' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columns"></tr>
+          <tr mat-row *matRowDef="let r; columns: columns; trackBy: trackCve"></tr>
+        </table>
+
+        @if (page()!.items.length === 0) {
+          <p class="cvm-cves-muted">Keine CVEs gefunden.</p>
+        }
+
+        <mat-paginator
+          [length]="page()!.totalElements"
+          [pageSize]="page()!.size"
+          [pageIndex]="page()!.page"
+          [pageSizeOptions]="[10, 25, 50]"
+          (page)="onPage($event)"
+        ></mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

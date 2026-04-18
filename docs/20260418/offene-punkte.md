@@ -1,16 +1,20 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 25 am 2026-04-18 hat die Einstellungen-Seite plus
-> funktionale Regeln- und Profile-Seiten gebaut (Backend-GETs fuer
-> Environments und LLM-Model-Profiles).  Details:
-> `docs/20260418/iteration-25-fortschritt.md`.
+> Iteration 26 am 2026-04-18 hat das CVE- und Komponenten-Inventar
+> mit eigenen Backend-Read-Endpunkten und Angular-Seiten
+> umgesetzt (`/api/v1/cves`, `/api/v1/products`).  Details:
+> `docs/20260418/iteration-26-fortschritt.md`.
 
-## Stand 2026-04-18 nach Iteration 25 - offen
+## Stand 2026-04-18 nach Iteration 26 - offen
 
+- **CVE-Detailseite** mit verknuepften Findings und Assessments.
+- **Criteria-basiertes Server-Paging** fuer CVE-Listen
+  (Stream-Filter reicht bis wenige tausend CVEs).
+- **Produkt-/Versions-Verwaltung** (Create/Update, aktuell nur
+  Read - Anlage via SBOM-Import).
 - **Rules-Editor im Frontend** (Create/Update Rule).
 - **Profil-YAML-Editor** im Frontend (Monaco + Diff-Viewer).
 - **Tenant-Verwaltungs-UI** (Liste/Create/Deaktivieren).
-- **CVE- und Komponenten-UIs** (Iteration 26).
 
 ## Stand 2026-04-18 nach Iteration 24 - offen
 

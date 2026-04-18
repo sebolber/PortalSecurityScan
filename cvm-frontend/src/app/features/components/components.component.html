@@ -1,0 +1,91 @@
+<div class="cvm-components-page">
+  <div class="cvm-components-head">
+    <h1 class="cvm-components-title">Komponenten</h1>
+    <button
+      mat-stroked-button
+      (click)="ladeProdukte()"
+      [disabled]="loadingProducts()"
+    >
+      <mat-icon>refresh</mat-icon>
+      Neu laden
+    </button>
+  </div>
+
+  @if (error()) {
+    <p class="cvm-components-error">{{ error() }}</p>
+  }
+
+  <div class="cvm-components-layout">
+    <mat-card class="cvm-products-card">
+      <mat-card-header>
+        <mat-card-title>Produkte</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (loadingProducts()) {
+          <div class="cvm-components-muted">
+            <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
+            <span>Laedt...</span>
+          </div>
+        } @else if (products().length === 0) {
+          <p class="cvm-components-muted">Keine Produkte angelegt.</p>
+        } @else {
+          <mat-nav-list>
+            @for (p of products(); track p.id) {
+              <a
+                mat-list-item
+                [class.cvm-product-active]="selectedProduct()?.id === p.id"
+                (click)="waehleProdukt(p)"
+              >
+                <mat-icon matListItemIcon>inventory_2</mat-icon>
+                <span matListItemTitle>{{ p.key }}</span>
+                <span matListItemLine class="cvm-product-name">{{ p.name }}</span>
+              </a>
+            }
+          </mat-nav-list>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cvm-versions-card">
+      <mat-card-header>
+        <mat-card-title>
+          {{ selectedProduct()?.key || 'Versionen' }}
+        </mat-card-title>
+        @if (selectedProduct()?.description; as d) {
+          <mat-card-subtitle>{{ d }}</mat-card-subtitle>
+        }
+      </mat-card-header>
+      <mat-card-content>
+        @if (loadingVersions()) {
+          <div class="cvm-components-muted">
+            <mat-progress-spinner diameter="24" mode="indeterminate"></mat-progress-spinner>
+            <span>Laedt...</span>
+          </div>
+        } @else if (!selectedProduct()) {
+          <p class="cvm-components-muted">Kein Produkt ausgewaehlt.</p>
+        } @else if (versions().length === 0) {
+          <p class="cvm-components-muted">Fuer dieses Produkt sind noch keine Versionen vorhanden.</p>
+        } @else {
+          <table class="cvm-versions-table">
+            <thead>
+              <tr>
+                <th>Version</th>
+                <th>Git-Commit</th>
+                <th>Released</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of versions(); track v.id) {
+                <tr>
+                  <td class="cvm-cell-version">{{ v.version }}</td>
+                  <td class="cvm-cell-commit">{{ v.gitCommit || '-' }}</td>
+                  <td>{{ v.releasedAt ? (v.releasedAt | date:'yyyy-MM-dd') : '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>
