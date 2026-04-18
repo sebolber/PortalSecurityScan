@@ -1,6 +1,10 @@
 spring:
   application:
     name: cvm
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 35MB
   datasource:
     url: ${CVM_DB_URL:jdbc:postgresql://localhost:5432/cvm}
     username: ${CVM_DB_USER:cvm}

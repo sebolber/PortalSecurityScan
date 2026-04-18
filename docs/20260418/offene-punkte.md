@@ -11,9 +11,8 @@
 - **Karma-Suite blockiert**: `chart-theme.service.spec.ts` hat
   TS4111-Index-Access-Fehler (pre-existent). Eigener Fix in separater
   Iteration, damit Tests wieder laufen.
-- **Server-Multipart-Limit**: `spring.servlet.multipart.max-file-size`
-  in `application.yaml` setzen (z.B. 10 MB) — aktuell nur clientseitig
-  auf 5 MB begrenzt.
+- ~~Server-Multipart-Limit~~ erledigt: `spring.servlet.multipart.max-file-size=30MB`
+  in `application.yaml` gesetzt, Client-Limit synchron bei 30 MB.
 - **Produkt-/Profil-Edit und Soft-Delete** (eigene Iteration, Vier-Augen
   auf Profil-Delete).
 - **Playwright-E2E `onboarding.e2e.ts`** fuer den durchgehenden Happy-Path

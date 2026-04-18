@@ -5,7 +5,7 @@
     <mat-card-header>
       <mat-card-title>CycloneDX-SBOM einreichen</mat-card-title>
       <mat-card-subtitle>
-        Nur JSON im CycloneDX 1.x-Schema, max. 5 MB. Die Verarbeitung
+        Nur JSON im CycloneDX 1.x-Schema, max. 30 MB. Die Verarbeitung
         (Parsing + CVE-Anreicherung) laeuft asynchron.
       </mat-card-subtitle>
     </mat-card-header>
@@ -66,7 +66,7 @@
           </p>
         } @else {
           <p class="cvm-scan-upload-muted">
-            Datei hier ablegen oder auswaehlen (nur .json, max. 5 MB)
+            Datei hier ablegen oder auswaehlen (nur .json, max. 30 MB)
           </p>
         }
         <input type="file"

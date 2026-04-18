@@ -23,7 +23,7 @@ import {
   ScansService
 } from '../../core/scans/scans.service';
 
-const MAX_SIZE_BYTES = 5 * 1024 * 1024;
+const MAX_SIZE_BYTES = 30 * 1024 * 1024;
 
 type UploadState = 'idle' | 'uploading' | 'polling' | 'done' | 'error';
 
@@ -133,7 +133,7 @@ export class ScanUploadComponent implements OnInit {
   private setzeDatei(file: File): void {
     if (file.size > MAX_SIZE_BYTES) {
       this.snack.open(
-        `Datei zu gross (${(file.size / 1024 / 1024).toFixed(1)} MB, max 5 MB).`,
+        `Datei zu gross (${(file.size / 1024 / 1024).toFixed(1)} MB, max 30 MB).`,
         'OK', { duration: 4000 });
       return;
     }
