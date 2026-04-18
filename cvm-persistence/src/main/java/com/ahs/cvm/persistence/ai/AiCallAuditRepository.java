@@ -1,6 +1,7 @@
 package com.ahs.cvm.persistence.ai;
 
 import com.ahs.cvm.domain.enums.AiCallStatus;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -28,4 +29,19 @@ public interface AiCallAuditRepository extends JpaRepository<AiCallAudit, UUID> 
             @Param("status") AiCallStatus status,
             @Param("useCase") String useCase,
             Pageable pageable);
+
+    /**
+     * Summiert {@code costEur} fuer alle erfolgreichen Aufrufe eines
+     * Modells in einem Zeitfenster. Basis fuer den Kosten-Cap pro
+     * Monat (Iteration 21).
+     */
+    @Query("SELECT COALESCE(SUM(a.costEur), 0) FROM AiCallAudit a "
+            + "WHERE a.modelId = :modelId "
+            + "  AND a.createdAt >= :from "
+            + "  AND a.createdAt <  :to "
+            + "  AND a.status = com.ahs.cvm.domain.enums.AiCallStatus.OK")
+    BigDecimal sumCostEurForModelAndRange(
+            @Param("modelId") String modelId,
+            @Param("from") Instant from,
+            @Param("to") Instant to);
 }

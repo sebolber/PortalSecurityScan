@@ -1,5 +1,44 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 21 - Go-Live-Checkliste
+
+**RLS-Hardening**
+- RLS-Policies auf Sachtabellen (`assessment`, `scan`, `finding`,
+  `waiver`, `ai_call_audit`, ...) mit
+  `USING (tenant_id = current_setting('cvm.current_tenant')::uuid)`
+  in einer eigenen Migration nachziehen.
+- `@Transactional`-Aspekt, der `SET LOCAL cvm.current_tenant`
+  aus dem `TenantContext` pusht.
+- ArchUnit-Test: kein Repository-Call ohne Tenant-Kontext.
+- `RlsIsolationTest` (Testcontainers): Tenant A sieht Tenant B
+  nicht - auch bei bewusst fehlerhafter Query.
+
+**Gate-Integration**
+- GitLab-CI-Template `.gitlab-ci-cvm-gate.yml` im Repo-Root und
+  in den Produkt-Pipelines ausrollen.
+- MR-Kommentar POST zurueck ans MergeRequest (via GitProviderPort).
+- Rate-Limit am Gate-Endpunkt (Bucket4j analog zum LLM-Gateway).
+
+**KPI-UI**
+- ECharts-Widgets im Dashboard: Burn-Down-Linie, Severity-Saeulen,
+  Ampel fuer SLA-Quote.
+- Executive-Report: CSV-Anhang einbinden (aktuell nur separater
+  Download).
+- Optional: `kpi_snapshot_daily` materialisieren.
+
+**Tenant-Rollout**
+- Migrations-Script zur Einfuehrung einer
+  `tenant_id`-Spalte auf allen Sachtabellen (mit Default-Tenant).
+- JWT-Tenant-Resolver scharf schalten (im API-Modul ist der
+  `TenantContext` vorbereitet).
+- Modell-Profil-Seed pro Mandant (Claude-Cloud + Ollama-Fallback).
+
+**Cost-Cap-Integration in KI-Services**
+- Jeder KI-Service (Copilot, Anomaly, Executive-Summary, ...)
+  fragt `LlmCostGuard.isUnderBudget(...)` vor dem Call und
+  faellt sonst in Regel-only-Modus. Aktuell nur der Guard
+  selbst verdrahtet.
+
 ## Stand 2026-04-18 nach Iteration 20
 - **VEX-Import-Ingestion**: Statements werden aktuell nur
   geparst + validiert. Das Anlegen von AssessmentProposals
