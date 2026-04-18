@@ -1,5 +1,16 @@
 # Offene Punkte (kumulativ)
 
+> Iteration 30 am 2026-04-18 hat die Severity-Farbentscheidung
+> formell unter `docs/konzept/severity-farbentscheidung.md`
+> dokumentiert (Mapping, Begruendung, Kontrastnachweis,
+> Aenderungspolitik). Details:
+> `docs/20260418/iteration-30-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 30 - offen
+
+- Keine neuen Punkte. Backlog-Eintrag "Severity-Farbentscheidung
+  formell dokumentieren" aus Iteration 27 ist damit erledigt.
+
 > Iteration 29 am 2026-04-18 hat die Test-Bootstrap-Blocker behoben:
 > Chart-Theme-Spec kompiliert wieder (TS4111), Persistenz- und
 > Integrationstests skippen sauber, wenn Testcontainers die
@@ -47,8 +58,8 @@
 - **Mandanten-Platzhalter** (Waiver, Alert-Historie,
   Reachability, Fix-Verifikation, Anomalie-Board,
   Cross-Tenant-Dashboard) mit `<cvm-page-placeholder>` anbinden.
-- **Severity-Farbentscheidung** formell dokumentieren
-  (`docs/konzept/severity-farbentscheidung.md`).
+- ~~**Severity-Farbentscheidung** formell dokumentieren~~ erledigt
+  in Iteration 30 (`docs/konzept/severity-farbentscheidung.md`).
 - **FullNavigationWalkThroughTest + axe-core** in Playwright
   (Sandbox ohne Chromium).
 - **branding_config_history**-Tabelle fuer One-Click-Rollback.
