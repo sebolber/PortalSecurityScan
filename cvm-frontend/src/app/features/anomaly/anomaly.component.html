@@ -1,0 +1,80 @@
+<section class="cvm-anomaly">
+  <header class="cvm-anomaly__header">
+    <h1 class="text-title-lg">Anomalie-Board</h1>
+    <p class="text-body">
+      Gestoppte KI-Vorbewertungen mit Muster-Klassifikation. Jede
+      Anomalie verlangt eine menschliche Freigabe, bevor die
+      Vorbewertung wirksam wird.
+    </p>
+  </header>
+
+  <mat-button-toggle-group
+    [value]="hours()"
+    (change)="fensterWechseln($event.value)"
+    aria-label="Zeitfenster"
+  >
+    @for (f of fenster; track f.key) {
+      <mat-button-toggle [value]="f.key">{{ f.label }}</mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+
+  @if (loading()) {
+    <mat-spinner diameter="36"></mat-spinner>
+  } @else if (rows().length === 0) {
+    <ahs-empty-state
+      icon="sensors"
+      title="Keine Anomalien"
+      hint="Im gewaehlten Zeitfenster sind keine KI-Vorbewertungen gestoppt worden."
+    ></ahs-empty-state>
+  } @else {
+    <table
+      mat-table
+      [dataSource]="rows()"
+      [trackBy]="trackId"
+      class="cvm-anomaly__table"
+    >
+      <ng-container matColumnDef="triggeredAt">
+        <th mat-header-cell *matHeaderCellDef>Zeit</th>
+        <td mat-cell *matCellDef="let a">
+          {{ a.triggeredAt | date: 'yyyy-MM-dd HH:mm' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pattern">
+        <th mat-header-cell *matHeaderCellDef>Muster</th>
+        <td mat-cell *matCellDef="let a" class="text-code">{{ a.pattern }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="severity">
+        <th mat-header-cell *matHeaderCellDef>Severity</th>
+        <td mat-cell *matCellDef="let a">
+          <span
+            class="cvm-anomaly__severity"
+            [attr.data-severity]="a.severity"
+          >
+            {{ a.severity }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="reason">
+        <th mat-header-cell *matHeaderCellDef>Begruendung</th>
+        <td mat-cell *matCellDef="let a">{{ a.reason }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="assessment">
+        <th mat-header-cell *matHeaderCellDef>Assessment</th>
+        <td mat-cell *matCellDef="let a" class="text-code">
+          {{ a.assessmentId || '–' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+</section>
