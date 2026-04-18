@@ -1,0 +1,78 @@
+<section class="cvm-alerts-history">
+  <header class="cvm-alerts-history__header">
+    <h1 class="text-title-lg">Alert-Historie</h1>
+    <p class="text-body">
+      Letzte 50 ausgeloeste Mail-Dispatches mit Empfaengern, Zeitstempel
+      und Dry-Run-Kennzeichnung.
+    </p>
+  </header>
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+
+  @if (loading()) {
+    <mat-spinner diameter="36"></mat-spinner>
+  } @else if (rows().length === 0) {
+    <ahs-empty-state
+      icon="history"
+      title="Keine Alert-Events"
+      hint="Es wurden bisher keine Alerts verschickt."
+    ></ahs-empty-state>
+  } @else {
+    <table
+      mat-table
+      [dataSource]="rows()"
+      [trackBy]="trackId"
+      class="cvm-alerts-history__table"
+    >
+      <ng-container matColumnDef="dispatchedAt">
+        <th mat-header-cell *matHeaderCellDef>Zeit</th>
+        <td mat-cell *matCellDef="let a">
+          {{ a.dispatchedAt | date: 'yyyy-MM-dd HH:mm' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="subject">
+        <th mat-header-cell *matHeaderCellDef>Betreff</th>
+        <td mat-cell *matCellDef="let a">{{ a.subject }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="recipients">
+        <th mat-header-cell *matHeaderCellDef>Empfaenger</th>
+        <td mat-cell *matCellDef="let a" class="text-caption">
+          {{ a.recipients?.join(', ') || '–' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="triggerKey">
+        <th mat-header-cell *matHeaderCellDef>Trigger</th>
+        <td mat-cell *matCellDef="let a" class="text-code">
+          {{ a.triggerKey }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="state">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let a">
+          @if (a.error) {
+            <span class="cvm-alerts-history__state" data-state="ERROR">
+              FEHLER
+            </span>
+          } @else if (a.dryRun) {
+            <span class="cvm-alerts-history__state" data-state="DRY">
+              DRY-RUN
+            </span>
+          } @else {
+            <span class="cvm-alerts-history__state" data-state="SENT">
+              GESENDET
+            </span>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+</section>

@@ -12,6 +12,8 @@ import com.ahs.cvm.application.alert.AlertBannerService.BannerStatus;
 import com.ahs.cvm.application.alert.AlertConfig;
 import com.ahs.cvm.application.alert.AlertEvaluator;
 import com.ahs.cvm.application.alert.AlertEvaluator.AlertOutcome;
+import com.ahs.cvm.application.alert.AlertHistoryService;
+import com.ahs.cvm.application.alert.AlertHistoryView;
 import com.ahs.cvm.application.alert.AlertRuleService;
 import com.ahs.cvm.application.alert.AlertRuleView;
 import com.ahs.cvm.domain.enums.AlertSeverity;
@@ -44,6 +46,7 @@ class AlertsControllerWebTest {
     @MockBean AlertRuleService ruleService;
     @MockBean AlertEvaluator evaluator;
     @MockBean AlertBannerService bannerService;
+    @MockBean AlertHistoryService historyService;
 
     @org.springframework.boot.test.context.TestConfiguration
     static class TestBeans {
@@ -116,5 +119,27 @@ class AlertsControllerWebTest {
                 true,
                 Instant.now(),
                 null);
+    }
+
+    @Test
+    @DisplayName("GET /alerts/history: liefert letzte Dispatches mit limit")
+    void history() throws Exception {
+        given(historyService.recent(25)).willReturn(List.of(
+                new AlertHistoryView(
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        "CVE-X|prod",
+                        Instant.parse("2026-04-18T09:30:00Z"),
+                        List.of("ops@ahs.test"),
+                        "[CVM] KEV-Hit CVE-X",
+                        "Body-Auszug",
+                        false,
+                        null)));
+
+        mockMvc.perform(get("/api/v1/alerts/history").param("limit", "25"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].subject").value("[CVM] KEV-Hit CVE-X"))
+                .andExpect(jsonPath("$[0].dryRun").value(false));
     }
 }

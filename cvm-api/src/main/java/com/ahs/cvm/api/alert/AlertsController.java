@@ -6,6 +6,8 @@ import com.ahs.cvm.application.alert.AlertConfig;
 import com.ahs.cvm.application.alert.AlertContext;
 import com.ahs.cvm.application.alert.AlertEvaluator;
 import com.ahs.cvm.application.alert.AlertEvaluator.AlertOutcome;
+import com.ahs.cvm.application.alert.AlertHistoryService;
+import com.ahs.cvm.application.alert.AlertHistoryView;
 import com.ahs.cvm.application.alert.AlertRuleService;
 import com.ahs.cvm.application.alert.AlertRuleService.CreateRuleCommand;
 import com.ahs.cvm.application.alert.AlertRuleView;
@@ -53,6 +55,7 @@ public class AlertsController {
     private final AlertRuleService ruleService;
     private final AlertEvaluator evaluator;
     private final AlertBannerService bannerService;
+    private final AlertHistoryService historyService;
     private final AlertConfig config;
     private final Clock clock;
 
@@ -60,11 +63,13 @@ public class AlertsController {
             AlertRuleService ruleService,
             AlertEvaluator evaluator,
             AlertBannerService bannerService,
+            AlertHistoryService historyService,
             AlertConfig config,
             Clock clock) {
         this.ruleService = ruleService;
         this.evaluator = evaluator;
         this.bannerService = bannerService;
+        this.historyService = historyService;
         this.config = config;
         this.clock = clock;
     }
@@ -119,6 +124,14 @@ public class AlertsController {
     @Operation(summary = "Banner-Status (T2-Eskalation offen?)")
     public ResponseEntity<BannerStatus> banner() {
         return ResponseEntity.ok(bannerService.aktuellerStatus());
+    }
+
+    @GetMapping("/history")
+    @Operation(summary = "Letzte Alert-Dispatches absteigend nach Zeit")
+    public ResponseEntity<List<AlertHistoryView>> history(
+            @org.springframework.web.bind.annotation.RequestParam(
+                    name = "limit", defaultValue = "50") int limit) {
+        return ResponseEntity.ok(historyService.recent(limit));
     }
 
     /** Eingabe fuer {@code POST /rules}. */
