@@ -1,4 +1,4 @@
-# Iteration 23 – UI-Komplettüberarbeitung: Modernes, harmonisches Design mit Theming
+# Iteration 27 – UI-Komplettüberarbeitung: Modernes, harmonisches Design mit Theming
 
 **Jira**: CVM-61
 **Abhängigkeit**: alle vorherigen inkl. Iteration 22 (Settings-Center); UI-Stellen aus 07, 08, 10, 14, 18, 19, 21
@@ -25,7 +25,7 @@ produktives Niveau und legt die Grundlage für mandantenspezifisches Branding.
 
 **Bevor du irgendwas änderst**:
 Durchforste `cvm-frontend/` und erstelle eine **Bestandsaufnahme** unter
-`docs/YYYYMMDD/iteration-23-ui-audit.md`. Darin listest du:
+`docs/YYYYMMDD/iteration-27-ui-audit.md`. Darin listest du:
 - jede eigene Komponente (Name, Pfad, Zweck)
 - alle direkt verwendeten Angular-Material-Komponenten
 - alle Stellen mit Inline-Styles oder hardkodierten Farben/Abständen
@@ -649,7 +649,7 @@ Bei jedem Bereich:
     zu Schritt 3 bis 5, bis alle Routen entweder Inhalt oder Platzhalter
     haben.
 16. Abschluss: Screenshots aller Hauptseiten unter
-    `docs/YYYYMMDD/iteration-23-after/` sammeln, Vorher-/Nachher-Tabelle
+    `docs/YYYYMMDD/iteration-27-after/` sammeln, Vorher-/Nachher-Tabelle
     im Fortschrittsbericht.
 
 ---
@@ -712,7 +712,7 @@ Bei jedem Bereich:
 
 ## 6 Definition of Done
 
-- [ ] Audit-Dokument `iteration-23-ui-audit.md` liegt vor.
+- [ ] Audit-Dokument `iteration-27-ui-audit.md` liegt vor.
 - [ ] **Frontend-Backend-Coverage-Matrix** `docs/YYYYMMDD/frontend-backend-coverage.md`
       liegt vor, vollständig für alle Prüfbereiche aus 2.0.2, jede
       Zeile mit einem der Status `ANGEBUNDEN` / `NAV_OHNE_INHALT` /
@@ -742,7 +742,7 @@ Bei jedem Bereich:
       Iterationen 07, 08, 14, 18, 19, 21 weiterhin grün.
 - [ ] Overlap-Problemstellen aus Audit nachweislich behoben (im
       Fortschrittsbericht je Stelle mit Vorher/Nachher-Verweis).
-- [ ] Fortschrittsbericht `docs/YYYYMMDD/iteration-23-fortschritt.md` mit:
+- [ ] Fortschrittsbericht `docs/YYYYMMDD/iteration-27-fortschritt.md` mit:
       Umbauliste, Vorher-/Nachher-Screenshots, Coverage-Matrix-Zusammenfassung,
       Liste abgelehnter Erweiterungsversuche, offene Punkte.
 - [ ] Commit-Folge gemäß 2.8, jeder Commit conventional:
@@ -779,7 +779,7 @@ nicht den Test.
 
 ## 8 Abschlussreport
 
-Unter `docs/YYYYMMDD/iteration-23-fortschritt.md`:
+Unter `docs/YYYYMMDD/iteration-27-fortschritt.md`:
 
 1. Was wurde umgebaut (Feature-Bereiche und Commits in Reihenfolge)
 2. Welche Probleme aus dem Audit wurden wie gelöst (Tabelle:
