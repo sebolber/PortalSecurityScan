@@ -120,6 +120,68 @@ const MENU: readonly MenuEntry[] = [
     ]
   },
   {
+    id: 'waivers',
+    label: 'Waiver',
+    path: '/waivers',
+    icon: 'rule_folder',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'alerts-history',
+    label: 'Alert-Historie',
+    path: '/alerts/history',
+    icon: 'history',
+    requiredRoles: [
+      CVM_ROLES.VIEWER,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'reachability',
+    label: 'Reachability',
+    path: '/reachability',
+    icon: 'account_tree',
+    requiredRoles: [
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'fix-verification',
+    label: 'Fix-Verifikation',
+    path: '/fix-verification',
+    icon: 'verified',
+    requiredRoles: [
+      CVM_ROLES.ASSESSOR,
+      CVM_ROLES.REVIEWER,
+      CVM_ROLES.APPROVER,
+      CVM_ROLES.ADMIN
+    ]
+  },
+  {
+    id: 'anomaly',
+    label: 'Anomalie-Board',
+    path: '/anomaly',
+    icon: 'sensors',
+    requiredRoles: [CVM_ROLES.AI_AUDITOR, CVM_ROLES.ADMIN]
+  },
+  {
+    id: 'tenant-kpi',
+    label: 'Mandanten-KPIs',
+    path: '/tenant-kpi',
+    icon: 'insights',
+    requiredRoles: [CVM_ROLES.ADMIN]
+  },
+  {
     id: 'admin-theme',
     label: 'Theme & Branding',
     path: '/admin/theme',

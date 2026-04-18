@@ -109,6 +109,50 @@ export const APP_ROUTES: Routes = [
         loadComponent: () =>
           import('./features/admin-theme/admin-theme.component')
             .then((m) => m.AdminThemeComponent)
+      },
+      {
+        path: 'waivers',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/waivers/waivers.component')
+            .then((m) => m.WaiversComponent)
+      },
+      {
+        path: 'alerts/history',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/alerts-history/alerts-history.component')
+            .then((m) => m.AlertsHistoryComponent)
+      },
+      {
+        path: 'reachability',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/reachability/reachability.component')
+            .then((m) => m.ReachabilityComponent)
+      },
+      {
+        path: 'fix-verification',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/fix-verification/fix-verification.component')
+            .then((m) => m.FixVerificationComponent)
+      },
+      {
+        path: 'anomaly',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.AI_AUDITOR, CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/anomaly/anomaly.component')
+            .then((m) => m.AnomalyComponent)
+      },
+      {
+        path: 'tenant-kpi',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/tenant-kpi/tenant-kpi.component')
+            .then((m) => m.TenantKpiComponent)
       }
     ]
   },

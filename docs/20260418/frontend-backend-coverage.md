@@ -23,17 +23,17 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
 | 22 | `GET /api/v1/settings/*` | `/settings` | `SettingsComponent` | ANGEBUNDEN | - |
 | 27 | `GET /api/v1/theme`, `PUT /api/v1/admin/theme` | `/admin/theme` | `AdminThemeComponent` | ANGEBUNDEN (diese Iteration) | - |
 | 06 | `GET /api/v1/assessments/findings/{id}` | `/queue` (Detail) | `QueueDetailComponent` | ANGEBUNDEN | - |
-| 09 | `GET /api/v1/alerts/history` | - | - | FEHLT_GANZ | (B) - Platzhalter in `/alerts/history`, folgt in 27b |
+| 09 | `GET /api/v1/alerts/history` | `/alerts/history` | `AlertsHistoryComponent` (Placeholder) | PLATZHALTER | (B) - Basis-Liste folgt, Platzhalter aktiv seit 27b |
 | 10 | `GET /api/v1/reports/archive` | `/reports` | `ReportsComponent` | ANGEBUNDEN (Archiv-Sicht) | - |
 | 13 | `GET /api/v1/ai-queue` | - | - | BACKEND_FEHLT | (B) - Vorbewertungs-Queue nutzt zentrale Queue, eigene Ansicht in 27b |
 | 14 | `POST /api/v1/copilot/sessions` | `/queue` (Detail) | `QueueDetailComponent` (embedded) | ANGEBUNDEN | - |
-| 15 | `GET /api/v1/reachability/{id}` | - | - | NAV_OHNE_INHALT | (B) - Reachability-Board folgt |
-| 16 | `GET /api/v1/fix-verification/{id}` | - | - | NAV_OHNE_INHALT | (B) - Fix-Verifikation-Board folgt |
+| 15 | `GET /api/v1/reachability/{id}` | `/reachability` | `ReachabilityComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
+| 16 | `GET /api/v1/fix-verification/{id}` | `/fix-verification` | `FixVerificationComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
 | 17 | `GET /api/v1/rule-suggestions` | `/rules` (Tab) | `RulesComponent` | ANGEBUNDEN | - |
-| 18 | `GET /api/v1/anomaly`, `POST /api/v1/profile-assistant` | - | - | NAV_OHNE_INHALT | (B) - Anomalie-Board folgt |
+| 18 | `GET /api/v1/anomaly`, `POST /api/v1/profile-assistant` | `/anomaly` | `AnomalyComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
 | 19 | `POST /api/v1/nl-query` | `/reports` (Exec) | `ReportsComponent` (Exec-Tab) | ANGEBUNDEN | - |
-| 20 | `GET /api/v1/waivers` | - | - | FEHLT_GANZ | (B) - Waiver-Liste folgt, Platzhalter ab 27b |
-| 21 | `GET /api/v1/kpi/tenant` (Cross-Tenant) | `/dashboard` | `DashboardComponent` | ANGEBUNDEN (single-tenant); Cross-Tenant-View (B) - folgt in 27b |
+| 20 | `GET /api/v1/waivers` | `/waivers` | `WaiversComponent` (Placeholder) | PLATZHALTER | (B) - Liste folgt, Platzhalter aktiv seit 27b |
+| 21 | `GET /api/v1/kpi/tenant` (Cross-Tenant) | `/tenant-kpi` | `TenantKpiComponent` (Placeholder) | PLATZHALTER | (B) - Cross-Tenant-View folgt, Platzhalter aktiv seit 27b |
 
 ## Zusammenfassung
 
@@ -41,15 +41,19 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
   Komponenten, Profile, Regeln, Reports, KI-Audit,
   Settings, Theme-Admin, Queue-Detail, Copilot,
   Rule-Suggestions, NL-Query).
-- **(B) Platzhalter** (in 27b umzusetzen): 6 Bereiche
-  (Alert-Historie, Reachability-Board, Fix-Verifikation,
-  Anomalie-Board, Waiver-Liste, Cross-Tenant-Dashboard).
-- **(A) Sofortanbindung in 27**: Theme-Admin (neu). Die in
-  2.0.4 priorisierten Basis-Listen (CVE-Browser,
-  Komponenten-Browser, Profile, Report-Archiv) waren
-  bereits durch Iteration 26 und fruehere Schritte
-  abgedeckt - keine weiteren (A)-Massnahmen noetig.
+- **PLATZHALTER** (27b: Basis-Liste folgt) - 6 Bereiche,
+  jeweils mit aktiver Route + `<cvm-page-placeholder>`-
+  Komponente: Alert-Historie, Reachability-Board,
+  Fix-Verifikation, Anomalie-Board, Waiver-Liste,
+  Cross-Tenant-Dashboard. `FullNavigationWalkThroughTest`
+  darf dank des Platzhalters gruen bleiben.
+- **(A) Sofortanbindung in 27**: Theme-Admin. Die in 2.0.4
+  priorisierten Basis-Listen (CVE-Browser, Komponenten-
+  Browser, Profile, Report-Archiv) waren bereits durch
+  Iteration 26 und fruehere Schritte abgedeckt.
 - **(C) aus Navigation entfernen**: keine.
+- **Keine `NAV_OHNE_INHALT`-Zeilen mehr**: Coverage-Gate-
+  Voraussetzung erfuellt.
 
 ## Konsequenz fuer `FullNavigationWalkThroughTest`
 
