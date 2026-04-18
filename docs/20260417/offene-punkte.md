@@ -1,5 +1,21 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 20
+- **VEX-Import-Ingestion**: Statements werden aktuell nur
+  geparst + validiert. Das Anlegen von AssessmentProposals
+  (inkl. Merge-Strategie bei bestehenden Bewertungen) folgt
+  in einer eigenen Iteration.
+- **Waiver-UI** (Angular): Formular fuer Grant/Extend/Revoke
+  + Liste EXPIRING_SOON im Admin-Bereich.
+- **Waiver-Mails**: aktuell feuern Alerts ueber
+  `AlertEvaluator`, aber es gibt noch keinen dedizierten
+  E-Mail-Versand bei Ablauf (Design-Entscheidung: Mail nur
+  via regulaeren Alert-Dispatcher).
+- **SPDX-VEX-Export**: laut Plan ausserhalb des Scopes;
+  falls noetig, in eigener Iteration nachziehen.
+- **Goldmaster-Test** fuer VEX-Byte-Gleichheit ueber mehrere
+  Laeufe im CI (aktuell nur innerhalb eines Testlaufs).
+
 ## Stand 2026-04-18 nach Iteration 19
 - **Delta-Historie** im Executive-Report: Werte aktuell auf 0
   gesetzt; sobald Executive-Reports archiviert werden,
