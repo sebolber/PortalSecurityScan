@@ -32,6 +32,8 @@ class ReachabilityControllerWebTest {
 
     @Autowired MockMvc mockMvc;
     @MockBean ReachabilityAgent agent;
+    // Satisfies ReachabilityQueryController constructor (same @ComponentScan).
+    @MockBean com.ahs.cvm.application.reachability.ReachabilityQueryService reachabilityQueryService;
 
     private static final String BODY = """
             {
