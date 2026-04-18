@@ -111,6 +111,24 @@ export const APP_ROUTES: Routes = [
             .then((m) => m.AdminThemeComponent)
       },
       {
+        path: 'admin/products',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/admin-products/admin-products.component')
+            .then((m) => m.AdminProductsComponent)
+      },
+      {
+        path: 'scans/upload',
+        canActivate: [authGuard],
+        data: {
+          requiredRoles: [CVM_ROLES.ADMIN, CVM_ROLES.ASSESSOR]
+        },
+        loadComponent: () =>
+          import('./features/scan-upload/scan-upload.component')
+            .then((m) => m.ScanUploadComponent)
+      },
+      {
         path: 'waivers',
         canActivate: [authGuard],
         loadComponent: () =>

@@ -187,6 +187,20 @@ const MENU: readonly MenuEntry[] = [
     path: '/admin/theme',
     icon: 'palette',
     requiredRoles: [CVM_ROLES.ADMIN]
+  },
+  {
+    id: 'admin-products',
+    label: 'Produkte',
+    path: '/admin/products',
+    icon: 'category',
+    requiredRoles: [CVM_ROLES.ADMIN]
+  },
+  {
+    id: 'scan-upload',
+    label: 'Scan hochladen',
+    path: '/scans/upload',
+    icon: 'cloud_upload',
+    requiredRoles: [CVM_ROLES.ADMIN, CVM_ROLES.ASSESSOR]
   }
 ];
 

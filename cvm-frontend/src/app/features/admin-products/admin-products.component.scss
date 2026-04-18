@@ -1,0 +1,58 @@
+.cvm-admin-products-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1040px;
+}
+
+.cvm-admin-products-title {
+  margin: 0;
+  font-weight: 600;
+  color: var(--cvm-text);
+}
+
+.cvm-admin-products-card {
+  background: var(--cvm-surface);
+  color: var(--cvm-text);
+}
+
+.cvm-admin-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.cvm-admin-field {
+  min-width: 260px;
+}
+
+.cvm-admin-field-wide {
+  min-width: 360px;
+  flex: 1 1 360px;
+}
+
+.cvm-admin-muted {
+  color: var(--cvm-text-muted);
+  margin: 0;
+}
+
+.cvm-admin-error {
+  color: #d32f2f;
+  margin: 0 0 0.5rem;
+}
+
+.cvm-admin-table {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.cvm-admin-selected {
+  border-color: var(--cvm-accent, #1976d2) !important;
+}
+
+.cvm-admin-section-title {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}

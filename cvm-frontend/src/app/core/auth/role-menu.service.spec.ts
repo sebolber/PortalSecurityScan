@@ -72,4 +72,22 @@ describe('RoleMenuService', () => {
     expect(service.hasAccess('/rules', [CVM_ROLES.RULE_AUTHOR])).toBeTrue();
     expect(service.hasAccess('/unbekannt', [CVM_ROLES.ADMIN])).toBeFalse();
   });
+
+  it('Admin sieht Produkt-Admin und Scan-Upload', () => {
+    const ids = service.visibleEntries([CVM_ROLES.ADMIN]).map((e) => e.id);
+    expect(ids).toContain('admin-products');
+    expect(ids).toContain('scan-upload');
+  });
+
+  it('Bewerter sieht Scan-Upload, aber nicht Produkt-Admin', () => {
+    const ids = service.visibleEntries([CVM_ROLES.ASSESSOR]).map((e) => e.id);
+    expect(ids).toContain('scan-upload');
+    expect(ids).not.toContain('admin-products');
+  });
+
+  it('Viewer sieht weder Produkt-Admin noch Scan-Upload', () => {
+    const ids = service.visibleEntries([CVM_ROLES.VIEWER]).map((e) => e.id);
+    expect(ids).not.toContain('admin-products');
+    expect(ids).not.toContain('scan-upload');
+  });
 });

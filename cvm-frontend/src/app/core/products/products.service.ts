@@ -17,6 +17,18 @@ export interface ProductVersionView {
   readonly releasedAt: string | null;
 }
 
+export interface ProductCreateRequest {
+  readonly key: string;
+  readonly name: string;
+  readonly description: string | null;
+}
+
+export interface ProductVersionCreateRequest {
+  readonly version: string;
+  readonly gitCommit: string | null;
+  readonly releasedAt: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ProductsService {
   private readonly api = inject(ApiClient);
@@ -29,6 +41,24 @@ export class ProductsService {
     return firstValueFrom(
       this.api.get<ProductVersionView[]>(
         `/api/v1/products/${productId}/versions`
+      )
+    );
+  }
+
+  create(req: ProductCreateRequest): Promise<ProductView> {
+    return firstValueFrom(
+      this.api.post<ProductView, ProductCreateRequest>('/api/v1/products', req)
+    );
+  }
+
+  createVersion(
+    productId: string,
+    req: ProductVersionCreateRequest
+  ): Promise<ProductVersionView> {
+    return firstValueFrom(
+      this.api.post<ProductVersionView, ProductVersionCreateRequest>(
+        `/api/v1/products/${productId}/versions`,
+        req
       )
     );
   }
