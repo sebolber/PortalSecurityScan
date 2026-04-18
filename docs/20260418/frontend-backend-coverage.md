@@ -27,8 +27,8 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
 | 10 | `GET /api/v1/reports/archive` | `/reports` | `ReportsComponent` | ANGEBUNDEN (Archiv-Sicht) | - |
 | 13 | `GET /api/v1/ai-queue` | - | - | BACKEND_FEHLT | (B) - Vorbewertungs-Queue nutzt zentrale Queue, eigene Ansicht in 27b |
 | 14 | `POST /api/v1/copilot/sessions` | `/queue` (Detail) | `QueueDetailComponent` (embedded) | ANGEBUNDEN | - |
-| 15 | `GET /api/v1/reachability/{id}` | `/reachability` | `ReachabilityComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
-| 16 | `GET /api/v1/fix-verification/{id}` | `/fix-verification` | `FixVerificationComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
+| 15 | `GET /api/v1/reachability` | `/reachability` | `ReachabilityComponent` | ANGEBUNDEN | - (seit 27e) |
+| 16 | `GET /api/v1/fix-verification` | `/fix-verification` | `FixVerificationComponent` | ANGEBUNDEN | - (seit 27e) |
 | 17 | `GET /api/v1/rule-suggestions` | `/rules` (Tab) | `RulesComponent` | ANGEBUNDEN | - |
 | 18 | `GET /api/v1/anomalies` | `/anomaly` | `AnomalyComponent` | ANGEBUNDEN | - (seit 27d) |
 | 19 | `POST /api/v1/nl-query` | `/reports` (Exec) | `ReportsComponent` (Exec-Tab) | ANGEBUNDEN | - |
@@ -37,18 +37,16 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
 
 ## Zusammenfassung
 
-- **ANGEBUNDEN**: 18 Bereiche (Dashboard, Queue, CVEs,
-  Komponenten, Profile, Regeln, Reports, KI-Audit,
-  Settings, Theme-Admin, Queue-Detail, Copilot,
-  Rule-Suggestions, NL-Query, Waiver-Liste, Alert-Historie,
-  Anomalie-Board seit 27d, Mandanten-KPIs seit 27d).
-- **PLATZHALTER** - 2 Bereiche (je mit aktiver Route und
-  `<cvm-page-placeholder>`): Reachability-Board,
-  Fix-Verifikation. Beide sind per-Finding-/per-Mitigation-
-  Views, die heute aus der Assessment-Queue gestartet werden;
-  die Uebersichtsseite folgt in 27e.
-  `FullNavigationWalkThroughTest` darf dank des Platzhalters
-  gruen bleiben.
+- **ANGEBUNDEN**: 20 Bereiche (alle aus der Navigation).
+  Dashboard, Queue, CVEs, Komponenten, Profile, Regeln,
+  Reports, KI-Audit, Settings, Theme-Admin, Queue-Detail,
+  Copilot, Rule-Suggestions, NL-Query, Waiver-Liste,
+  Alert-Historie, Anomalie-Board, Mandanten-KPIs,
+  Reachability-Uebersicht seit 27e, Fix-Verifikations-
+  Uebersicht seit 27e.
+- **PLATZHALTER** - 0 Bereiche. Der in Iteration 27
+  geforderte Zustand "Kein Menuepunkt in der Sidebar fuehrt
+  auf eine komplett leere Seite" ist erreicht.
 - **(A) Sofortanbindung in 27**: Theme-Admin. Die in 2.0.4
   priorisierten Basis-Listen (CVE-Browser, Komponenten-
   Browser, Profile, Report-Archiv) waren bereits durch
