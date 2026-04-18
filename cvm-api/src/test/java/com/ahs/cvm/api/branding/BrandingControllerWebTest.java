@@ -5,15 +5,22 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.ahs.cvm.application.branding.BrandingAssetService;
+import com.ahs.cvm.application.branding.BrandingAssetService.AssetKind;
+import com.ahs.cvm.application.branding.BrandingAssetView;
 import com.ahs.cvm.application.branding.BrandingService;
 import com.ahs.cvm.application.branding.BrandingService.ContrastViolationException;
 import com.ahs.cvm.application.branding.BrandingView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +28,7 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(
@@ -31,6 +39,7 @@ class BrandingControllerWebTest {
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper json;
     @MockBean BrandingService service;
+    @MockBean BrandingAssetService assetService;
 
     @Test
     @DisplayName("GET /api/v1/theme: liefert aktive Branding-Konfiguration")
@@ -87,5 +96,45 @@ class BrandingControllerWebTest {
                         .content(json.writeValueAsString(body)))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.error").value("contrast_violation"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/admin/theme/assets: Logo-Upload liefert 201 + Location")
+    void uploadLogo() throws Exception {
+        UUID assetId = UUID.randomUUID();
+        BrandingAssetView saved = new BrandingAssetView(
+                assetId, UUID.randomUUID(), "LOGO", "image/svg+xml",
+                42, "abc", new byte[] {1, 2, 3});
+        given(assetService.upload(
+                        any(AssetKind.class), anyString(), any(byte[].class), anyString()))
+                .willReturn(saved);
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "logo.svg", "image/svg+xml",
+                "<svg></svg>".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/admin/theme/assets")
+                        .file(file)
+                        .param("kind", "LOGO"))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location",
+                        "/api/v1/theme/assets/" + assetId))
+                .andExpect(jsonPath("$.kind").value("LOGO"))
+                .andExpect(jsonPath("$.sha256").value("abc"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/theme/assets/{id}: liefert Bytes mit ETag")
+    void downloadAsset() throws Exception {
+        UUID assetId = UUID.randomUUID();
+        BrandingAssetView view = new BrandingAssetView(
+                assetId, UUID.randomUUID(), "LOGO", "image/svg+xml",
+                5, "xyz", "<svg/>".getBytes());
+        given(assetService.findById(assetId)).willReturn(Optional.of(view));
+
+        mockMvc.perform(get("/api/v1/theme/assets/" + assetId))
+                .andExpect(status().isOk())
+                .andExpect(header().string("ETag", "\"xyz\""))
+                .andExpect(header().string("Cache-Control", "public, max-age=3600"));
     }
 }
