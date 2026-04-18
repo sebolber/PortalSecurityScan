@@ -84,6 +84,18 @@ public class FindingsCreatedListener {
         if (findings.isEmpty()) {
             return;
         }
+        if (environmentId == null) {
+            // Assessment.environment ist NOT NULL; ohne Umgebungs-Bezug
+            // koennen wir fachlich keine Relevanz bewerten. Ueberspringen
+            // statt Hibernate-Crash ("There are delayed insert actions
+            // before operation as cascade level 0").
+            log.warn(
+                    "Cascade-Run ({}) fuer Scan {} uebersprungen: keine "
+                            + "Environment gesetzt. Upload mit --environment-id "
+                            + "wiederholen, dann werden die {} Findings bewertet.",
+                    quelle, scanId, findings.size());
+            return;
+        }
         JsonNode profileTree = ladeProfilbaum(environmentId);
         log.info(
                 "Cascade-Run ({}) fuer Scan {} ({} Findings)",

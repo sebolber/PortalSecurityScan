@@ -77,6 +77,15 @@ public class AssessmentWriteService {
             log.debug("Cascade: HUMAN-Outcome, kein Auto-Write fuer Finding {}", cmd.findingId());
             return null;
         }
+        if (cmd.environmentId() == null) {
+            // Assessment.environment ist NOT NULL. Der Cascade-Listener
+            // sollte vorher schon abbrechen, aber eine zweite
+            // Schutzebene erspart Hibernate-Exceptions, wenn propose()
+            // von anderen Call-Sites ohne Environment aufgerufen wird.
+            throw new IllegalArgumentException(
+                    "environmentId fehlt - Assessment erfordert eine "
+                            + "konkrete Umgebung (siehe /admin/environments).");
+        }
 
         Finding finding = findingRepository.findById(cmd.findingId())
                 .orElseThrow(() -> new IllegalArgumentException(
