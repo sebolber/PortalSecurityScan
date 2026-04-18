@@ -23,7 +23,7 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
 | 22 | `GET /api/v1/settings/*` | `/settings` | `SettingsComponent` | ANGEBUNDEN | - |
 | 27 | `GET /api/v1/theme`, `PUT /api/v1/admin/theme` | `/admin/theme` | `AdminThemeComponent` | ANGEBUNDEN (diese Iteration) | - |
 | 06 | `GET /api/v1/assessments/findings/{id}` | `/queue` (Detail) | `QueueDetailComponent` | ANGEBUNDEN | - |
-| 09 | `GET /api/v1/alerts/history` | `/alerts/history` | `AlertsHistoryComponent` (Placeholder) | PLATZHALTER | (B) - Basis-Liste folgt, Platzhalter aktiv seit 27b |
+| 09 | `GET /api/v1/alerts/history` | `/alerts/history` | `AlertsHistoryComponent` | ANGEBUNDEN | - (seit 27c) |
 | 10 | `GET /api/v1/reports/archive` | `/reports` | `ReportsComponent` | ANGEBUNDEN (Archiv-Sicht) | - |
 | 13 | `GET /api/v1/ai-queue` | - | - | BACKEND_FEHLT | (B) - Vorbewertungs-Queue nutzt zentrale Queue, eigene Ansicht in 27b |
 | 14 | `POST /api/v1/copilot/sessions` | `/queue` (Detail) | `QueueDetailComponent` (embedded) | ANGEBUNDEN | - |
@@ -32,21 +32,21 @@ Status-Werte: `ANGEBUNDEN` / `NAV_OHNE_INHALT` / `FEHLT_GANZ` /
 | 17 | `GET /api/v1/rule-suggestions` | `/rules` (Tab) | `RulesComponent` | ANGEBUNDEN | - |
 | 18 | `GET /api/v1/anomaly`, `POST /api/v1/profile-assistant` | `/anomaly` | `AnomalyComponent` (Placeholder) | PLATZHALTER | (B) - Board folgt, Platzhalter aktiv seit 27b |
 | 19 | `POST /api/v1/nl-query` | `/reports` (Exec) | `ReportsComponent` (Exec-Tab) | ANGEBUNDEN | - |
-| 20 | `GET /api/v1/waivers` | `/waivers` | `WaiversComponent` (Placeholder) | PLATZHALTER | (B) - Liste folgt, Platzhalter aktiv seit 27b |
+| 20 | `GET /api/v1/waivers` | `/waivers` | `WaiversComponent` | ANGEBUNDEN | - (seit 27c) |
 | 21 | `GET /api/v1/kpi/tenant` (Cross-Tenant) | `/tenant-kpi` | `TenantKpiComponent` (Placeholder) | PLATZHALTER | (B) - Cross-Tenant-View folgt, Platzhalter aktiv seit 27b |
 
 ## Zusammenfassung
 
-- **ANGEBUNDEN**: 14 Bereiche (Dashboard, Queue, CVEs,
+- **ANGEBUNDEN**: 16 Bereiche (Dashboard, Queue, CVEs,
   Komponenten, Profile, Regeln, Reports, KI-Audit,
   Settings, Theme-Admin, Queue-Detail, Copilot,
-  Rule-Suggestions, NL-Query).
-- **PLATZHALTER** (27b: Basis-Liste folgt) - 6 Bereiche,
-  jeweils mit aktiver Route + `<cvm-page-placeholder>`-
-  Komponente: Alert-Historie, Reachability-Board,
-  Fix-Verifikation, Anomalie-Board, Waiver-Liste,
-  Cross-Tenant-Dashboard. `FullNavigationWalkThroughTest`
-  darf dank des Platzhalters gruen bleiben.
+  Rule-Suggestions, NL-Query, Waiver-Liste seit 27c,
+  Alert-Historie seit 27c).
+- **PLATZHALTER** - 4 Bereiche (je mit aktiver Route und
+  `<cvm-page-placeholder>`): Reachability-Board,
+  Fix-Verifikation, Anomalie-Board, Cross-Tenant-Dashboard.
+  `FullNavigationWalkThroughTest` darf dank des Platzhalters
+  gruen bleiben.
 - **(A) Sofortanbindung in 27**: Theme-Admin. Die in 2.0.4
   priorisierten Basis-Listen (CVE-Browser, Komponenten-
   Browser, Profile, Report-Archiv) waren bereits durch
