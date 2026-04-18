@@ -1,0 +1,116 @@
+<div class="cvm-scan-upload-page">
+  <h1 class="cvm-scan-upload-title">Scan hochladen</h1>
+
+  <mat-card class="cvm-scan-upload-card">
+    <mat-card-header>
+      <mat-card-title>CycloneDX-SBOM einreichen</mat-card-title>
+      <mat-card-subtitle>
+        Nur JSON im CycloneDX 1.x-Schema, max. 5 MB. Die Verarbeitung
+        (Parsing + CVE-Anreicherung) laeuft asynchron.
+      </mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content class="cvm-scan-upload-content">
+      @if (fehler()) {
+        <p class="cvm-scan-upload-error">{{ fehler() }}</p>
+      }
+
+      <div class="cvm-scan-upload-row">
+        <mat-form-field appearance="outline" class="cvm-scan-upload-field">
+          <mat-label>Produkt</mat-label>
+          <mat-select
+            [ngModel]="selectedProductId()"
+            (ngModelChange)="onProductChange($event)">
+            @for (p of produkte(); track p.id) {
+              <mat-option [value]="p.id">{{ p.key }} — {{ p.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="cvm-scan-upload-field">
+          <mat-label>Version</mat-label>
+          <mat-select
+            [disabled]="versionen().length === 0"
+            [ngModel]="selectedVersionId()"
+            (ngModelChange)="onVersionChange($event)">
+            @for (v of versionen(); track v.id) {
+              <mat-option [value]="v.id">
+                {{ v.version }}@if (v.gitCommit) { — {{ v.gitCommit }} }
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="cvm-scan-upload-field">
+          <mat-label>Umgebung (optional)</mat-label>
+          <mat-select
+            [ngModel]="selectedEnvironmentId()"
+            (ngModelChange)="onEnvironmentChange($event)">
+            <mat-option [value]="null">(keine)</mat-option>
+            @for (e of umgebungen(); track e.id) {
+              <mat-option [value]="e.id">{{ e.key }} ({{ e.stage }})</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="cvm-scan-upload-dropzone"
+           [class.cvm-drag-over]="dragOver()"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave()"
+           (drop)="onDrop($event)">
+        <mat-icon class="cvm-scan-upload-icon">cloud_upload</mat-icon>
+        @if (selectedFile(); as f) {
+          <p class="cvm-scan-upload-file">
+            <strong>{{ f.name }}</strong>
+            ({{ (f.size / 1024).toFixed(1) }} KB)
+          </p>
+        } @else {
+          <p class="cvm-scan-upload-muted">
+            Datei hier ablegen oder auswaehlen (nur .json, max. 5 MB)
+          </p>
+        }
+        <input type="file"
+               id="sbom-file"
+               class="cvm-scan-upload-file-input"
+               accept="application/json,.json"
+               (change)="onFileInput($event)">
+        <label for="sbom-file" class="cvm-scan-upload-file-label">
+          <button mat-stroked-button type="button"
+                  (click)="$event.preventDefault()">
+            <mat-icon>folder_open</mat-icon>
+            Datei auswaehlen
+          </button>
+        </label>
+      </div>
+
+      <div class="cvm-scan-upload-row">
+        <button mat-raised-button color="primary" type="button"
+                [disabled]="state() === 'uploading' || state() === 'polling'
+                            || !selectedFile() || !selectedVersionId()"
+                (click)="hochladen()">
+          <mat-icon>upload_file</mat-icon>
+          @switch (state()) {
+            @case ('uploading') { Wird hochgeladen... }
+            @case ('polling') { Wird verarbeitet... }
+            @default { Hochladen }
+          }
+        </button>
+      </div>
+
+      @if (state() === 'uploading' || state() === 'polling') {
+        <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      }
+
+      @if (summary(); as s) {
+        <div class="cvm-scan-upload-summary">
+          <h3>Ergebnis</h3>
+          <p>Scan-ID: <code>{{ s.scanId }}</code></p>
+          <p>Scanner: {{ s.scanner }}</p>
+          <p>SHA-256: <code>{{ s.contentSha256 }}</code></p>
+          <p>Komponenten: {{ s.componentCount }}</p>
+          <p>Findings: {{ s.findingCount }}</p>
+        </div>
+      }
+    </mat-card-content>
+  </mat-card>
+</div>

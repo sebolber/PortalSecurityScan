@@ -1,5 +1,24 @@
 # Offene Punkte (kumulativ)
 
+> Iteration 28 am 2026-04-18 hat Produkt-Anlage (`POST /api/v1/products`
+> + `.../versions`), LLM-Modell-Profil-Anlage mit Vier-Augen-Audit
+> (`POST /api/v1/llm-model-profiles`, Migration `V0026`) und die
+> SBOM-Upload-UI (`/scans/upload`) ausgeliefert. Details:
+> `docs/20260418/iteration-28-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 28 - offen
+
+- **Karma-Suite blockiert**: `chart-theme.service.spec.ts` hat
+  TS4111-Index-Access-Fehler (pre-existent). Eigener Fix in separater
+  Iteration, damit Tests wieder laufen.
+- **Server-Multipart-Limit**: `spring.servlet.multipart.max-file-size`
+  in `application.yaml` setzen (z.B. 10 MB) — aktuell nur clientseitig
+  auf 5 MB begrenzt.
+- **Produkt-/Profil-Edit und Soft-Delete** (eigene Iteration, Vier-Augen
+  auf Profil-Delete).
+- **Playwright-E2E `onboarding.e2e.ts`** fuer den durchgehenden Happy-Path
+  Produkt → Profil → SBOM-Upload.
+
 > Iteration 27 am 2026-04-18 hat den Token-Layer, die Branding-API
 > (`/api/v1/theme`, `/api/v1/admin/theme`) und die Theme-Admin-UI
 > (`/admin/theme`) ausgeliefert. Details:
