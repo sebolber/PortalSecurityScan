@@ -1,9 +1,25 @@
 # Offene Punkte (kumulativ)
 
-> Iteration 22 am 2026-04-18 hat Go-Live-Bloecke 2 (MR-Kommentar),
-> 4 (`kpi_snapshot_daily` schreiben) und Tenant-Rollout-Teile
-> (Resolver + Modellprofil-Seed) umgesetzt.  Details siehe
-> `docs/20260418/iteration-22-fortschritt.md`.
+> Iteration 23 am 2026-04-18 hat die Rollen-Verdrahtung zwischen
+> Keycloak-Realm und Spring-Security scharf geschaltet
+> (`KeycloakJwtAuthoritiesConverter` + `@PreAuthorize`-Annotationen
+> an allen fachlichen Endpunkten).  Details:
+> `docs/20260418/iteration-23-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 23 - offen
+
+- **Security-Integrationstest** mit echtem JWT-Flow (Testcontainers
+  oder Fake-Authorization-Server, der `realm_access.roles`-Claim
+  liefert).
+- **Rollen-gefilterte Navigation im Angular-Frontend**
+  (landet in Iteration 24, UI-Ueberarbeitung + Theming).
+- **Tenant-Scope der Rollen** (z.&nbsp;B. `CVM_ADMIN@bkk-nord`).
+  Aktuell flaches Modell.
+- **Rollen-/Realm-Rollout** pro Tenant (Modell-Profil-Seed liegt
+  beim Default-Tenant; BKK-spezifische Realms muessen eigene Rollen
+  mitbringen).
+
+## Stand 2026-04-18 nach Iteration 22 - Go-Live-Checkliste (Rest)
 
 ## Stand 2026-04-18 nach Iteration 22 - Go-Live-Checkliste (Rest)
 

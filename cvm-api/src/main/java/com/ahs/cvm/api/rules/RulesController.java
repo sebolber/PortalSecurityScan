@@ -43,7 +43,7 @@ public class RulesController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('CVM_RULE_AUTHOR','CVM_ADMIN')")
     @Operation(summary = "Neue Regel als DRAFT anlegen")
     public ResponseEntity<RuleResponse> anlegen(@Valid @RequestBody RuleCreateRequest req) {
         RuleView draft = ruleService.proposeRule(
@@ -63,7 +63,7 @@ public class RulesController {
     }
 
     @PostMapping("/{ruleId}/activate")
-    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('CVM_RULE_APPROVER','CVM_ADMIN')")
     @Operation(summary = "Regel im Vier-Augen-Prinzip aktivieren")
     public ResponseEntity<RuleResponse> aktivieren(
             @PathVariable UUID ruleId, @Valid @RequestBody RuleActivateRequest req) {
@@ -72,7 +72,7 @@ public class RulesController {
     }
 
     @PostMapping("/{ruleId}/dry-run")
-    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('CVM_RULE_AUTHOR','CVM_RULE_APPROVER','CVM_ADMIN')")
     @Operation(summary = "Regel gegen historische Findings simulieren")
     public ResponseEntity<DryRunResponse> dryRun(
             @PathVariable UUID ruleId,

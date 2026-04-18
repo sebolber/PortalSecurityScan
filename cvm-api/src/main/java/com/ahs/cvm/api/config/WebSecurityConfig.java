@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -50,8 +51,24 @@ public class WebSecurityConfig {
                                 .permitAll()
                                 .anyRequest()
                                 .authenticated())
-                .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> {}));
+                .oauth2ResourceServer(oauth ->
+                        oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(
+                                jwtAuthenticationConverter())));
         return http.build();
+    }
+
+    /**
+     * Konvertiert das eingehende JWT in ein {@link
+     * org.springframework.security.authentication.AbstractAuthenticationToken}
+     * und extrahiert dabei die Keycloak-Realm-Rollen als Authorities
+     * (Iteration 23, CVM-54).
+     */
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(
+                new KeycloakJwtAuthoritiesConverter());
+        return converter;
     }
 
     @Bean

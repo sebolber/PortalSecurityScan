@@ -11,6 +11,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -53,6 +54,7 @@ public class ProfileController {
     }
 
     @PutMapping("/environments/{environmentId}/profile")
+    @PreAuthorize("hasAnyAuthority('CVM_PROFILE_AUTHOR','CVM_ADMIN')")
     @Operation(
             summary = "Neuen Profil-Draft fuer eine Umgebung anlegen",
             description = "Liefert die Draft-ID. Die Aktivierung erfolgt ueber /approve.")
@@ -66,6 +68,7 @@ public class ProfileController {
     }
 
     @PostMapping("/profiles/{profileVersionId}/approve")
+    @PreAuthorize("hasAnyAuthority('CVM_PROFILE_APPROVER','CVM_ADMIN')")
     @Operation(summary = "Profil-Draft im Vier-Augen-Prinzip aktivieren")
     public ResponseEntity<ProfileResponse> freigeben(
             @PathVariable UUID profileVersionId,

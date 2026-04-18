@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,6 +39,7 @@ public class AssessmentsController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyAuthority('CVM_ASSESSOR','CVM_ADMIN')")
     @Operation(summary = "Neuen Bewertungs-Vorschlag anlegen (Status PROPOSED)")
     public ResponseEntity<AssessmentResponse> anlegen(
             @Valid @RequestBody AssessmentRequest request) {
@@ -56,6 +58,7 @@ public class AssessmentsController {
     }
 
     @PostMapping("/{id}/approve")
+    @PreAuthorize("hasAnyAuthority('CVM_APPROVER','CVM_ADMIN')")
     @Operation(summary = "Assessment freigeben (Vier-Augen-Pruefung bei Downgrades)")
     public ResponseEntity<AssessmentResponse> freigeben(
             @PathVariable UUID id,
@@ -73,6 +76,7 @@ public class AssessmentsController {
     }
 
     @PostMapping("/{id}/reject")
+    @PreAuthorize("hasAnyAuthority('CVM_APPROVER','CVM_REVIEWER','CVM_ADMIN')")
     @Operation(summary = "Assessment ablehnen (Kommentar pflicht)")
     public ResponseEntity<AssessmentResponse> ablehnen(
             @PathVariable UUID id,

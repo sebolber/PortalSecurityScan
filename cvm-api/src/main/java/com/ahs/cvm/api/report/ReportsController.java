@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -48,6 +49,7 @@ public class ReportsController {
     }
 
     @PostMapping("/hardening")
+    @PreAuthorize("hasAnyAuthority('CVM_REPORTER','CVM_ADMIN')")
     @Operation(summary = "Neuen Hardening-Report erzeugen (synchron, archiviert immutable)")
     public ResponseEntity<ReportResponse> erzeugen(
             @Valid @RequestBody HardeningReportRequest request) {
@@ -66,6 +68,7 @@ public class ReportsController {
     }
 
     @GetMapping(value = "/{reportId}", produces = MediaType.APPLICATION_PDF_VALUE)
+    @PreAuthorize("hasAnyAuthority('CVM_VIEWER','CVM_REPORTER','CVM_ADMIN')")
     @Operation(summary = "Report-PDF herunterladen")
     public ResponseEntity<byte[]> download(@PathVariable UUID reportId) {
         GeneratedReportView view = service.findById(reportId);
@@ -79,6 +82,7 @@ public class ReportsController {
     }
 
     @GetMapping("/{reportId}/meta")
+    @PreAuthorize("hasAnyAuthority('CVM_VIEWER','CVM_REPORTER','CVM_ADMIN')")
     @Operation(summary = "Report-Metadaten (ohne PDF-Bytes)")
     public ResponseEntity<ReportResponse> meta(@PathVariable UUID reportId) {
         GeneratedReportView view = service.findById(reportId);
@@ -86,6 +90,7 @@ public class ReportsController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyAuthority('CVM_VIEWER','CVM_REPORTER','CVM_ADMIN')")
     @Operation(summary = "Report-Historie pagenieren (neueste zuerst, ohne PDF-Bytes)")
     public ResponseEntity<ReportListResponse> list(
             @RequestParam(name = "productVersionId", required = false) UUID productVersionId,

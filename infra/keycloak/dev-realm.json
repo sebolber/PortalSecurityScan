@@ -10,10 +10,17 @@
   "bruteForceProtected": true,
   "roles": {
     "realm": [
-      { "name": "CVM_VIEWER",   "description": "Lesezugriff auf Bewertungen und Reports" },
-      { "name": "CVM_ASSESSOR", "description": "Bewerten, Queue-Bearbeitung" },
-      { "name": "CVM_APPROVER", "description": "Vier-Augen-Freigabe" },
-      { "name": "CVM_ADMIN",    "description": "Profil-, Regel-, LLM-Verwaltung" }
+      { "name": "CVM_VIEWER",           "description": "Lesezugriff auf Bewertungen und Reports" },
+      { "name": "CVM_ASSESSOR",         "description": "Bewerten, Queue-Bearbeitung" },
+      { "name": "CVM_REVIEWER",         "description": "Bewertungs-Review (ohne Freigabe)" },
+      { "name": "CVM_APPROVER",         "description": "Vier-Augen-Freigabe von Bewertungen" },
+      { "name": "CVM_PROFILE_AUTHOR",   "description": "Kontextprofile als Draft pflegen" },
+      { "name": "CVM_PROFILE_APPROVER", "description": "Kontextprofile freigeben" },
+      { "name": "CVM_RULE_AUTHOR",      "description": "Regeln als Draft pflegen" },
+      { "name": "CVM_RULE_APPROVER",    "description": "Regeln aktivieren und Dry-Run" },
+      { "name": "CVM_REPORTER",         "description": "Hardening-/Executive-Reports erzeugen und lesen" },
+      { "name": "AI_AUDITOR",           "description": "Lesezugriff auf ai_call_audit" },
+      { "name": "CVM_ADMIN",            "description": "Profil-, Regel-, LLM- und Tenant-Verwaltung" }
     ]
   },
   "clients": [
@@ -39,7 +46,7 @@
       "firstName": "Tom",
       "lastName": "Tester",
       "credentials": [{ "type": "password", "value": "test", "temporary": false }],
-      "realmRoles": ["CVM_ASSESSOR"]
+      "realmRoles": ["CVM_VIEWER", "CVM_ASSESSOR", "CVM_REVIEWER"]
     },
     {
       "username": "a.admin@ahs.test",
@@ -49,7 +56,31 @@
       "firstName": "Anna",
       "lastName": "Admin",
       "credentials": [{ "type": "password", "value": "admin", "temporary": false }],
-      "realmRoles": ["CVM_ADMIN", "CVM_APPROVER"]
+      "realmRoles": [
+        "CVM_ADMIN",
+        "CVM_APPROVER",
+        "CVM_PROFILE_AUTHOR",
+        "CVM_PROFILE_APPROVER",
+        "CVM_RULE_AUTHOR",
+        "CVM_RULE_APPROVER",
+        "CVM_REPORTER",
+        "AI_AUDITOR"
+      ]
+    },
+    {
+      "username": "j.meyer@ahs.test",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "j.meyer@ahs.test",
+      "firstName": "Julia",
+      "lastName": "Meyer",
+      "credentials": [{ "type": "password", "value": "meyer", "temporary": false }],
+      "realmRoles": [
+        "CVM_PROFILE_AUTHOR",
+        "CVM_RULE_AUTHOR",
+        "CVM_REPORTER",
+        "CVM_REVIEWER"
+      ]
     }
   ]
 }
