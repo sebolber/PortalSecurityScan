@@ -5,6 +5,20 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Top-Level-Aliases fuer Tailwind-Utilities wie bg-primary,
+        // text-primary, border-primary. Binden an die CSS-Tokens aus
+        // src/styles/tokens/colors.scss, damit der Mandanten-
+        // ThemeService sie zur Laufzeit ueberschreiben kann.
+        // Vorher: bg-primary rendert als transparent, weil primary
+        // nur unter adesso.primary existierte - Freigeben-Button war
+        // unsichtbar.
+        primary: 'var(--color-primary)',
+        'primary-contrast': 'var(--color-primary-contrast)',
+        'primary-muted': 'var(--color-primary-muted)',
+        surface: 'var(--color-surface)',
+        'surface-muted': 'var(--color-surface-muted)',
+        border: 'var(--color-border)',
+        light: 'var(--color-surface-muted)',
         adesso: {
           primary: '#e2001a',
           primaryDark: '#b00015',
