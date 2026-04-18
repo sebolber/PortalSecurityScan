@@ -1,0 +1,93 @@
+<section class="cvm-tenant-kpi">
+  <header class="cvm-tenant-kpi__header">
+    <h1 class="text-title-lg">Mandanten-KPIs</h1>
+    <p class="text-body">
+      Offene Findings, MTTR, Fix-SLA-Quote und Automatisierungsquote
+      fuer den aktuellen Mandanten. Stand:
+      {{ result()?.calculatedAt ? (result()!.calculatedAt | date: 'yyyy-MM-dd HH:mm') : '–' }}.
+    </p>
+  </header>
+
+  <mat-button-toggle-group
+    [value]="window()"
+    (change)="fensterWechseln($event.value)"
+    aria-label="Zeitfenster"
+  >
+    @for (f of fenster; track f.key) {
+      <mat-button-toggle [value]="f.key">{{ f.label }}</mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+
+  @if (loading()) {
+    <mat-spinner diameter="36"></mat-spinner>
+  } @else if (result()) {
+    <div class="cvm-tenant-kpi__grid">
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>Automatisierungsquote</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="cvm-tenant-kpi__hero">
+            {{ result()!.automationRate | percent: '1.1-1' }}
+          </div>
+          <p class="text-caption">
+            Anteil Findings mit automatischer Bewertung im Fenster.
+          </p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="cvm-tenant-kpi__severity">
+        <mat-card-header>
+          <mat-card-title>Offene Findings</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <table class="cvm-tenant-kpi__table">
+            <thead>
+              <tr>
+                <th>Severity</th>
+                <th>Offen</th>
+                <th>MTTR (Tage)</th>
+                <th>SLA-Quote</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of severities; track s) {
+                <tr>
+                  <td>
+                    <span
+                      class="cvm-tenant-kpi__severity-chip"
+                      [attr.data-severity]="s"
+                    >
+                      {{ s }}
+                    </span>
+                  </td>
+                  <td>{{ openCount(s) }}</td>
+                  <td>{{ mttr(s) | number }}</td>
+                  <td>{{ slaQuote(s) | percent: '1.0-0' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="cvm-tenant-kpi__burndown">
+        <mat-card-header>
+          <mat-card-title>Burn-Down (offene Findings)</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div
+            class="cvm-tenant-kpi__chart"
+            echarts
+            [options]="burnDownOption()"
+            [autoResize]="true"
+          ></div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  }
+</section>
