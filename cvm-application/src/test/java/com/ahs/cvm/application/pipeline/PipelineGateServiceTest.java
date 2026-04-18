@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import com.ahs.cvm.application.pipeline.PipelineGateService.GateDecision;
 import com.ahs.cvm.application.pipeline.PipelineGateService.GateRequest;
@@ -28,6 +30,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 class PipelineGateServiceTest {
 
@@ -39,6 +42,7 @@ class PipelineGateServiceTest {
     private CveRepository cveRepo;
     private FindingRepository findingRepo;
     private PipelineGateRateLimiter rateLimiter;
+    private ApplicationEventPublisher events;
     private PipelineGateService service;
 
     @BeforeEach
@@ -47,9 +51,10 @@ class PipelineGateServiceTest {
         cveRepo = mock(CveRepository.class);
         findingRepo = mock(FindingRepository.class);
         rateLimiter = mock(PipelineGateRateLimiter.class);
+        events = mock(ApplicationEventPublisher.class);
         given(rateLimiter.tryAcquire(any())).willReturn(true);
         service = new PipelineGateService(parser, cveRepo, findingRepo,
-                rateLimiter, Clock.fixed(NOW, ZoneOffset.UTC));
+                rateLimiter, events, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     private CycloneDxBom bomMit(CycloneDxBom.Vulnerability... vs) {
@@ -163,5 +168,18 @@ class PipelineGateServiceTest {
         assertThatThrownBy(() -> service.evaluate(new GateRequest(
                 PV, ENV, "m", "M", "{}".getBytes())))
                 .isInstanceOf(PipelineGateService.GateRateLimitException.class);
+        verify(events, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("Gate: publiziert PipelineGateEvaluatedEvent mit repoUrl und MR-Id")
+    void publiziertEvent() {
+        given(parser.parse(any(byte[].class))).willReturn(bomMit());
+        GateResult r = service.evaluate(new GateRequest(
+                PV, ENV, "main", "42", "{}".getBytes(),
+                "https://github.com/adesso-health/portal-core"));
+        assertThat(r.gate()).isEqualTo(GateDecision.PASS);
+        verify(events).publishEvent(new PipelineGateEvaluatedEvent(
+                PV, "https://github.com/adesso-health/portal-core", "42", r));
     }
 }

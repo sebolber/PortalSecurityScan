@@ -38,13 +38,14 @@ public class PipelineGateController {
             @RequestParam(name = "environmentId", required = false) UUID environmentId,
             @RequestParam(name = "branchRef", required = false) String branchRef,
             @RequestParam(name = "mergeRequestId", required = false) String mergeRequestId,
+            @RequestParam(name = "repoUrl", required = false) String repoUrl,
             @RequestParam("sbom") MultipartFile sbom) throws IOException {
         if (sbom == null || sbom.isEmpty()) {
             throw new IllegalArgumentException("SBOM-Datei fehlt oder ist leer.");
         }
         GateResult r = service.evaluate(new GateRequest(
                 productVersionId, environmentId, branchRef, mergeRequestId,
-                sbom.getBytes()));
+                sbom.getBytes(), repoUrl));
         return ResponseEntity.ok()
                 .header("X-Gate-Decision", r.gate().name())
                 .body(r);

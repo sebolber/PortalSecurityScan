@@ -20,6 +20,8 @@ public class FakeGitProvider implements GitProviderPort {
 
     private final Map<String, ReleaseNotes> notes = new HashMap<>();
     private final Map<String, List<CommitSummary>> commits = new HashMap<>();
+    private final List<MergeRequestComment> postedComments = new ArrayList<>();
+    private boolean simulatePostFailure;
 
     public void stub(String repoUrl, String toTag,
             ReleaseNotes note, List<CommitSummary> commitRange) {
@@ -30,7 +32,30 @@ public class FakeGitProvider implements GitProviderPort {
     public void reset() {
         notes.clear();
         commits.clear();
+        postedComments.clear();
+        simulatePostFailure = false;
     }
+
+    public void simulatePostFailure(boolean simulate) {
+        this.simulatePostFailure = simulate;
+    }
+
+    public List<MergeRequestComment> postedComments() {
+        return List.copyOf(postedComments);
+    }
+
+    @Override
+    public boolean postMergeRequestComment(String repoUrl,
+            String mergeRequestId, String body) {
+        if (simulatePostFailure) {
+            throw new RuntimeException("simulated post failure");
+        }
+        postedComments.add(new MergeRequestComment(repoUrl, mergeRequestId, body));
+        return true;
+    }
+
+    public record MergeRequestComment(String repoUrl, String mergeRequestId,
+            String body) {}
 
     @Override
     public Optional<ReleaseNotes> releaseNotes(String repoUrl, String tag) {

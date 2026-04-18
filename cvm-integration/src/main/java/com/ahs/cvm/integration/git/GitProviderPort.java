@@ -25,6 +25,27 @@ public interface GitProviderPort {
     List<CommitSummary> compare(String repoUrl, String fromTag, String toTag);
 
     /**
+     * Postet einen Kommentar an ein bestehendes Merge-/Pull-Request
+     * (Iteration 22, CVM-53).
+     *
+     * <p>Wird z.&nbsp;B. vom CI/CD-Gate genutzt, um das Gate-Ergebnis
+     * zurueck an den MR zu haengen. Provider-Fehler (Netzwerk,
+     * HTTP 4xx/5xx, fehlende Berechtigung) fangen die Adapter ab und
+     * liefern {@code false}; der Aufrufer entscheidet selbst, ob das
+     * ein harter Fehler ist.
+     *
+     * @param repoUrl vollstaendige URL des Upstream-Repos.
+     * @param mergeRequestId provider-spezifischer MR-/PR-Identifier
+     *     (GitHub: PR-Nummer als String, GitLab: IID).
+     * @param body Markdown-Body des Kommentars.
+     * @return {@code true}, wenn der Provider den Post quittiert hat.
+     */
+    default boolean postMergeRequestComment(String repoUrl,
+            String mergeRequestId, String body) {
+        return false;
+    }
+
+    /**
      * @param repoUrl vollstaendige URL des Upstream-Repos
      *     (z.&nbsp;B. {@code https://github.com/foo/bar}).
      * @param tag Tag-Name (z.&nbsp;B. {@code v1.14.3}).

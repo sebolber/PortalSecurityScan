@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,7 @@ public class PipelineGateService {
     private final CveRepository cveRepository;
     private final FindingRepository findingRepository;
     private final PipelineGateRateLimiter rateLimiter;
+    private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
     public PipelineGateService(
@@ -52,11 +54,13 @@ public class PipelineGateService {
             CveRepository cveRepository,
             FindingRepository findingRepository,
             PipelineGateRateLimiter rateLimiter,
+            ApplicationEventPublisher eventPublisher,
             Clock clock) {
         this.parser = parser;
         this.cveRepository = cveRepository;
         this.findingRepository = findingRepository;
         this.rateLimiter = rateLimiter;
+        this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
 
@@ -107,8 +111,11 @@ public class PipelineGateService {
         GateDecision gate = entscheide(newCritical, newHigh);
         log.info("Pipeline-Gate {} (PV {}, MR {}): newCritical={}, newHigh={}",
                 gate, req.productVersionId(), req.mergeRequestId(), newCritical, newHigh);
-        return new GateResult(gate, newCritical, newHigh, Instant.now(clock),
-                details);
+        GateResult result = new GateResult(gate, newCritical, newHigh,
+                Instant.now(clock), details);
+        eventPublisher.publishEvent(new PipelineGateEvaluatedEvent(
+                req.productVersionId(), req.repoUrl(), req.mergeRequestId(), result));
+        return result;
     }
 
     static GateDecision entscheide(int newCritical, int newHigh) {
@@ -199,7 +206,15 @@ public class PipelineGateService {
     public record GateRequest(
             UUID productVersionId, UUID environmentId,
             String branchRef, String mergeRequestId,
-            byte[] sbom) {}
+            byte[] sbom, String repoUrl) {
+
+        /** Konstruktor ohne {@code repoUrl} (Iteration 21-Kompatibilitaet). */
+        public GateRequest(UUID productVersionId, UUID environmentId,
+                String branchRef, String mergeRequestId, byte[] sbom) {
+            this(productVersionId, environmentId, branchRef, mergeRequestId,
+                    sbom, null);
+        }
+    }
 
     public record GateResult(
             GateDecision gate,

@@ -130,6 +130,29 @@ public class GitHubApiProvider implements GitProviderPort {
         }
     }
 
+    @Override
+    public boolean postMergeRequestComment(String repoUrl,
+            String mergeRequestId, String body) {
+        String slug = slugOf(repoUrl);
+        if (slug == null || mergeRequestId == null || mergeRequestId.isBlank()
+                || body == null || body.isBlank()) {
+            return false;
+        }
+        try {
+            restClient.post()
+                    .uri("/repos/" + slug + "/issues/" + mergeRequestId.trim()
+                            + "/comments")
+                    .body(java.util.Map.of("body", body))
+                    .retrieve()
+                    .toBodilessEntity();
+            return true;
+        } catch (RuntimeException ex) {
+            log.debug("GitHub-MR-Kommentar {}#{} fehlgeschlagen: {}",
+                    slug, mergeRequestId, ex.getMessage());
+            return false;
+        }
+    }
+
     static String slugOf(String repoUrl) {
         if (repoUrl == null) {
             return null;
