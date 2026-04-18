@@ -34,6 +34,7 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
     private FindingRepository findingRepository;
     private CveRepository cveRepository;
     private ComponentVulnerabilityLookup lookup;
+    private CveEnrichmentService enrichmentService;
     private ComponentCveMatchingOnScanIngestedListener listener;
 
     @BeforeEach
@@ -42,8 +43,10 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
         findingRepository = mock(FindingRepository.class);
         cveRepository = mock(CveRepository.class);
         lookup = mock(ComponentVulnerabilityLookup.class);
+        enrichmentService = mock(CveEnrichmentService.class);
         listener = new ComponentCveMatchingOnScanIngestedListener(
-                occurrenceRepository, findingRepository, cveRepository, lookup);
+                occurrenceRepository, findingRepository, cveRepository,
+                lookup, enrichmentService);
     }
 
     @Test
@@ -137,6 +140,34 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
         listener.onScanIngested(new ScanIngestedEvent(SCAN_ID, UUID.randomUUID(), null, 1, 0, java.time.Instant.now()));
 
         verify(findingRepository, never()).save(any(Finding.class));
+    }
+
+    @Test
+    @DisplayName("Neu angelegte CVEs werden sofort angereichert (enrich-Call)")
+    void automatischeAnreicherung() {
+        given(lookup.isEnabled()).willReturn(true);
+        ComponentOccurrence occ = occurrence("pkg:npm/axios@0.21.0",
+                UUID.randomUUID());
+        given(occurrenceRepository.findByScanId(SCAN_ID))
+                .willReturn(List.of(occ));
+        given(lookup.findCveIdsForPurls(anyList()))
+                .willReturn(Map.of(occ.getComponent().getPurl(),
+                        List.of("CVE-2021-3749")));
+        given(cveRepository.findByCveId("CVE-2021-3749"))
+                .willReturn(Optional.empty());
+        when(cveRepository.save(any(Cve.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(findingRepository.save(any(Finding.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        given(findingRepository
+                .existsByScanIdAndComponentOccurrenceIdAndCveCveId(
+                        any(), any(), any()))
+                .willReturn(false);
+
+        listener.onScanIngested(new ScanIngestedEvent(
+                SCAN_ID, UUID.randomUUID(), null, 1, 0, java.time.Instant.now()));
+
+        verify(enrichmentService).enrich("CVE-2021-3749");
     }
 
     @Test
