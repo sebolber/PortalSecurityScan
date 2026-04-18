@@ -60,12 +60,19 @@ describe('QueueApiService', () => {
         source: 'RULE'
       })
       .subscribe();
+    // Der Service baut die Query direkt in den URL-String ein (statt
+    // ueber HttpParams), damit ApiClient#get(path) keine zweite
+    // Signatur braucht. Wir pruefen daher die finale URL, nicht
+    // r.params - das war im Originaltest falsch und blieb bis
+    // Iteration 32 unbemerkt, weil Karma ohne Chromium nie lief.
     const req = httpMock.expectOne((r) =>
-      r.url === 'http://api.test/api/v1/findings'
-      && r.params.get('status') === 'PROPOSED'
-      && r.params.get('productVersionId') === '11111111-1111-1111-1111-111111111111'
-      && r.params.get('environmentId') === '22222222-2222-2222-2222-222222222222'
-      && r.params.get('source') === 'RULE'
+      r.urlWithParams.startsWith('http://api.test/api/v1/findings?')
+      && r.urlWithParams.includes('status=PROPOSED')
+      && r.urlWithParams.includes(
+          'productVersionId=11111111-1111-1111-1111-111111111111')
+      && r.urlWithParams.includes(
+          'environmentId=22222222-2222-2222-2222-222222222222')
+      && r.urlWithParams.includes('source=RULE')
     );
     req.flush([]);
   });

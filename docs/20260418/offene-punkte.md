@@ -6,12 +6,14 @@
 > Frontend-Build gruen, Backend alle Module gruen. Karma-Run bleibt
 > weiter Sandbox-geblockt (Chromium fehlt) - kein neuer Finding.
 
-## Stand 2026-04-18 nach Iteration 32 - offen
+## Stand 2026-04-18 nach Iteration 32b - offen
 
-- **Material-Icons offline haerten**: Aktuell CDN
-  (`fonts.googleapis.com`). Fuer air-gapped Installationen muss
-  `material-icons` als self-hosted npm-Paket eingebunden werden.
-- Karma-Sandbox-Chromium fehlt weiterhin.
+- ~~Material-Icons offline haerten~~ erledigt in 32b
+  (`material-icons` + `@fontsource/fira-sans` self-hosted).
+- ~~Karma-Sandbox-Chromium~~ erledigt in 32b (Puppeteer-Chromium +
+  `karma.conf.cjs`). `npx ng test` liefert jetzt 68 SUCCESS in der
+  Sandbox.
+- Alte Backlog-Eintraege unveraendert (axe-core, Persistenz-IT).
 
 > Iteration 31 am 2026-04-18 hat `branding_config_history` (Flyway
 > V0027, Entity + Repository), `BrandingService#rollbackForCurrentTenant`

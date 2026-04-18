@@ -6,18 +6,12 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
-  <!-- Iteration 32 (CVM-73), UI-Fix HIGH-1: Material-Icons-Font und Fira Sans
-       werden sonst nicht geladen. Admins sehen dann nur die ersten Zeichen
-       des Ligatur-Namens ("da", "cl", ...) statt der Icons. Mandanten-Branding
-       (ThemeService) kann font_family_href ueberschreiben, das ist weiter
-       weg hinter <cvm-root> geregelt. Fuer offline/air-gapped Installationen
-       ist ein self-hosted Asset-Paket als naechster Schritt vorgesehen. -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&amp;display=swap">
+  <!--
+    Iteration 32 (CVM-74): Material-Icons + Fira Sans werden
+    self-hosted ueber die npm-Pakete `material-icons` und
+    `@fontsource/fira-sans` in `src/styles.scss` eingebunden. Kein
+    CDN-Aufruf mehr; funktioniert in air-gapped Umgebungen.
+  -->
 </head>
 <body class="mat-typography">
   <cvm-root></cvm-root>

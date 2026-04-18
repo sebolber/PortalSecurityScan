@@ -1,6 +1,17 @@
 @use '@angular/material' as mat;
 @use './styles/tokens';
 
+// Iteration 32 (CVM-74 Nachzug): Material-Icons und Fira Sans werden
+// self-hosted eingebunden, damit das CVM auch in air-gapped Umgebungen
+// ohne `fonts.googleapis.com`-Zugriff korrekt rendert. Die Pakete
+// `material-icons` und `@fontsource/fira-sans` kommen aus npm, sodass
+// Ligatur-Icons und Schriftschnitte lokal aus `node_modules` geladen
+// werden.
+@import 'material-icons/iconfont/material-icons.css';
+@import '@fontsource/fira-sans/400.css';
+@import '@fontsource/fira-sans/500.css';
+@import '@fontsource/fira-sans/700.css';
+
 @include mat.core();
 
 $cvm-primary: mat.m2-define-palette(mat.$m2-blue-palette, 800);
