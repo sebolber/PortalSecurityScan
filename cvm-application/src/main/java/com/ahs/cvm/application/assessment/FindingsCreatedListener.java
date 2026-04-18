@@ -3,6 +3,7 @@ package com.ahs.cvm.application.assessment;
 import com.ahs.cvm.application.cascade.CascadeInput;
 import com.ahs.cvm.application.cascade.CascadeOutcome;
 import com.ahs.cvm.application.cascade.CascadeService;
+import com.ahs.cvm.application.cve.ComponentMatchedFindingsEvent;
 import com.ahs.cvm.application.profile.ContextProfileService;
 import com.ahs.cvm.application.profile.ProfileView;
 import com.ahs.cvm.application.rules.RuleEvaluationContext;
@@ -60,12 +61,40 @@ public class FindingsCreatedListener {
 
     @TransactionalEventListener
     public void onScanIngested(ScanIngestedEvent event) {
-        List<Finding> findings = findingRepository.findByScanId(event.scanId());
+        runCascade(event.scanId(), event.productVersionId(),
+                event.environmentId(), "ScanIngested");
+    }
+
+    /**
+     * Iteration 33 (CVM-77): OSV-Listener legt Findings erst nach dem
+     * Ingest an und feuert dieses Event. Ohne den zweiten Listener hier
+     * bliebe die Queue bei reinen Komponenten-SBOMs leer, weil
+     * {@link #onScanIngested} den Scan ohne Findings sieht und sofort
+     * zurueckkehrt.
+     */
+    @TransactionalEventListener
+    public void onComponentMatchedFindings(ComponentMatchedFindingsEvent event) {
+        runCascade(event.scanId(), event.productVersionId(),
+                event.environmentId(), "ComponentMatchedFindings");
+    }
+
+    private void runCascade(
+            UUID scanId, UUID productVersionId, UUID environmentId, String quelle) {
+        List<Finding> findings = findingRepository.findByScanId(scanId);
         if (findings.isEmpty()) {
             return;
         }
-        JsonNode profileTree = ladeProfilbaum(event.environmentId());
-        log.info("Cascade-Run fuer Scan {} ({} Findings)", event.scanId(), findings.size());
+        JsonNode profileTree = ladeProfilbaum(environmentId);
+        log.info(
+                "Cascade-Run ({}) fuer Scan {} ({} Findings)",
+                quelle, scanId, findings.size());
+        ScanIngestedEvent event = new ScanIngestedEvent(
+                scanId,
+                productVersionId,
+                environmentId,
+                0,
+                findings.size(),
+                java.time.Instant.now());
         for (Finding f : findings) {
             try {
                 CascadeInput input = baueInput(f, event, profileTree);

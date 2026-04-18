@@ -35,6 +35,7 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
     private CveRepository cveRepository;
     private ComponentVulnerabilityLookup lookup;
     private CveEnrichmentService enrichmentService;
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
     private ComponentCveMatchingOnScanIngestedListener listener;
 
     @BeforeEach
@@ -44,9 +45,11 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
         cveRepository = mock(CveRepository.class);
         lookup = mock(ComponentVulnerabilityLookup.class);
         enrichmentService = mock(CveEnrichmentService.class);
+        eventPublisher = mock(
+                org.springframework.context.ApplicationEventPublisher.class);
         listener = new ComponentCveMatchingOnScanIngestedListener(
                 occurrenceRepository, findingRepository, cveRepository,
-                lookup, enrichmentService);
+                lookup, enrichmentService, eventPublisher);
     }
 
     @Test
@@ -140,6 +143,53 @@ class ComponentCveMatchingOnScanIngestedListenerTest {
         listener.onScanIngested(new ScanIngestedEvent(SCAN_ID, UUID.randomUUID(), null, 1, 0, java.time.Instant.now()));
 
         verify(findingRepository, never()).save(any(Finding.class));
+    }
+
+    @Test
+    @DisplayName(
+        "Nach neuen Findings wird ComponentMatchedFindingsEvent gefeuert")
+    void publiziertEventBeiNeuenFindings() {
+        given(lookup.isEnabled()).willReturn(true);
+        ComponentOccurrence occ = occurrence("pkg:npm/axios@0.21.0",
+                UUID.randomUUID());
+        given(occurrenceRepository.findByScanId(SCAN_ID))
+                .willReturn(List.of(occ));
+        given(lookup.findCveIdsForPurls(anyList()))
+                .willReturn(Map.of(occ.getComponent().getPurl(),
+                        List.of("CVE-2021-3749")));
+        given(cveRepository.findByCveId("CVE-2021-3749"))
+                .willReturn(Optional.empty());
+        when(cveRepository.save(any(Cve.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        when(findingRepository.save(any(Finding.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+        given(findingRepository
+                .existsByScanIdAndComponentOccurrenceIdAndCveCveId(
+                        any(), any(), any()))
+                .willReturn(false);
+
+        UUID pvId = UUID.randomUUID();
+        UUID envId = UUID.randomUUID();
+        listener.onScanIngested(new ScanIngestedEvent(
+                SCAN_ID, pvId, envId, 1, 0, java.time.Instant.now()));
+
+        verify(eventPublisher).publishEvent(
+                any(ComponentMatchedFindingsEvent.class));
+    }
+
+    @Test
+    @DisplayName("Kein Event, wenn keine neuen Findings entstehen")
+    void keinEventBeiNullFindings() {
+        given(lookup.isEnabled()).willReturn(true);
+        given(occurrenceRepository.findByScanId(SCAN_ID))
+                .willReturn(List.of());
+
+        listener.onScanIngested(new ScanIngestedEvent(
+                SCAN_ID, UUID.randomUUID(), null, 0, 0,
+                java.time.Instant.now()));
+
+        verify(eventPublisher, never()).publishEvent(
+                any(ComponentMatchedFindingsEvent.class));
     }
 
     @Test

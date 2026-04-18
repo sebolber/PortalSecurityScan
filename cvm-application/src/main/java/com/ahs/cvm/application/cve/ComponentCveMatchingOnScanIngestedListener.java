@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -41,18 +42,21 @@ public class ComponentCveMatchingOnScanIngestedListener {
     private final CveRepository cveRepository;
     private final ComponentVulnerabilityLookup lookup;
     private final CveEnrichmentService enrichmentService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ComponentCveMatchingOnScanIngestedListener(
             ComponentOccurrenceRepository occurrenceRepository,
             FindingRepository findingRepository,
             CveRepository cveRepository,
             ComponentVulnerabilityLookup lookup,
-            CveEnrichmentService enrichmentService) {
+            CveEnrichmentService enrichmentService,
+            ApplicationEventPublisher eventPublisher) {
         this.occurrenceRepository = occurrenceRepository;
         this.findingRepository = findingRepository;
         this.cveRepository = cveRepository;
         this.lookup = lookup;
         this.enrichmentService = enrichmentService;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -122,7 +126,7 @@ public class ComponentCveMatchingOnScanIngestedListener {
 
         // Kette an die Feed-Anreicherung an. CveEnrichmentOnScanIngestedListener
         // laeuft parallel auf demselben Event und sieht die gerade
-        // angelegten CVEs deswegen in der Regel NICHT. Damit die 77 OSV-
+        // angelegten CVEs deswegen in der Regel NICHT. Damit die OSV-
         // Matches trotzdem NVD/GHSA/KEV/EPSS-Daten bekommen, reichern wir
         // sie hier explizit an. Fehler in einzelnen Feeds werden
         // geschluckt - der Scan selbst bleibt dann trotzdem konsistent.
@@ -133,6 +137,18 @@ public class ComponentCveMatchingOnScanIngestedListener {
                 log.warn("Anreicherung fuer OSV-Treffer {} fehlgeschlagen: {}",
                         cveId, ex.getMessage());
             }
+        }
+
+        // FindingsCreatedListener horcht auf ScanIngestedEvent (alter Flow)
+        // UND auf dieses Event (neuer Flow: Findings entstehen erst durch
+        // OSV-Matching). Nur feuern, wenn wir wirklich neue Findings
+        // angelegt haben - der Cascade-Run soll nicht leer laufen.
+        if (neueFindings > 0) {
+            eventPublisher.publishEvent(new ComponentMatchedFindingsEvent(
+                    event.scanId(),
+                    event.productVersionId(),
+                    event.environmentId(),
+                    neueFindings));
         }
     }
 
