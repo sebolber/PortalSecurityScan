@@ -7,19 +7,20 @@ import com.ahs.cvm.application.alert.MailSenderPort;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import java.util.List;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 /**
- * Produktiver Mail-Adapter via {@link JavaMailSender}. Wird nur
- * aktiviert, wenn ein {@code JavaMailSender}-Bean (Spring Mail
- * AutoConfig) vorhanden ist.
+ * Produktiver Mail-Adapter via {@link JavaMailSender}. Spring Boot's
+ * Mail-AutoConfig liefert {@code JavaMailSender} mit, sobald
+ * {@code spring-boot-starter-mail} im Classpath ist (im Modul
+ * {@code cvm-integration} der Fall). Damit ist dieser Adapter immer
+ * aktiv und verdraengt den Noop-Fallback aus
+ * {@link com.ahs.cvm.application.alert.AlertConfig}.
  */
 @Component
-@ConditionalOnBean(JavaMailSender.class)
 public class SpringMailSenderAdapter implements MailSenderPort {
 
     private final JavaMailSender mailSender;
