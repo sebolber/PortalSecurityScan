@@ -1,0 +1,19 @@
+{
+  "name": "cvm-explore-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Playwright-basierte UI-Exploration fuer CVM (Iteration 23C, CVM-60). Startet headless Chromium, loggt Admin in Keycloak ein, durchlaeuft die Sidebar-Routen und erzeugt Screenshots + JSON/MD-Report.",
+  "type": "module",
+  "scripts": {
+    "explore": "tsx explore-ui.ts",
+    "install-browsers": "playwright install chromium"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.45.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "~5.5.0"
+  }
+}
