@@ -1,5 +1,18 @@
 # Offene Punkte (kumulativ)
 
+> Iteration 31 am 2026-04-18 hat `branding_config_history` (Flyway
+> V0027, Entity + Repository), `BrandingService#rollbackForCurrentTenant`
+> und die Admin-Endpunkte
+> `GET /api/v1/admin/theme/history` und
+> `POST /api/v1/admin/theme/rollback/{version}` ausgeliefert.
+> Details: `docs/20260418/iteration-31-fortschritt.md`.
+
+## Stand 2026-04-18 nach Iteration 31 - offen
+
+- Frontend-UI fuer History-Liste + Rollback-Button in
+  `AdminThemeComponent`.
+- Persistenz-Integrationstest fuer V0027 bleibt Docker-pflichtig.
+
 > Iteration 30 am 2026-04-18 hat die Severity-Farbentscheidung
 > formell unter `docs/konzept/severity-farbentscheidung.md`
 > dokumentiert (Mapping, Begruendung, Kontrastnachweis,
@@ -62,7 +75,8 @@
   in Iteration 30 (`docs/konzept/severity-farbentscheidung.md`).
 - **FullNavigationWalkThroughTest + axe-core** in Playwright
   (Sandbox ohne Chromium).
-- **branding_config_history**-Tabelle fuer One-Click-Rollback.
+- ~~**branding_config_history**-Tabelle fuer One-Click-Rollback~~
+  erledigt in Iteration 31 (V0027, Endpunkte `history`/`rollback`).
 
 ## Stand 2026-04-18 nach Iteration 26 - offen
 

@@ -1,6 +1,7 @@
 package com.ahs.cvm.api.branding;
 
 import com.ahs.cvm.application.branding.BrandingService.ContrastViolationException;
+import com.ahs.cvm.application.branding.BrandingService.UnknownBrandingVersionException;
 import com.ahs.cvm.application.branding.SvgSanitizer.SvgRejectedException;
 import jakarta.persistence.OptimisticLockException;
 import java.util.Map;
@@ -36,5 +37,12 @@ public class BrandingExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIllegalArg(IllegalArgumentException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "branding_validation", "message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnknownBrandingVersionException.class)
+    public ResponseEntity<Map<String, Object>> handleUnknownVersion(
+            UnknownBrandingVersionException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "branding_version_unknown", "message", ex.getMessage()));
     }
 }

@@ -3,17 +3,21 @@ package com.ahs.cvm.application.branding;
 import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.application.tenant.TenantLookupService;
 import com.ahs.cvm.persistence.branding.BrandingConfig;
+import com.ahs.cvm.persistence.branding.BrandingConfigHistory;
+import com.ahs.cvm.persistence.branding.BrandingConfigHistoryRepository;
 import com.ahs.cvm.persistence.branding.BrandingConfigRepository;
 import jakarta.persistence.OptimisticLockException;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Lese-/Schreib-Service fuer Mandanten-Branding (Iteration 27, CVM-61).
+ * Lese-/Schreib-Service fuer Mandanten-Branding (Iterationen 27 + 31, CVM-61/72).
  *
  * <p>{@link #loadForCurrentTenant()} liefert das Branding des aktuellen
  * (via {@link TenantContext}) oder - wenn keiner gesetzt - des
@@ -22,9 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
  * Vorbelegung.
  *
  * <p>{@link #updateForCurrentTenant(BrandingUpdateCommand, String)}
- * erzwingt WCAG-AA-Kontrast und optimistisches Locking. Assets
- * (Logo, Favicon, Font) werden in dieser Iteration ueber externe URLs
- * gepflegt; der Multipart-Upload folgt in 27b.
+ * erzwingt WCAG-AA-Kontrast und optimistisches Locking und schreibt
+ * den alten Stand vor dem Speichern in {@link BrandingConfigHistory}.
+ *
+ * <p>{@link #rollbackForCurrentTenant(int, String)} laedt einen
+ * History-Snapshot und stellt ihn als neue Version wieder her -
+ * wiederum mit Kontrast-Check und History-Eintrag, damit auch
+ * Rollbacks auditierbar bleiben.
  */
 @Service
 public class BrandingService {
@@ -32,12 +40,15 @@ public class BrandingService {
     private static final Logger LOG = LoggerFactory.getLogger(BrandingService.class);
 
     private final BrandingConfigRepository repository;
+    private final BrandingConfigHistoryRepository historyRepository;
     private final TenantLookupService tenantLookup;
 
     public BrandingService(
             BrandingConfigRepository repository,
+            BrandingConfigHistoryRepository historyRepository,
             TenantLookupService tenantLookup) {
         this.repository = repository;
+        this.historyRepository = historyRepository;
         this.tenantLookup = tenantLookup;
     }
 
@@ -79,6 +90,10 @@ public class BrandingService {
                             + ", aktuell v" + config.getVersion() + ").");
         }
 
+        if (config.getVersion() != null && config.getVersion() > 0) {
+            historyRepository.save(snapshotFromConfig(config, actor));
+        }
+
         config.setPrimaryColor(trim(command.primaryColor()));
         config.setPrimaryContrastColor(trim(command.primaryContrastColor()));
         config.setAccentColor(trim(command.accentColor()));
@@ -99,6 +114,50 @@ public class BrandingService {
                 saved.getVersion(),
                 actor);
         return toView(saved);
+    }
+
+    @Transactional
+    public BrandingView rollbackForCurrentTenant(int targetVersion, String actor) {
+        UUID tenantId = resolveTenantId();
+        BrandingConfigHistory snapshot = historyRepository
+                .findByTenantIdAndVersion(tenantId, targetVersion)
+                .orElseThrow(() -> new UnknownBrandingVersionException(
+                        "Keine Branding-History fuer Version " + targetVersion
+                                + " des Mandanten " + tenantId + " gefunden."));
+        int currentVersion = repository
+                .findByTenantId(tenantId)
+                .map(BrandingConfig::getVersion)
+                .orElse(0);
+        BrandingUpdateCommand rollbackCommand = new BrandingUpdateCommand(
+                snapshot.getPrimaryColor(),
+                snapshot.getPrimaryContrastColor(),
+                snapshot.getAccentColor(),
+                snapshot.getFontFamilyName(),
+                snapshot.getFontFamilyMonoName(),
+                snapshot.getAppTitle(),
+                snapshot.getLogoUrl(),
+                snapshot.getLogoAltText(),
+                snapshot.getFaviconUrl(),
+                snapshot.getFontFamilyHref(),
+                currentVersion);
+        LOG.info(
+                "Rollback der Branding-Konfiguration fuer Mandant {} auf Version {} durch {}",
+                tenantId,
+                targetVersion,
+                actor);
+        return updateForCurrentTenant(rollbackCommand, actor);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BrandingHistoryEntry> history(int limit) {
+        UUID tenantId = resolveTenantId();
+        int sicheresLimit = limit <= 0 ? 20 : Math.min(limit, 200);
+        return historyRepository
+                .findByTenantIdOrderByVersionDesc(
+                        tenantId, PageRequest.of(0, sicheresLimit))
+                .stream()
+                .map(BrandingService::toHistoryEntry)
+                .toList();
     }
 
     private UUID resolveTenantId() {
@@ -152,9 +211,60 @@ public class BrandingService {
                 config.getVersion() == null ? 1 : config.getVersion());
     }
 
+    private static BrandingConfigHistory snapshotFromConfig(
+            BrandingConfig config, String actor) {
+        return BrandingConfigHistory.builder()
+                .historyId(UUID.randomUUID())
+                .tenantId(config.getTenantId())
+                .primaryColor(config.getPrimaryColor())
+                .primaryContrastColor(config.getPrimaryContrastColor())
+                .accentColor(config.getAccentColor())
+                .fontFamilyName(config.getFontFamilyName())
+                .fontFamilyMonoName(config.getFontFamilyMonoName())
+                .appTitle(config.getAppTitle())
+                .logoUrl(config.getLogoUrl())
+                .logoAltText(config.getLogoAltText())
+                .faviconUrl(config.getFaviconUrl())
+                .fontFamilyHref(config.getFontFamilyHref())
+                .version(config.getVersion() == null ? 0 : config.getVersion())
+                .updatedAt(config.getUpdatedAt() == null
+                        ? Instant.now() : config.getUpdatedAt())
+                .updatedBy(config.getUpdatedBy() == null
+                        ? "unknown" : config.getUpdatedBy())
+                .recordedAt(Instant.now())
+                .recordedBy(actor == null ? "unknown" : actor)
+                .build();
+    }
+
+    private static BrandingHistoryEntry toHistoryEntry(BrandingConfigHistory row) {
+        return new BrandingHistoryEntry(
+                row.getVersion() == null ? 0 : row.getVersion(),
+                row.getPrimaryColor(),
+                row.getPrimaryContrastColor(),
+                row.getAccentColor(),
+                row.getFontFamilyName(),
+                row.getFontFamilyMonoName(),
+                row.getAppTitle(),
+                row.getLogoUrl(),
+                row.getLogoAltText(),
+                row.getFaviconUrl(),
+                row.getFontFamilyHref(),
+                row.getUpdatedAt(),
+                row.getUpdatedBy(),
+                row.getRecordedAt(),
+                row.getRecordedBy());
+    }
+
     /** Wird geworfen, wenn der Kontrast unter 4.5:1 liegt. */
     public static final class ContrastViolationException extends RuntimeException {
         public ContrastViolationException(String message) {
+            super(message);
+        }
+    }
+
+    /** Wird geworfen, wenn ein Rollback auf eine nicht existierende Version zielt. */
+    public static final class UnknownBrandingVersionException extends RuntimeException {
+        public UnknownBrandingVersionException(String message) {
             super(message);
         }
     }

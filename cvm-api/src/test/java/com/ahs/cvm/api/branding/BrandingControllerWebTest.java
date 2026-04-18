@@ -1,11 +1,14 @@
 package com.ahs.cvm.api.branding;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -14,10 +17,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.ahs.cvm.application.branding.BrandingAssetService;
 import com.ahs.cvm.application.branding.BrandingAssetService.AssetKind;
 import com.ahs.cvm.application.branding.BrandingAssetView;
+import com.ahs.cvm.application.branding.BrandingHistoryEntry;
 import com.ahs.cvm.application.branding.BrandingService;
 import com.ahs.cvm.application.branding.BrandingService.ContrastViolationException;
+import com.ahs.cvm.application.branding.BrandingService.UnknownBrandingVersionException;
 import com.ahs.cvm.application.branding.BrandingView;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -121,6 +128,48 @@ class BrandingControllerWebTest {
                         "/api/v1/theme/assets/" + assetId))
                 .andExpect(jsonPath("$.kind").value("LOGO"))
                 .andExpect(jsonPath("$.sha256").value("abc"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/theme/history: liefert History-Liste")
+    void getHistory() throws Exception {
+        BrandingHistoryEntry entry = new BrandingHistoryEntry(
+                3, "#006ec7", "#ffffff", "#887d75",
+                "Fira Sans", "Fira Code", "CVE-Relevance-Manager",
+                null, "adesso", null, null,
+                Instant.parse("2026-04-17T10:00:00Z"), "admin",
+                Instant.parse("2026-04-17T10:05:00Z"), "admin");
+        given(service.history(anyInt())).willReturn(List.of(entry));
+
+        mockMvc.perform(get("/api/v1/admin/theme/history?limit=5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].version").value(3))
+                .andExpect(jsonPath("$[0].primaryColor").value("#006ec7"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/admin/theme/rollback/{version}: Happy-Path liefert neue Version")
+    void rollbackHappy() throws Exception {
+        given(service.rollbackForCurrentTenant(eq(3), anyString()))
+                .willReturn(new BrandingView(
+                        "#006ec7", "#ffffff", null,
+                        "Fira Sans", null, "CVM", null, "adesso", null, null, 8));
+
+        mockMvc.perform(post("/api/v1/admin/theme/rollback/3"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.primaryColor").value("#006ec7"))
+                .andExpect(jsonPath("$.version").value(8));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/admin/theme/rollback/{version}: unbekannte Version liefert 404")
+    void rollbackUnbekannt() throws Exception {
+        willThrow(new UnknownBrandingVersionException("Unbekannt: 99"))
+                .given(service).rollbackForCurrentTenant(eq(99), anyString());
+
+        mockMvc.perform(post("/api/v1/admin/theme/rollback/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("branding_version_unknown"));
     }
 
     @Test

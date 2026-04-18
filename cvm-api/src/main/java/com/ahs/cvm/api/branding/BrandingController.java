@@ -3,6 +3,7 @@ package com.ahs.cvm.api.branding;
 import com.ahs.cvm.application.branding.BrandingAssetService;
 import com.ahs.cvm.application.branding.BrandingAssetService.AssetKind;
 import com.ahs.cvm.application.branding.BrandingAssetView;
+import com.ahs.cvm.application.branding.BrandingHistoryEntry;
 import com.ahs.cvm.application.branding.BrandingService;
 import com.ahs.cvm.application.branding.BrandingUpdateCommand;
 import com.ahs.cvm.application.branding.BrandingView;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.net.URI;
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
@@ -86,6 +88,24 @@ public class BrandingController {
                 "sizeBytes", saved.sizeBytes(),
                 "sha256", saved.sha256(),
                 "url", location.toString()));
+    }
+
+    @GetMapping("/admin/theme/history")
+    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @Operation(summary = "Branding-Historie pro Mandant (neueste zuerst)")
+    public ResponseEntity<List<BrandingHistoryEntry>> history(
+            @RequestParam(value = "limit", defaultValue = "20") int limit) {
+        return ResponseEntity.ok(brandingService.history(limit));
+    }
+
+    @PostMapping("/admin/theme/rollback/{version}")
+    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @Operation(summary = "Branding auf eine vergangene Version zuruecksetzen")
+    public ResponseEntity<BrandingView> rollback(
+            @PathVariable int version, Principal principal) {
+        String actor = principal != null ? principal.getName() : "anonymous";
+        return ResponseEntity.ok(
+                brandingService.rollbackForCurrentTenant(version, actor));
     }
 
     @GetMapping("/theme/assets/{assetId}")
