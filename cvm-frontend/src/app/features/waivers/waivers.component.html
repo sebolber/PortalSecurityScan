@@ -1,0 +1,92 @@
+<section class="cvm-waivers">
+  <header class="cvm-waivers__header">
+    <h1 class="text-title-lg">Waiver-Verwaltung</h1>
+    <p class="text-body">
+      Bestaetigte Risiko-Waiver mit validUntil-Ablauf-Warner. Aenderungen erfolgen
+      ueber die Assessment-Queue und unterliegen dem Vier-Augen-Prinzip.
+    </p>
+  </header>
+
+  <mat-button-toggle-group
+    [value]="status()"
+    (change)="statusWechseln($event.value)"
+    aria-label="Status-Filter"
+  >
+    @for (s of statusse; track s) {
+      <mat-button-toggle [value]="s">{{ s }}</mat-button-toggle>
+    }
+  </mat-button-toggle-group>
+
+  @if (abgelaufenBald().length > 0) {
+    <ahs-banner kind="warn" title="Ablauf in den naechsten 14 Tagen">
+      {{ abgelaufenBald().length }} Waiver laufen bald ab und muessen
+      verlaengert oder widerrufen werden.
+    </ahs-banner>
+  }
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+
+  @if (loading()) {
+    <mat-spinner diameter="36"></mat-spinner>
+  } @else if (rows().length === 0) {
+    <ahs-empty-state
+      icon="rule_folder"
+      title="Keine Waiver"
+      [hint]="'Fuer Status ' + status() + ' liegen keine Waiver vor.'"
+    ></ahs-empty-state>
+  } @else {
+    <table
+      mat-table
+      [dataSource]="rows()"
+      [trackBy]="trackId"
+      class="cvm-waivers__table"
+    >
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Status</th>
+        <td mat-cell *matCellDef="let w">
+          <span class="cvm-waivers__status" [attr.data-status]="w.status">
+            {{ w.status }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="assessment">
+        <th mat-header-cell *matHeaderCellDef>Assessment</th>
+        <td mat-cell *matCellDef="let w" class="text-code">
+          {{ w.assessmentId || '–' }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="reason">
+        <th mat-header-cell *matHeaderCellDef>Begruendung</th>
+        <td mat-cell *matCellDef="let w">{{ w.reason }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="grantedBy">
+        <th mat-header-cell *matHeaderCellDef>Erteilt von</th>
+        <td mat-cell *matCellDef="let w">{{ w.grantedBy }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="validUntil">
+        <th mat-header-cell *matHeaderCellDef>Gueltig bis</th>
+        <td mat-cell *matCellDef="let w">
+          <span [class.cvm-waivers__ablauf-warn]="isBaldAblaufend(w)">
+            {{ w.validUntil | date: 'yyyy-MM-dd' }}
+          </span>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="age">
+        <th mat-header-cell *matHeaderCellDef>Erteilt</th>
+        <td mat-cell *matCellDef="let w">
+          {{ w.createdAt | date: 'yyyy-MM-dd' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+</section>
