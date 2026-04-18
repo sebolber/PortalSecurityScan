@@ -38,6 +38,7 @@ class PipelineGateServiceTest {
     private CycloneDxParser parser;
     private CveRepository cveRepo;
     private FindingRepository findingRepo;
+    private PipelineGateRateLimiter rateLimiter;
     private PipelineGateService service;
 
     @BeforeEach
@@ -45,8 +46,10 @@ class PipelineGateServiceTest {
         parser = mock(CycloneDxParser.class);
         cveRepo = mock(CveRepository.class);
         findingRepo = mock(FindingRepository.class);
+        rateLimiter = mock(PipelineGateRateLimiter.class);
+        given(rateLimiter.tryAcquire(any())).willReturn(true);
         service = new PipelineGateService(parser, cveRepo, findingRepo,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+                rateLimiter, Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
     private CycloneDxBom bomMit(CycloneDxBom.Vulnerability... vs) {
@@ -151,5 +154,14 @@ class PipelineGateServiceTest {
         assertThatThrownBy(() -> service.evaluate(new GateRequest(
                 PV, ENV, "m", "M", new byte[0])))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Gate: Rate-Limit greift -> GateRateLimitException, kein Parse")
+    void rateLimit() {
+        given(rateLimiter.tryAcquire(PV.toString())).willReturn(false);
+        assertThatThrownBy(() -> service.evaluate(new GateRequest(
+                PV, ENV, "m", "M", "{}".getBytes())))
+                .isInstanceOf(PipelineGateService.GateRateLimitException.class);
     }
 }

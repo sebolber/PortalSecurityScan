@@ -93,6 +93,23 @@ public interface AssessmentRepository extends JpaRepository<Assessment, UUID> {
                     AssessmentStatus status, Instant grenze);
 
     /**
+     * Aktive (nicht superseded, nicht SUPERSEDED) Assessments fuer
+     * eine {@code (productVersionId, environmentId)}-Kombination.
+     * Basis fuer den Hardening-Report und KPI-Berechnungen - ersetzt
+     * das teure {@code findAll().stream().filter(...)} aus
+     * Iteration&nbsp;10.
+     */
+    @Query("SELECT a FROM Assessment a "
+            + "WHERE a.supersededAt IS NULL "
+            + "  AND a.productVersion.id = :productVersionId "
+            + "  AND a.environment.id = :environmentId "
+            + "  AND a.status <> com.ahs.cvm.domain.enums.AssessmentStatus.SUPERSEDED "
+            + "ORDER BY a.severity ASC, a.createdAt ASC")
+    List<Assessment> findActiveByProductVersionAndEnvironment(
+            @Param("productVersionId") UUID productVersionId,
+            @Param("environmentId") UUID environmentId);
+
+    /**
      * Batch-Update: setzt {@code status=EXPIRED} ohne den
      * {@link AssessmentImmutabilityListener} zu triggern. Analog zum
      * {@code NEEDS_REVIEW}-Fall in {@link #markiereAlsReview}.

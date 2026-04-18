@@ -44,16 +44,19 @@ public class PipelineGateService {
     private final CycloneDxParser parser;
     private final CveRepository cveRepository;
     private final FindingRepository findingRepository;
+    private final PipelineGateRateLimiter rateLimiter;
     private final Clock clock;
 
     public PipelineGateService(
             CycloneDxParser parser,
             CveRepository cveRepository,
             FindingRepository findingRepository,
+            PipelineGateRateLimiter rateLimiter,
             Clock clock) {
         this.parser = parser;
         this.cveRepository = cveRepository;
         this.findingRepository = findingRepository;
+        this.rateLimiter = rateLimiter;
         this.clock = clock;
     }
 
@@ -64,6 +67,9 @@ public class PipelineGateService {
         }
         if (req.sbom() == null || req.sbom().length == 0) {
             throw new IllegalArgumentException("SBOM-Bytes duerfen nicht leer sein.");
+        }
+        if (!rateLimiter.tryAcquire(req.productVersionId().toString())) {
+            throw new GateRateLimitException(req.productVersionId());
         }
 
         CycloneDxBom bom = parser.parse(req.sbom());
@@ -207,4 +213,11 @@ public class PipelineGateService {
             UUID cveId,
             AhsSeverity severity,
             String status) {}
+
+    /** Wird geworfen, wenn der Rate-Limiter fuer die Produkt-Version verweigert. */
+    public static class GateRateLimitException extends RuntimeException {
+        public GateRateLimitException(UUID productVersionId) {
+            super("Rate-Limit ueberschritten fuer productVersionId=" + productVersionId);
+        }
+    }
 }

@@ -224,6 +224,54 @@ class AssessmentWriteServiceTest {
     }
 
     @Test
+    @DisplayName("expireIfDue: publiziert AssessmentExpiredEvent mit allen Ids")
+    void expireIfDuePubliziertEvent() {
+        UUID a1 = UUID.randomUUID();
+        UUID a2 = UUID.randomUUID();
+        Assessment ex1 = Assessment.builder().id(a1).version(1)
+                .finding(bestehendesFinding())
+                .productVersion(ProductVersion.builder().id(productVersionId).build())
+                .environment(Environment.builder().id(environmentId).build())
+                .cve(Cve.builder().id(cveId).build())
+                .status(AssessmentStatus.APPROVED).severity(AhsSeverity.HIGH)
+                .proposalSource(ProposalSource.HUMAN).build();
+        Assessment ex2 = Assessment.builder().id(a2).version(1)
+                .finding(bestehendesFinding())
+                .productVersion(ProductVersion.builder().id(productVersionId).build())
+                .environment(Environment.builder().id(environmentId).build())
+                .cve(Cve.builder().id(cveId).build())
+                .status(AssessmentStatus.APPROVED).severity(AhsSeverity.MEDIUM)
+                .proposalSource(ProposalSource.HUMAN).build();
+        given(assessmentRepository
+                .findByStatusAndValidUntilLessThanEqualAndSupersededAtIsNull(
+                        AssessmentStatus.APPROVED, Instant.parse("2026-05-01T00:00:00Z")))
+                .willReturn(List.of(ex1, ex2));
+        given(assessmentRepository.markiereAlsAbgelaufen(any(), any())).willReturn(2);
+
+        int betroffen = service.expireIfDue(Instant.parse("2026-05-01T00:00:00Z"));
+
+        assertThat(betroffen).isEqualTo(2);
+        ArgumentCaptor<AssessmentExpiredEvent> cap =
+                ArgumentCaptor.forClass(AssessmentExpiredEvent.class);
+        verify(eventPublisher).publishEvent(cap.capture());
+        assertThat(cap.getValue().assessmentIds()).containsExactly(a1, a2);
+    }
+
+    @Test
+    @DisplayName("expireIfDue: keine Kandidaten -> kein Event")
+    void expireIfDueLeer() {
+        given(assessmentRepository
+                .findByStatusAndValidUntilLessThanEqualAndSupersededAtIsNull(
+                        any(), any()))
+                .willReturn(List.of());
+
+        int betroffen = service.expireIfDue(Instant.parse("2026-05-01T00:00:00Z"));
+
+        assertThat(betroffen).isZero();
+        verify(eventPublisher, times(0)).publishEvent(any(AssessmentExpiredEvent.class));
+    }
+
+    @Test
     @DisplayName("approve: mit Mitigation-Plan persistiert Strategie und Zieltermin")
     void approveMitMitigationPlan() {
         Assessment proposed = proposedAssessment(AhsSeverity.HIGH, "t.tester@ahs.test");

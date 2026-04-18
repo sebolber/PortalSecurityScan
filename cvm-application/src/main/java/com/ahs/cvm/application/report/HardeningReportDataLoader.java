@@ -22,7 +22,6 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -79,19 +78,8 @@ public class HardeningReportDataLoader {
 
         List<Assessment> assessments = assessmentRepository
                 .findeOffeneQueue(env.getId(), pv.getId(), null);
-        // Zusaetzlich alle aktiven (nicht-superseded) Assessments fuer die
-        // Kennzahlen. Da die vorhandenen Repo-Methoden kein direktes
-        // "alle aktiven fuer prodVersion" liefern, kombinieren wir die
-        // Queue-Methode (PROPOSED/NEEDS_REVIEW) mit einer zweiten
-        // Selektion ueber findeAktiveIdsByEnvironmentAndSourceFields?
-        // Fuer Iteration 10 reicht die Queue-Menge plus die bereits
-        // approved-Eintraege, die wir ueber findAll + Filter ziehen.
-        // Pragmatisch ohne zusaetzliche Queries: alles aus findAll.
-        List<Assessment> aktive = assessmentRepository.findAll().stream()
-                .filter(a -> a.getSupersededAt() == null)
-                .filter(a -> Objects.equals(a.getProductVersion().getId(), pv.getId()))
-                .filter(a -> Objects.equals(a.getEnvironment().getId(), env.getId()))
-                .toList();
+        List<Assessment> aktive = assessmentRepository
+                .findActiveByProductVersionAndEnvironment(pv.getId(), env.getId());
 
         HardeningReportData.Kopf kopf = buildKopf(input, pv, env, profil);
         List<HardeningReportData.KennzahlZeile> kennzahlen = buildKennzahlen(aktive);

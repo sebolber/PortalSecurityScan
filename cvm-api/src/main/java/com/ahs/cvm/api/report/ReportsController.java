@@ -9,7 +9,9 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -81,4 +84,27 @@ public class ReportsController {
         GeneratedReportView view = service.findById(reportId);
         return ResponseEntity.ok(ReportResponse.from(view));
     }
+
+    @GetMapping
+    @Operation(summary = "Report-Historie pagenieren (neueste zuerst, ohne PDF-Bytes)")
+    public ResponseEntity<ReportListResponse> list(
+            @RequestParam(name = "productVersionId", required = false) UUID productVersionId,
+            @RequestParam(name = "environmentId", required = false) UUID environmentId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size) {
+        Page<GeneratedReportView> result = service.list(
+                productVersionId, environmentId, page, size);
+        List<ReportResponse> items = result.getContent().stream()
+                .map(ReportResponse::from).toList();
+        return ResponseEntity.ok(new ReportListResponse(
+                items, result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages()));
+    }
+
+    public record ReportListResponse(
+            List<ReportResponse> items,
+            int page,
+            int size,
+            long totalElements,
+            int totalPages) {}
 }

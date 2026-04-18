@@ -19,10 +19,14 @@ import com.ahs.cvm.persistence.product.Product;
 import com.ahs.cvm.persistence.product.ProductVersion;
 import com.ahs.cvm.persistence.scan.Scan;
 import com.ahs.cvm.persistence.scan.ScanRepository;
+import com.ahs.cvm.persistence.summary.ScanDeltaSummaryEntity;
+import com.ahs.cvm.persistence.summary.ScanDeltaSummaryEntityRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +44,7 @@ class ScanDeltaSummaryServiceTest {
     private ScanDeltaCalculator calculator;
     private AiCallAuditService auditService;
     private LlmClientSelector clientSelector;
+    private ScanDeltaSummaryEntityRepository persistRepository;
     private ScanDeltaSummaryService service;
 
     @BeforeEach
@@ -48,12 +53,15 @@ class ScanDeltaSummaryServiceTest {
         calculator = mock(ScanDeltaCalculator.class);
         auditService = mock(AiCallAuditService.class);
         clientSelector = mock(LlmClientSelector.class);
+        persistRepository = mock(ScanDeltaSummaryEntityRepository.class);
         LlmClient client = mock(LlmClient.class);
         given(client.modelId()).willReturn("claude-sonnet-4-6");
         given(clientSelector.select(any(), anyString())).willReturn(client);
         service = new ScanDeltaSummaryService(
                 scanRepository, calculator, auditService, clientSelector,
-                new PromptTemplateLoader(), 1);
+                new PromptTemplateLoader(), persistRepository,
+                Clock.fixed(Instant.parse("2026-04-18T10:00:00Z"), ZoneOffset.UTC),
+                1);
     }
 
     private Scan scan(UUID id, Instant ts) {
@@ -128,6 +136,22 @@ class ScanDeltaSummaryServiceTest {
         assertThat(s.llmAufgerufen()).isTrue();
         assertThat(s.shortText()).isEqualTo("1 neue CVE.");
         assertThat(s.longText()).contains("CVE-NEU");
+        verify(persistRepository).save(any(ScanDeltaSummaryEntity.class));
+    }
+
+    @Test
+    @DisplayName("DeltaSummary: Initial-Run wird auch persistiert")
+    void initialRunPersistiert() {
+        UUID id = UUID.randomUUID();
+        given(scanRepository.findById(id)).willReturn(Optional.of(scan(id, Instant.now())));
+        given(scanRepository.findByProductVersionIdOrderByScannedAtDesc(PV_ID))
+                .willReturn(List.of(scan(id, Instant.now())));
+        given(calculator.calculate(id, null)).willReturn(new ScanDelta(
+                List.of("CVE-1"), List.of(), List.of(), List.of()));
+
+        service.summarize(id);
+
+        verify(persistRepository).save(any(ScanDeltaSummaryEntity.class));
     }
 
     @Test

@@ -94,6 +94,36 @@ public class ReportGeneratorService {
         return GeneratedReportView.from(r);
     }
 
+    /**
+     * Pagenierte Liste (neueste zuerst) fuer den Reports-Listing-
+     * Endpoint. PDF-Bytes werden weggelassen - die lassen sich
+     * ueber den Download-Endpoint holen.
+     */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<GeneratedReportView> list(
+            UUID productVersionId, UUID environmentId,
+            int page, int size) {
+        int p = Math.max(0, page);
+        int s = Math.min(100, Math.max(1, size));
+        org.springframework.data.domain.Pageable pageable =
+                org.springframework.data.domain.PageRequest.of(p, s,
+                        org.springframework.data.domain.Sort.by(
+                                org.springframework.data.domain.Sort.Direction.DESC,
+                                "erzeugtAm"));
+        org.springframework.data.domain.Page<GeneratedReport> source;
+        if (productVersionId != null && environmentId != null) {
+            source = repository.findByProductVersionIdAndEnvironmentId(
+                    productVersionId, environmentId, pageable);
+        } else if (productVersionId != null) {
+            source = repository.findByProductVersionId(productVersionId, pageable);
+        } else if (environmentId != null) {
+            source = repository.findByEnvironmentId(environmentId, pageable);
+        } else {
+            source = repository.findAll(pageable);
+        }
+        return source.map(r -> GeneratedReportView.from(r).withoutBytes());
+    }
+
     private static void validate(HardeningReportInput input) {
         if (input.productVersionId() == null) {
             throw new IllegalArgumentException("productVersionId darf nicht null sein.");

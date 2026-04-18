@@ -258,6 +258,31 @@ public class FixVerificationService {
         return fresh;
     }
 
+    /**
+     * Entfernt Cache-Eintraege, die aelter als {@code 2 * cacheTtlMinutes}
+     * sind. Wird taeglich vom {@link FixVerificationCacheEvictionJob}
+     * aufgerufen, damit der Speicher bei laufendem Betrieb nicht
+     * unbegrenzt waechst.
+     */
+    public int purgeExpiredCache() {
+        long grenzeMin = config.cacheTtlMinutes() * 2L;
+        Instant now = Instant.now();
+        int vorher = cache.size();
+        cache.entrySet().removeIf(e -> Duration.between(
+                e.getValue().fetchedAt, now).toMinutes() >= grenzeMin);
+        int entfernt = vorher - cache.size();
+        if (entfernt > 0) {
+            log.info("FixVerification-Cache purged: {} Eintraege entfernt, {} verbleiben.",
+                    entfernt, cache.size());
+        }
+        return entfernt;
+    }
+
+    /** Paketsichtbar fuer Tests. */
+    int cacheSize() {
+        return cache.size();
+    }
+
     private LlmResponse runLlm(FixVerificationRequest request, Cve cve,
             String fromVersion, String toVersion, ReleaseNotes notes,
             List<Verdict> suspicious, List<Verdict> rest, boolean messagesOnly) {

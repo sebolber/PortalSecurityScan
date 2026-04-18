@@ -67,11 +67,17 @@ class AiCallAuditServiceTest {
     }
 
     private AiCallAuditService service(boolean enabled, LlmGatewayConfig.InjectionMode mode) {
+        return service(enabled, mode, envId -> true);
+    }
+
+    private AiCallAuditService service(boolean enabled,
+            LlmGatewayConfig.InjectionMode mode,
+            com.ahs.cvm.llm.budget.CostBudgetPort costBudget) {
         LlmGatewayConfig config = new LlmGatewayConfig(
                 enabled, mode.name().toLowerCase(), MODEL, 120, 30);
         return new AiCallAuditService(
                 config, auditPort, injectionDetector, outputValidator,
-                rateLimiter, costCalculator, clock);
+                rateLimiter, costCalculator, costBudget, clock);
     }
 
     private LlmRequest request(String userText, JsonNode schema) {
@@ -106,6 +112,24 @@ class AiCallAuditServiceTest {
 
         verify(auditPort, never()).persistPending(any());
         verify(client, never()).complete(any());
+    }
+
+    @Test
+    @DisplayName("Audit: Monatsbudget gerissen -> DISABLED, kein Client-Call")
+    void kostenCapGreift() {
+        AiCallAuditService svc = service(true, LlmGatewayConfig.InjectionMode.WARN,
+                envId -> false);
+
+        assertThatThrownBy(() -> svc.execute(client, request("bewerte CVE-...", null)))
+                .isInstanceOf(LlmDisabledException.class)
+                .hasMessageContaining("Monatsbudget");
+
+        verify(client, never()).complete(any());
+        ArgumentCaptor<AiCallAuditFinalization> cap =
+                ArgumentCaptor.forClass(AiCallAuditFinalization.class);
+        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.DISABLED);
+        assertThat(cap.getValue().errorMessage()).contains("Monatsbudget");
     }
 
     @Test

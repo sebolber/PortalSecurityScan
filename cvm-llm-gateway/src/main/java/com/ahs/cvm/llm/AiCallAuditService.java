@@ -7,6 +7,7 @@ import com.ahs.cvm.llm.LlmGatewayConfig.InjectionMode;
 import com.ahs.cvm.llm.audit.AiCallAuditPort;
 import com.ahs.cvm.llm.audit.AiCallAuditPort.AiCallAuditFinalization;
 import com.ahs.cvm.llm.audit.AiCallAuditPort.AiCallAuditPending;
+import com.ahs.cvm.llm.budget.CostBudgetPort;
 import com.ahs.cvm.llm.cost.LlmCostCalculator;
 import com.ahs.cvm.llm.injection.InjectionDetector;
 import com.ahs.cvm.llm.injection.InjectionDetector.InjectionVerdict;
@@ -50,6 +51,7 @@ public class AiCallAuditService {
     private final OutputValidator outputValidator;
     private final LlmRateLimiter rateLimiter;
     private final LlmCostCalculator costCalculator;
+    private final CostBudgetPort costBudget;
     private final Clock clock;
 
     public AiCallAuditService(
@@ -59,6 +61,7 @@ public class AiCallAuditService {
             OutputValidator outputValidator,
             LlmRateLimiter rateLimiter,
             LlmCostCalculator costCalculator,
+            CostBudgetPort costBudget,
             Clock clock) {
         this.config = config;
         this.auditPort = auditPort;
@@ -66,6 +69,7 @@ public class AiCallAuditService {
         this.outputValidator = outputValidator;
         this.rateLimiter = rateLimiter;
         this.costCalculator = costCalculator;
+        this.costBudget = costBudget;
         this.clock = clock;
     }
 
@@ -78,6 +82,17 @@ public class AiCallAuditService {
         if (!config.enabled()) {
             log.info("LLM-Call abgelehnt: Feature-Flag aus (useCase={}).", request.useCase());
             throw new LlmDisabledException();
+        }
+
+        if (!costBudget.isUnderBudget(request.environmentId())) {
+            UUID auditId = auditPort.persistPending(pending(request, client.modelId(), false));
+            auditPort.finalize(auditId, finalization(
+                    AiCallStatus.DISABLED, null, null, null, null, BigDecimal.ZERO,
+                    null, "Monatsbudget fuer LLM-Profil aufgebraucht"));
+            log.warn("LLM-Call abgelehnt: Monatsbudget aufgebraucht (useCase={}, env={}).",
+                    request.useCase(), request.environmentId());
+            throw new LlmDisabledException(
+                    "Monatsbudget fuer LLM-Profil aufgebraucht");
         }
 
         String tenant = tenantOf(request);

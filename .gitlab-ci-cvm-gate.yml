@@ -1,0 +1,73 @@
+# CVE-Relevance-Manager - CI/CD-Gate-Template (Iteration 21, CVM-52).
+#
+# Einbindung in Produkt-Pipelines:
+#   include:
+#     - project: 'adesso/health-solutions/cve-relevance-manager'
+#       ref: main
+#       file: '/.gitlab-ci-cvm-gate.yml'
+#
+# Erwartete Variablen (pro Projekt zu setzen):
+#   CVM_URL                  Basis-URL des CVM-Backends
+#                            (z.B. https://cvm.intern.example/api).
+#   CVM_TOKEN                Bearer-Token eines Pipeline-Service-Accounts.
+#   CVM_PRODUCT_VERSION_ID   UUID der Produkt-Version.
+#   CVM_ENVIRONMENT_ID       UUID der CI-Umgebung (Default: CI).
+#   CVM_GATE_ALLOW_WARN      'true' = bei WARN durchlassen
+#                            (default: hart auf PASS).
+#
+# Output-Mapping:
+#   gate=FAIL  -> Exit 2, Pipeline bricht ab (allow_failure:false).
+#   gate=WARN  -> Exit 0 wenn CVM_GATE_ALLOW_WARN='true', sonst 1.
+#   gate=PASS  -> Exit 0.
+
+cvm-gate:
+  stage: security
+  image: aquasec/trivy:latest
+  needs: []
+  variables:
+    TRIVY_CACHE_DIR: ${CI_PROJECT_DIR}/.trivycache
+    CVM_GATE_ALLOW_WARN: "false"
+  before_script:
+    - apk add --no-cache curl jq
+  script:
+    - trivy fs --format cyclonedx -o sbom.json .
+    - |
+      RESPONSE=$(curl -sS -w "\n%{http_code}" \
+        -H "Authorization: Bearer ${CVM_TOKEN}" \
+        -F "sbom=@sbom.json" \
+        -F "productVersionId=${CVM_PRODUCT_VERSION_ID}" \
+        -F "environmentId=${CVM_ENVIRONMENT_ID:-}" \
+        -F "branchRef=${CI_COMMIT_REF_NAME}" \
+        -F "mergeRequestId=${CI_MERGE_REQUEST_IID:-}" \
+        "${CVM_URL}/v1/pipeline/gate")
+      HTTP_CODE=$(echo "$RESPONSE" | tail -n 1)
+      BODY=$(echo "$RESPONSE" | sed '$d')
+      echo "HTTP $HTTP_CODE"
+      echo "$BODY" | jq '.'
+      if [ "$HTTP_CODE" = "429" ]; then
+        echo "CVM-Gate rate-limited - bitte Minute warten."
+        exit 3
+      fi
+      if [ "$HTTP_CODE" != "200" ]; then
+        echo "CVM-Gate-Aufruf fehlgeschlagen ($HTTP_CODE)."
+        exit 4
+      fi
+      GATE=$(echo "$BODY" | jq -r '.gate')
+      echo "CVM-Gate-Entscheidung: $GATE"
+      case "$GATE" in
+        PASS) exit 0 ;;
+        WARN)
+          if [ "$CVM_GATE_ALLOW_WARN" = "true" ]; then exit 0; fi
+          echo "WARN nicht erlaubt in dieser Pipeline."; exit 1 ;;
+        FAIL) echo "FAIL - neuer kritischer CVE blockiert den Merge."; exit 2 ;;
+        *) echo "Unerwartete Gate-Antwort."; exit 5 ;;
+      esac
+  artifacts:
+    when: always
+    paths:
+      - sbom.json
+    expire_in: 7 days
+  allow_failure: false
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH

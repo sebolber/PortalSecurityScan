@@ -114,6 +114,24 @@ class ReportsControllerWebTest {
     }
 
     @Test
+    @DisplayName("GET /reports: pagenierte Liste ohne PDF-Bytes")
+    void liste() throws Exception {
+        given(service.list(eq(PRODUCT_VERSION_ID), eq(ENVIRONMENT_ID),
+                eq(0), eq(20)))
+                .willReturn(new org.springframework.data.domain.PageImpl<>(
+                        java.util.List.of(view().withoutBytes()),
+                        org.springframework.data.domain.PageRequest.of(0, 20),
+                        1));
+        mockMvc.perform(get("/api/v1/reports")
+                        .param("productVersionId", PRODUCT_VERSION_ID.toString())
+                        .param("environmentId", ENVIRONMENT_ID.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].reportId").value(REPORT_ID.toString()))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.page").value(0));
+    }
+
+    @Test
     @DisplayName("GET /reports/{id}: 404 bei unbekannter reportId")
     void downloadNotFound() throws Exception {
         UUID unbekannt = UUID.fromString("55555555-5555-5555-5555-555555555555");

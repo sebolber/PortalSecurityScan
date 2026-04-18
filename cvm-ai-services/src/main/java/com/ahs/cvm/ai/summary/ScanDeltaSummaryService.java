@@ -10,7 +10,11 @@ import com.ahs.cvm.llm.prompt.PromptTemplate;
 import com.ahs.cvm.llm.prompt.PromptTemplateLoader;
 import com.ahs.cvm.persistence.scan.Scan;
 import com.ahs.cvm.persistence.scan.ScanRepository;
+import com.ahs.cvm.persistence.summary.ScanDeltaSummaryEntity;
+import com.ahs.cvm.persistence.summary.ScanDeltaSummaryEntityRepository;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +50,8 @@ public class ScanDeltaSummaryService {
     private final AiCallAuditService auditService;
     private final LlmClientSelector clientSelector;
     private final PromptTemplateLoader templateLoader;
+    private final ScanDeltaSummaryEntityRepository persistRepository;
+    private final Clock clock;
     private final int minDelta;
 
     public ScanDeltaSummaryService(
@@ -54,12 +60,16 @@ public class ScanDeltaSummaryService {
             AiCallAuditService auditService,
             LlmClientSelector clientSelector,
             PromptTemplateLoader templateLoader,
+            ScanDeltaSummaryEntityRepository persistRepository,
+            Clock clock,
             @Value("${cvm.ai.summary.min-delta:1}") int minDelta) {
         this.scanRepository = scanRepository;
         this.calculator = calculator;
         this.auditService = auditService;
         this.clientSelector = clientSelector;
         this.templateLoader = templateLoader;
+        this.persistRepository = persistRepository;
+        this.clock = clock;
         this.minDelta = Math.max(1, minDelta);
     }
 
@@ -72,21 +82,22 @@ public class ScanDeltaSummaryService {
 
         if (previous.isEmpty()) {
             ScanDelta delta = calculator.calculate(scanId, null);
-            return new ScanDeltaSummary(scanId, null,
+            return persistAndReturn(new ScanDeltaSummary(scanId, null,
                     "Initial-Scan: " + delta.neueCves().size() + " CVEs gefunden.",
                     "Erster Scan dieser Produkt-Version in dieser Umgebung. "
                             + delta.neueCves().size()
                             + " CVEs sind im aktuellen SBOM enthalten.",
-                    delta, false);
+                    delta, false));
         }
 
         ScanDelta delta = calculator.calculate(scanId, previous.get().getId());
         if (delta.totalDelta() < minDelta) {
-            return new ScanDeltaSummary(scanId, previous.get().getId(),
+            return persistAndReturn(new ScanDeltaSummary(
+                    scanId, previous.get().getId(),
                     "Keine relevanten Aenderungen seit dem letzten Scan.",
                     "Der aktuelle Scan unterscheidet sich nicht (oder unter "
                             + "der konfigurierten Mindestschwelle) vom Vorgaenger.",
-                    delta, false);
+                    delta, false));
         }
 
         PromptTemplate template = templateLoader.load("delta-summary");
@@ -120,8 +131,20 @@ public class ScanDeltaSummaryService {
             shortText = "Aenderungen seit letztem Scan: "
                     + delta.totalDelta() + " Eintraege.";
         }
-        return new ScanDeltaSummary(scanId, previous.get().getId(),
-                shortText, longText, delta, true);
+        return persistAndReturn(new ScanDeltaSummary(scanId, previous.get().getId(),
+                shortText, longText, delta, true));
+    }
+
+    private ScanDeltaSummary persistAndReturn(ScanDeltaSummary summary) {
+        persistRepository.save(ScanDeltaSummaryEntity.builder()
+                .scanId(summary.scanId())
+                .previousScanId(summary.previousScanId())
+                .shortText(summary.shortText())
+                .longText(summary.longText())
+                .llmAufgerufen(summary.llmAufgerufen())
+                .createdAt(Instant.now(clock))
+                .build());
+        return summary;
     }
 
     private Optional<Scan> findePreviousScan(Scan current) {

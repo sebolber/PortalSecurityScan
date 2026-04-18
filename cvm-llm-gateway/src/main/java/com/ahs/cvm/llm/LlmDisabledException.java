@@ -11,4 +11,8 @@ public class LlmDisabledException extends RuntimeException {
     public LlmDisabledException() {
         super("LLM-Feature ist deaktiviert (cvm.llm.enabled=false).");
     }
+
+    public LlmDisabledException(String reason) {
+        super("LLM-Feature ist deaktiviert: " + reason);
+    }
 }

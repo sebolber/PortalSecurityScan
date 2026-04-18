@@ -312,8 +312,10 @@ public class AssessmentWriteService {
             return 0;
         }
         List<UUID> ids = kandidaten.stream().map(Assessment::getId).toList();
-        int betroffen = assessmentRepository.markiereAlsAbgelaufen(ids, Instant.now());
+        Instant jetzt = Instant.now();
+        int betroffen = assessmentRepository.markiereAlsAbgelaufen(ids, jetzt);
         log.info("Expiry: {} Assessments auf EXPIRED gesetzt.", betroffen);
+        eventPublisher.publishEvent(new AssessmentExpiredEvent(ids, jetzt));
         return betroffen;
     }
 

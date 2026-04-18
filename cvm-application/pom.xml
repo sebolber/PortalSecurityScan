@@ -51,6 +51,11 @@
             <artifactId>thymeleaf</artifactId>
         </dependency>
         <dependency>
+            <!-- Iteration 21+: Pipeline-Gate-Rate-Limit (CVM-52). -->
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>

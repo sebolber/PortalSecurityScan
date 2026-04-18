@@ -1,6 +1,10 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-18 nach Iteration 21 - Go-Live-Checkliste
+> Go-Live-Abarbeitung 2026-04-18: Tier 1 + Tier 2 der
+> Iteration-21-Liste sind abgeschlossen, siehe
+> `docs/20260417/go-live-abarbeitung.md`.
+
+## Stand 2026-04-18 nach Iteration 21 - Go-Live-Checkliste (Rest)
 
 **RLS-Hardening**
 - RLS-Policies auf Sachtabellen (`assessment`, `scan`, `finding`,
@@ -13,11 +17,8 @@
 - `RlsIsolationTest` (Testcontainers): Tenant A sieht Tenant B
   nicht - auch bei bewusst fehlerhafter Query.
 
-**Gate-Integration**
-- GitLab-CI-Template `.gitlab-ci-cvm-gate.yml` im Repo-Root und
-  in den Produkt-Pipelines ausrollen.
+**Gate-Integration (Rest)**
 - MR-Kommentar POST zurueck ans MergeRequest (via GitProviderPort).
-- Rate-Limit am Gate-Endpunkt (Bucket4j analog zum LLM-Gateway).
 
 **KPI-UI**
 - ECharts-Widgets im Dashboard: Burn-Down-Linie, Severity-Saeulen,
@@ -32,12 +33,6 @@
 - JWT-Tenant-Resolver scharf schalten (im API-Modul ist der
   `TenantContext` vorbereitet).
 - Modell-Profil-Seed pro Mandant (Claude-Cloud + Ollama-Fallback).
-
-**Cost-Cap-Integration in KI-Services**
-- Jeder KI-Service (Copilot, Anomaly, Executive-Summary, ...)
-  fragt `LlmCostGuard.isUnderBudget(...)` vor dem Call und
-  faellt sonst in Regel-only-Modus. Aktuell nur der Guard
-  selbst verdrahtet.
 
 ## Stand 2026-04-18 nach Iteration 20
 - **VEX-Import-Ingestion**: Statements werden aktuell nur
