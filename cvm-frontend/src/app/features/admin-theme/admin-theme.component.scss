@@ -59,6 +59,59 @@
   margin-top: var(--space-2);
 }
 
+.cvm-admin-theme__assets {
+  grid-column: 1 / -1;
+}
+
+.cvm-admin-theme__asset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.cvm-admin-theme__asset-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+
+  span {
+    max-width: 64ch;
+  }
+}
+
+.cvm-admin-theme__asset-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.cvm-admin-theme__file-trigger {
+  cursor: pointer;
+  user-select: none;
+}
+
+.cvm-admin-theme__file-input {
+  display: none;
+}
+
+.cvm-admin-theme__asset-url {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+  font-family: var(--font-family-mono);
+  font-size: var(--text-xs);
+  max-width: 60ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .cvm-admin-theme__preview .cvm-preview-shell {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);

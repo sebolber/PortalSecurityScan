@@ -16,6 +16,11 @@
       {{ contrastWarning() }}
     </ahs-banner>
   }
+  @if (uploadMessage()) {
+    <ahs-banner kind="success" title="Asset hochgeladen">
+      {{ uploadMessage() }}
+    </ahs-banner>
+  }
 
   <div class="cvm-admin-theme__grid">
     <mat-card class="cvm-admin-theme__form">
@@ -153,6 +158,51 @@
             </button>
           </div>
         </form>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="cvm-admin-theme__assets">
+      <mat-card-header>
+        <mat-card-title>Assets hochladen</mat-card-title>
+        <mat-card-subtitle>
+          Serverseitig gespeichert, URLs erscheinen im Formular.
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @for (slot of assetSlots; track slot.kind) {
+          <div class="cvm-admin-theme__asset">
+            <div class="cvm-admin-theme__asset-head">
+              <strong>{{ slot.label }}</strong>
+              <span class="text-caption">{{ slot.hint }}</span>
+            </div>
+            <div class="cvm-admin-theme__asset-row">
+              <label
+                [attr.for]="'asset-' + slot.kind"
+                class="cvm-admin-theme__file-trigger"
+                mat-stroked-button
+              >
+                <mat-icon>upload_file</mat-icon>
+                Datei auswaehlen
+              </label>
+              <input
+                [id]="'asset-' + slot.kind"
+                type="file"
+                class="cvm-admin-theme__file-input"
+                [accept]="slot.accept"
+                (change)="assetHochladen(slot, $event)"
+                [disabled]="uploading()[slot.kind]"
+              />
+              @if (uploading()[slot.kind]) {
+                <span class="text-caption">Lade hoch...</span>
+              }
+              @if (draft()[slot.fieldKey]) {
+                <code class="cvm-admin-theme__asset-url">
+                  {{ draft()[slot.fieldKey] }}
+                </code>
+              }
+            </div>
+          </div>
+        }
       </mat-card-content>
     </mat-card>
 
