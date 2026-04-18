@@ -1,6 +1,8 @@
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -13,6 +15,8 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/auth/auth.service';
 import { RoleMenuService } from '../core/auth/role-menu.service';
 import { LocaleService } from '../core/i18n/locale.service';
+import { AlertBannerService } from '../core/alerts/alert-banner.service';
+import { AlertBannerComponent } from './alert-banner.component';
 
 @Component({
   selector: 'cvm-shell',
@@ -30,7 +34,8 @@ import { LocaleService } from '../core/i18n/locale.service';
     MatButtonModule,
     MatMenuModule,
     MatSelectModule,
-    MatFormFieldModule
+    MatFormFieldModule,
+    AlertBannerComponent
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
@@ -39,6 +44,8 @@ export class ShellComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly menu = inject(RoleMenuService);
   private readonly locale = inject(LocaleService);
+  private readonly bannerService = inject(AlertBannerService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly texte = this.locale.messages;
   readonly username = this.auth.username;
@@ -57,6 +64,10 @@ export class ShellComponent implements OnInit {
 
   ngOnInit(): void {
     this.auth.refreshFromKeycloak();
+    void this.bannerService.refresh();
+    interval(60_000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => void this.bannerService.refresh());
   }
 
   async login(): Promise<void> {

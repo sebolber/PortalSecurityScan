@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ subjectPrefix }} Kritischer Vorschlag offen</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; color: #1c1c1c;">
+    <h2 style="color: #e2001a;">Kritischer Bewertungs-Vorschlag offen</h2>
+    <p>
+      Im CVE-Relevance-Manager ist seit
+      <strong>{{ alterMinuten }}</strong> Minuten ein Vorschlag mit
+      Severity <strong>{{ severity }}</strong> ohne Bewertung.
+    </p>
+    <table style="border-collapse: collapse;">
+      <tr>
+        <td style="padding: 4px 12px;"><strong>CVE</strong></td>
+        <td style="padding: 4px 12px;">{{ cveKey }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 4px 12px;"><strong>Produktversion</strong></td>
+        <td style="padding: 4px 12px;">{{ produktVersion }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 4px 12px;"><strong>Umgebung</strong></td>
+        <td style="padding: 4px 12px;">{{ umgebung }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 4px 12px;"><strong>Quelle</strong></td>
+        <td style="padding: 4px 12px;">{{ quelle }}</td>
+      </tr>
+    </table>
+    <p>
+      <a href="{{ queueUrl }}">Direkt zur Queue</a>
+    </p>
+    <p style="color: #888; font-size: 11px;">
+      Automatischer Alert aus dem CVE-Relevance-Manager.
+    </p>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ subjectPrefix }} KEV-Listing eingetroffen</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; color: #1c1c1c;">
+    <h2 style="color: #e2001a;">Bekannt ausgenutzt: {{ cveKey }}</h2>
+    <p>
+      Die CISA hat <strong>{{ cveKey }}</strong> in den
+      Known-Exploited-Vulnerabilities-Katalog aufgenommen. Der CVE ist
+      in mindestens einer beobachteten Komponente aktiv.
+    </p>
+    <table style="border-collapse: collapse;">
+      <tr>
+        <td style="padding: 4px 12px;"><strong>Severity</strong></td>
+        <td style="padding: 4px 12px;">{{ severity }}</td>
+      </tr>
+      <tr>
+        <td style="padding: 4px 12px;"><strong>Produktversion</strong></td>
+        <td style="padding: 4px 12px;">{{ produktVersion }}</td>
+      </tr>
+    </table>
+    <p>
+      <a href="{{ cveUrl }}">CVE-Detail oeffnen</a>
+    </p>
+  </body>
+</html>

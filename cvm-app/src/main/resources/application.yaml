@@ -29,6 +29,14 @@ spring:
     username: ${CVM_SMTP_USER:}
     password: ${CVM_SMTP_PASSWORD:}
 
+cvm:
+  alerts:
+    mode: ${CVM_ALERTS_MODE:dry-run}
+    from: ${CVM_ALERTS_FROM:cvm-alerts@ahs.local}
+    eskalation:
+      t1-minutes: ${CVM_ALERTS_T1:120}
+      t2-minutes: ${CVM_ALERTS_T2:360}
+
 server:
   port: ${CVM_SERVER_PORT:8081}
   error:

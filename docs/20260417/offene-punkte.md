@@ -1,5 +1,22 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 nach Iteration 09
+- **AssessmentExpiredEvent** noch nicht eingefuehrt. Re-Vorschlag-
+  Pfad sollte parallel zu `AlertEscalationJob` laufen, damit
+  abgelaufene Approves wieder als PROPOSED in der Queue landen.
+- **AlertRule-YAML-Bootstrap** fehlt; aktuell nur REST-Anlage.
+  Ein YAML-Loader (analog zu Profile/Rule) folgt mit Iteration 21.
+- **Persistenz-Integrationstest** fuer V0011 bleibt Docker-skipped.
+- **Manueller MailHog-Smoke**: `cvm.alerts.mode=real` mit
+  `CVM_SMTP_HOST=localhost`, `_PORT=1025` in einem Hands-On-Lauf
+  pruefen, sobald Docker lokal verfuegbar ist.
+- **ESKALATION_PENDING_REVIEW**: separater Trigger fuer
+  Vier-Augen-Pending-Faelle ist nicht enthalten. Iteration 13/14
+  kann das ergaenzen, sobald Cluster-Cases auflaufen.
+- **Banner i18n**: Banner-Text aktuell hart deutsch.
+- **AlertConfig.dryRun()** ist global; kein Per-Rule-Override.
+  Reicht fuer Iteration 09; Per-Rule-Switch waere ein Feature.
+
 ## Stand 2026-04-17 nach Iteration 08
 - **Produkt-/Umgebungs-Dropdowns**: In der Queue-Seite sind Produkt-
   version und Umgebung aktuell UUID-Freitextfelder. Sobald die

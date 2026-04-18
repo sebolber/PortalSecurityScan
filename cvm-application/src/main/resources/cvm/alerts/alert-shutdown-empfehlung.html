@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{ subjectPrefix }} Shutdown-Empfehlung</title>
+  </head>
+  <body style="font-family: Arial, sans-serif; color: #1c1c1c;">
+    <h2 style="color: #b00020;">Empfehlung: Weiterbetrieb pruefen</h2>
+    <p>
+      Die T2-Eskalations-Schwelle ist ueberschritten. In der Umgebung
+      <strong>{{ umgebung }}</strong> liegen offene CRITICAL-Vorschlaege
+      seit ueber {{ alterMinuten }} Minuten.
+    </p>
+    <p>
+      Bitte sofortige Bewertung pruefen oder Shutdown-Pfad einleiten.
+    </p>
+    <p>
+      <a href="{{ queueUrl }}">Queue oeffnen</a>
+    </p>
+  </body>
+</html>
