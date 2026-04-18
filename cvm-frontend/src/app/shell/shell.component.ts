@@ -6,6 +6,7 @@ import { interval } from 'rxjs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
@@ -14,7 +15,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/auth/auth.service';
-import { RoleMenuService } from '../core/auth/role-menu.service';
+import { MenuEntry, MenuSection, RoleMenuService } from '../core/auth/role-menu.service';
 import { CVM_ROLE_LABELS, CvmRole } from '../core/auth/cvm-roles';
 import { LocaleService } from '../core/i18n/locale.service';
 import { AlertBannerService } from '../core/alerts/alert-banner.service';
@@ -34,6 +35,7 @@ import { AlertBannerComponent } from './alert-banner.component';
     MatToolbarModule,
     MatSidenavModule,
     MatListModule,
+    MatExpansionModule,
     MatIconModule,
     MatButtonModule,
     MatMenuModule,
@@ -70,6 +72,39 @@ export class ShellComponent implements OnInit {
   readonly menuEintraege = computed(() =>
     this.menu.visibleEntries(this.auth.userRoles())
   );
+
+  /**
+   * Gruppiert die Menue-Eintraege in die drei Sektionen
+   * (Workflow / Uebersicht / Einstellungen). Die Reihenfolge der
+   * Eintraege innerhalb einer Sektion bleibt wie in
+   * {@link RoleMenuService} definiert.
+   */
+  readonly menuGruppen = computed<
+    readonly { section: MenuSection; label: string; entries: readonly MenuEntry[] }[]
+  >(() => {
+    const groups: Record<MenuSection, MenuEntry[]> = {
+      workflow: [],
+      uebersicht: [],
+      einstellungen: []
+    };
+    for (const entry of this.menuEintraege()) {
+      groups[entry.section].push(entry);
+    }
+    const ordered: {
+      section: MenuSection;
+      label: string;
+      entries: MenuEntry[];
+    }[] = [
+      { section: 'workflow', label: 'Workflow', entries: groups.workflow },
+      { section: 'uebersicht', label: 'Uebersicht', entries: groups.uebersicht },
+      {
+        section: 'einstellungen',
+        label: 'Einstellungen',
+        entries: groups.einstellungen
+      }
+    ];
+    return ordered.filter((g) => g.entries.length > 0);
+  });
 
   readonly rollenChips = computed(() => {
     const labels = CVM_ROLE_LABELS as Readonly<Record<string, string>>;

@@ -68,20 +68,63 @@
 
 <mat-sidenav-container class="cvm-container">
   <mat-sidenav mode="side" opened>
-    <mat-nav-list>
-      @for (entry of menuEintraege(); track entry.id) {
-        <a
-          mat-list-item
-          [routerLink]="entry.path"
-          routerLinkActive="active"
-        >
-          <mat-icon matListItemIcon>{{ entry.icon }}</mat-icon>
-          <span matListItemTitle>{{ entry.label }}</span>
-        </a>
-      } @empty {
-        <p class="cvm-no-menu">{{ texte.app.notLoggedIn }}</p>
-      }
-    </mat-nav-list>
+    @if (menuGruppen().length === 0) {
+      <p class="cvm-no-menu">{{ texte.app.notLoggedIn }}</p>
+    }
+    @for (gruppe of menuGruppen(); track gruppe.section) {
+      <div class="cvm-menu-group">
+        <h2 class="cvm-menu-group__label">{{ gruppe.label }}</h2>
+        @if (gruppe.section !== 'einstellungen') {
+          <mat-nav-list>
+            @for (entry of gruppe.entries; track entry.id) {
+              <a
+                mat-list-item
+                [routerLink]="entry.path"
+                routerLinkActive="active"
+              >
+                <mat-icon matListItemIcon>{{ entry.icon }}</mat-icon>
+                <span matListItemTitle>{{ entry.label }}</span>
+              </a>
+            }
+          </mat-nav-list>
+        } @else {
+          @for (entry of gruppe.entries; track entry.id) {
+            <mat-accordion>
+              <mat-expansion-panel
+                class="cvm-menu-expand"
+                [expanded]="true"
+              >
+                <mat-expansion-panel-header class="cvm-menu-expand__header">
+                  <mat-panel-title>
+                    <mat-icon>{{ entry.icon }}</mat-icon>
+                    <a
+                      [routerLink]="entry.path"
+                      routerLinkActive="active"
+                      (click)="$event.stopPropagation()"
+                    >
+                      {{ entry.label }}
+                    </a>
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                <mat-nav-list>
+                  @for (child of entry.children ?? []; track child.id) {
+                    <a
+                      mat-list-item
+                      [routerLink]="child.path"
+                      routerLinkActive="active"
+                      class="cvm-menu-child"
+                    >
+                      <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
+                      <span matListItemTitle>{{ child.label }}</span>
+                    </a>
+                  }
+                </mat-nav-list>
+              </mat-expansion-panel>
+            </mat-accordion>
+          }
+        }
+      </div>
+    }
   </mat-sidenav>
 
   <mat-sidenav-content class="cvm-content">
