@@ -13,6 +13,35 @@
   `AdminThemeComponent`.
 - Persistenz-Integrationstest fuer V0027 bleibt Docker-pflichtig.
 
+## Stand 2026-04-18 UI-Exploration - Findings aus Screenshot-Review
+
+Volltext: `docs/20260418/ui-exploration-findings.md`.
+
+HIGH:
+- HIGH-1 **Material-Icons** laden nicht (alle Screens zeigen
+  2-3-Buchstaben-Fallbacks statt Icons).
+- HIGH-2 **Top-Navigation-Overflow**: Rollen-Pills ueberlappen
+  Logo + Mandanten-Switcher.
+- HIGH-3 **Keycloak-CORS** blockiert `/realms/cvm-local/account`.
+  Loest die 19 FEHLER im Auto-Report aus.
+- HIGH-4 **NG0600** "Signal write in effect" auf `/queue`
+  (`QueueStore.reload`).
+
+MEDIUM:
+- MEDIUM-1 Severity-Farben auf `/cves` werden grau statt token-farbig
+  gerendert (Komponent verwendet nicht `<cvm-severity-badge>`).
+- MEDIUM-2 `/profiles` hat keinen Empty-State und keinen Anlege-CTA.
+- MEDIUM-3 `/admin/theme` behauptet "Rollback innerhalb 24 h" -
+  Implementierung hat kein Zeit-Limit. Text oder Service anpassen.
+- MEDIUM-4 `/admin/theme` hat keine Rollback-UI fuer die in
+  Iteration 31 gelieferten Endpoints.
+- MEDIUM-5 `/reports` verlangt UUIDs manuell statt Dropdown.
+- MEDIUM-6 Seitentitel inkonsistent (H1 vs. kleiner Untertitel).
+
+LOW: Siehe Findings-Datei (doppelte Form-Felder, fehlender
+Preview-Swatch, Farbschema-Toggle-UX, Severity-Quicktoggles,
+Rules-Empty-State).
+
 > Iteration 30 am 2026-04-18 hat die Severity-Farbentscheidung
 > formell unter `docs/konzept/severity-farbentscheidung.md`
 > dokumentiert (Mapping, Begruendung, Kontrastnachweis,
