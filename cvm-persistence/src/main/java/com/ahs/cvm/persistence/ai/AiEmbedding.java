@@ -2,6 +2,7 @@ package com.ahs.cvm.persistence.ai;
 
 import com.pgvector.PGvector;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
@@ -51,6 +52,7 @@ public class AiEmbedding {
 
     @Column(name = "embedding", nullable = false, updatable = false,
             columnDefinition = "vector(1536)")
+    @Convert(converter = PGvectorConverter.class)
     private PGvector embedding;
 
     @Column(name = "model_id", nullable = false, updatable = false)
