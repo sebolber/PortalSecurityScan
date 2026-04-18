@@ -87,3 +87,10 @@ info:
     name: CVE-Relevance-Manager
     description: Relevanzbewertung von CVEs gegen Produkte und Umgebungen
     version: 0.0.1-SNAPSHOT
+
+logging:
+  level:
+    org.hibernate.engine.jdbc.batch.internal: DEBUG
+    org.hibernate.engine.jdbc.spi.SqlExceptionHelper: DEBUG
+    org.springframework.transaction.interceptor: TRACE
+    org.springframework.transaction.event: DEBUG

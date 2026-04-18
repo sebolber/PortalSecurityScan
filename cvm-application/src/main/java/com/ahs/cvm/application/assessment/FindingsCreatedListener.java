@@ -26,6 +26,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
@@ -59,7 +61,18 @@ public class FindingsCreatedListener {
         this.yamlMapper = new YAMLMapper();
     }
 
+    /**
+     * Propagation.REQUIRES_NEW ist notwendig, damit
+     * {@code writeService.propose(...)}-Aufrufe in einer echten
+     * Transaktion laufen und committed werden. Ohne @Transactional
+     * liefert Spring 6 im AFTER_COMMIT-Listener eine Pseudo-Transaktion,
+     * bei der die Saves zwar ausgefuehrt werden, aber beim Listener-
+     * Ende weder committed noch rollbacked werden. Symptom vorher:
+     * Logs "Assessment angelegt" fuer alle Findings, aber 0 Zeilen
+     * in der assessment-Tabelle.
+     */
     @TransactionalEventListener
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onScanIngested(ScanIngestedEvent event) {
         runCascade(event.scanId(), event.productVersionId(),
                 event.environmentId(), "ScanIngested");
@@ -70,9 +83,11 @@ public class FindingsCreatedListener {
      * Ingest an und feuert dieses Event. Ohne den zweiten Listener hier
      * bliebe die Queue bei reinen Komponenten-SBOMs leer, weil
      * {@link #onScanIngested} den Scan ohne Findings sieht und sofort
-     * zurueckkehrt.
+     * zurueckkehrt. Propagation wie oben: REQUIRES_NEW erzwingt einen
+     * echten Commit pro Cascade-Run.
      */
     @TransactionalEventListener
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void onComponentMatchedFindings(ComponentMatchedFindingsEvent event) {
         runCascade(event.scanId(), event.productVersionId(),
                 event.environmentId(), "ComponentMatchedFindings");
