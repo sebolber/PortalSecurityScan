@@ -9,7 +9,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
     <ahs-empty-state
       icon="inventory_2"
       title="Komponenten"
-      hint="Komponenteninventar wird mit der CVE-Ansicht ergaenzt."
+      hint="Komponenteninventar im Backlog. Aktuell sind die Daten aus den SBOM-Imports (Iteration 02) nur ueber Backend-Queries lesbar; UI folgt zusammen mit der CVE-Sicht."
     ></ahs-empty-state>
   `
 })

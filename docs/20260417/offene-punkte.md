@@ -1,5 +1,20 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-18 - Frontend-Nachzug Iterationen 10/11
+- **Reports-Listing-Endpoint** im Backend fehlt: das Frontend
+  zeigt aktuell nur die in der laufenden Sitzung erzeugten Reports.
+  Folge-Iteration sollte `GET /api/v1/reports?productVersionId=&environmentId=`
+  liefern (paginiert, neueste zuerst), damit beim Reload die Historie
+  zurueckkommt.
+- **Produkt-/Umgebungs-Dropdowns** in der Reports-Form: derzeit
+  UUID-Eingabefelder, weil ProductCatalog-Read-Endpoint noch fehlt
+  (offen aus Iteration 08).
+- **Erweiterte Filter im AI-Audit**: heute nur Status + Use-Case;
+  triggeredBy / Datumsbereich / Kosten-Threshold koennen ergaenzt werden.
+- **Drill-Down "Audit -> Suggestion -> Source-Refs"**: Audit-Liste
+  verlinkt nicht auf den dazugehoerigen `ai_suggestion`. Sobald die
+  Queue-Detail-UI ausgebaut wird, hier verlinken.
+
 ## Stand 2026-04-18 nach Iteration 15
 - **JGit-Adapter** + Cache pro Commit + SSH-Key aus Vault. Aktuell
   liefert `NoopGitCheckoutAdapter` nur ein Tmp-Verzeichnis.

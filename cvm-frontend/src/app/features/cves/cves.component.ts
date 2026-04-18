@@ -9,7 +9,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state.compone
     <ahs-empty-state
       icon="bug_report"
       title="CVEs"
-      hint="CVE-Detailansicht folgt im Anschluss an die Queue-UI."
+      hint="CVE-Detailansicht im Backlog. Daten kommen aus den NVD-/GHSA-/KEV-/EPSS-Feeds (Iteration 03); UI folgt mit der CVE-Inventar-Iteration."
     ></ahs-empty-state>
   `
 })
