@@ -1,11 +1,156 @@
 <div class="cvm-rules-page">
   <div class="cvm-rules-head">
     <h1 class="cvm-rules-title">Regeln</h1>
-    <button mat-stroked-button (click)="laden()" [disabled]="loading()">
-      <mat-icon>refresh</mat-icon>
-      Neu laden
-    </button>
+    <div class="cvm-rules-head-actions">
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="editorUmschalten()"
+        [disabled]="!canAuthor()"
+      >
+        <mat-icon>{{ editorOpen() ? 'close' : 'add' }}</mat-icon>
+        {{ editorOpen() ? 'Editor schliessen' : 'Neue Regel anlegen' }}
+      </button>
+      <button mat-stroked-button (click)="laden()" [disabled]="loading()">
+        <mat-icon>refresh</mat-icon>
+        Neu laden
+      </button>
+    </div>
   </div>
+
+  @if (editorOpen()) {
+    <mat-card class="cvm-rules-editor">
+      <mat-card-header>
+        <mat-card-title>Neue Regel (DRAFT)</mat-card-title>
+        <mat-card-subtitle>
+          Anlage durch <code>CVM_RULE_AUTHOR</code>; Aktivierung im
+          Vier-Augen-Prinzip durch anderen User mit
+          <code>CVM_RULE_APPROVER</code>.
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (createError()) {
+          <ahs-banner kind="critical" title="Fehler">
+            {{ createError() }}
+          </ahs-banner>
+        }
+        <form (submit)="$event.preventDefault(); draftAnlegen()">
+          <div class="cvm-rules-editor-row">
+            <mat-form-field appearance="outline">
+              <mat-label>Rule-Key</mat-label>
+              <input
+                matInput
+                [ngModel]="draft().ruleKey"
+                name="ruleKey"
+                (ngModelChange)="updateDraft('ruleKey', $event)"
+                required
+              />
+              <mat-hint>z.B. kev-hit-downgrade</mat-hint>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Name</mat-label>
+              <input
+                matInput
+                [ngModel]="draft().name"
+                name="name"
+                (ngModelChange)="updateDraft('name', $event)"
+                required
+              />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Vorgeschlagene Severity</mat-label>
+              <mat-select
+                [ngModel]="draft().proposedSeverity"
+                name="proposedSeverity"
+                (ngModelChange)="updateDraft('proposedSeverity', $event)"
+              >
+                @for (s of severities; track s) {
+                  <mat-option [value]="s">{{ s }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
+            <mat-label>Beschreibung</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().description"
+              name="description"
+              (ngModelChange)="updateDraft('description', $event)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
+            <mat-label>Condition (JSON)</mat-label>
+            <textarea
+              matInput
+              rows="10"
+              [ngModel]="draft().conditionJson"
+              name="conditionJson"
+              (ngModelChange)="updateDraft('conditionJson', $event)"
+              spellcheck="false"
+              class="cvm-rules-editor-code"
+            ></textarea>
+            <mat-hint>
+              JSON-DSL: allOf / anyOf / not mit field/op/value -
+              z.B. <code>cve.kevListed eq true</code>.
+            </mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
+            <mat-label>Rationale-Template</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().rationaleTemplate"
+              name="rationaleTemplate"
+              (ngModelChange)="updateDraft('rationaleTemplate', $event)"
+            />
+            <mat-hint>
+              Freitext mit Platzhaltern wie &#123;cve.id&#125; oder
+              &#123;profile.architecture.windows_hosts&#125;.
+            </mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
+            <mat-label>Rationale-Quellfelder (komma-getrennt)</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().rationaleSourceFields"
+              name="rationaleSourceFields"
+              (ngModelChange)="updateDraft('rationaleSourceFields', $event)"
+            />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
+            <mat-label>Origin</mat-label>
+            <input
+              matInput
+              [ngModel]="draft().origin"
+              name="origin"
+              (ngModelChange)="updateDraft('origin', $event)"
+            />
+            <mat-hint>z.B. MANUAL, AI_EXTRACTED</mat-hint>
+          </mat-form-field>
+
+          <div class="cvm-rules-editor-actions">
+            <button
+              type="submit"
+              mat-flat-button
+              color="primary"
+              [disabled]="creating()"
+            >
+              @if (creating()) {
+                Speichere...
+              } @else {
+                Draft anlegen
+              }
+            </button>
+          </div>
+        </form>
+      </mat-card-content>
+    </mat-card>
+  }
 
   @if (loading()) {
     <p class="cvm-rules-muted">Regeln werden geladen...</p>
@@ -15,8 +160,7 @@
   }
   @if (!loading() && !error() && rules().length === 0) {
     <p class="cvm-rules-muted">
-      Es sind noch keine Regeln angelegt. Rule-Author kann ueber den
-      REST-Endpunkt POST /api/v1/rules einen Draft anlegen (UI-Editor folgt).
+      Es sind noch keine Regeln angelegt. Nutze "Neue Regel anlegen".
     </p>
   }
 

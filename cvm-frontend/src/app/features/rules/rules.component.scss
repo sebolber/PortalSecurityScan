@@ -146,3 +146,45 @@
     color: var(--cvm-primary-dark);
   }
 }
+
+.cvm-rules-head-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.cvm-rules-editor {
+  margin-bottom: var(--space-4);
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+}
+
+.cvm-rules-editor-row {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: 960px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.cvm-rules-editor-field {
+  width: 100%;
+}
+
+.cvm-rules-editor-code {
+  font-family: var(--font-family-mono);
+  font-size: var(--text-sm);
+  line-height: var(--line-height-snug);
+  min-height: 200px;
+}
+
+.cvm-rules-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}

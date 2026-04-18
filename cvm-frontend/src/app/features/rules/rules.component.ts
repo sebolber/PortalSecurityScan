@@ -8,6 +8,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/auth/auth.service';
 import { CVM_ROLES } from '../../core/auth/cvm-roles';
@@ -16,6 +17,46 @@ import {
   RuleResponse,
   RulesService
 } from '../../core/rules/rules.service';
+import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+
+interface RuleDraftForm {
+  ruleKey: string;
+  name: string;
+  description: string;
+  proposedSeverity: string;
+  conditionJson: string;
+  rationaleTemplate: string;
+  rationaleSourceFields: string;
+  origin: string;
+}
+
+const SEVERITIES = [
+  'CRITICAL',
+  'HIGH',
+  'MEDIUM',
+  'LOW',
+  'INFORMATIONAL',
+  'NOT_APPLICABLE'
+] as const;
+
+const DEFAULT_CONDITION = `{
+  "allOf": [
+    { "field": "cve.kevListed", "op": "eq", "value": true }
+  ]
+}`;
+
+function initialDraft(): RuleDraftForm {
+  return {
+    ruleKey: '',
+    name: '',
+    description: '',
+    proposedSeverity: 'HIGH',
+    conditionJson: DEFAULT_CONDITION,
+    rationaleTemplate: '',
+    rationaleSourceFields: '',
+    origin: 'MANUAL'
+  };
+}
 
 @Component({
   selector: 'cvm-rules',
@@ -29,7 +70,9 @@ import {
     MatExpansionModule,
     MatIconModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    MatSelectModule,
+    AhsBannerComponent
   ],
   templateUrl: './rules.component.html',
   styleUrls: ['./rules.component.scss']
@@ -39,9 +82,16 @@ export class RulesComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
 
+  readonly severities = SEVERITIES;
+
   readonly rules = signal<readonly RuleResponse[]>([]);
   readonly loading = signal<boolean>(false);
   readonly error = signal<string | null>(null);
+
+  readonly editorOpen = signal<boolean>(false);
+  readonly draft = signal<RuleDraftForm>(initialDraft());
+  readonly creating = signal<boolean>(false);
+  readonly createError = signal<string | null>(null);
 
   /** Letztes Dry-Run-Ergebnis pro Rule-ID. */
   readonly dryRuns = signal<Record<string, DryRunResponse | undefined>>({});
@@ -121,6 +171,71 @@ export class RulesComponent implements OnInit {
 
   isPending(ruleId: string): boolean {
     return !!this.pending()[ruleId];
+  }
+
+  editorUmschalten(): void {
+    this.editorOpen.update((v) => !v);
+    if (!this.editorOpen()) {
+      this.createError.set(null);
+    }
+  }
+
+  updateDraft<K extends keyof RuleDraftForm>(key: K, value: RuleDraftForm[K]): void {
+    this.draft.update((d) => ({ ...d, [key]: value }));
+  }
+
+  async draftAnlegen(): Promise<void> {
+    if (!this.canAuthor()) {
+      this.createError.set('Rolle CVM_RULE_AUTHOR erforderlich.');
+      return;
+    }
+    const autor = this.auth.username() || 'unbekannt';
+    const form = this.draft();
+    if (!form.ruleKey.trim() || !form.name.trim()) {
+      this.createError.set('ruleKey und name sind Pflichtfelder.');
+      return;
+    }
+    try {
+      JSON.parse(form.conditionJson);
+    } catch {
+      this.createError.set('conditionJson ist kein gueltiges JSON.');
+      return;
+    }
+    const fields = form.rationaleSourceFields
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    this.creating.set(true);
+    this.createError.set(null);
+    try {
+      const rule = await this.rulesService.create({
+        ruleKey: form.ruleKey.trim(),
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        proposedSeverity: form.proposedSeverity,
+        conditionJson: form.conditionJson,
+        rationaleTemplate: form.rationaleTemplate.trim() || null,
+        rationaleSourceFields: fields,
+        origin: form.origin.trim() || null,
+        createdBy: autor
+      });
+      this.snackBar.open(
+        'Regel "' + rule.ruleKey + '" angelegt (Status DRAFT).',
+        'OK',
+        { duration: 4000 }
+      );
+      this.draft.set(initialDraft());
+      this.editorOpen.set(false);
+      await this.laden();
+    } catch (err) {
+      this.createError.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Anlegen fehlgeschlagen (Schema-Validierung?).'
+      );
+    } finally {
+      this.creating.set(false);
+    }
   }
 
   private setPending(ruleId: string, value: boolean): void {

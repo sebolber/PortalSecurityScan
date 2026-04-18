@@ -32,6 +32,18 @@ export interface DryRunResponse {
   readonly beispiele: readonly string[];
 }
 
+export interface RuleCreateRequest {
+  readonly ruleKey: string;
+  readonly name: string;
+  readonly description: string | null;
+  readonly proposedSeverity: string;
+  readonly conditionJson: string;
+  readonly rationaleTemplate: string | null;
+  readonly rationaleSourceFields: readonly string[];
+  readonly origin: string | null;
+  readonly createdBy: string;
+}
+
 /** Thin HTTP-Wrapper um die Rules-Endpunkte aus Iteration 05/23. */
 @Injectable({ providedIn: 'root' })
 export class RulesService {
@@ -39,6 +51,18 @@ export class RulesService {
 
   list(): Promise<RuleResponse[]> {
     return firstValueFrom(this.api.get<RuleResponse[]>('/api/v1/rules'));
+  }
+
+  /**
+   * Legt einen neuen Regel-Draft an. Der Backend-Service validiert
+   * conditionJson + rationaleSourceFields; Fehler kommen als HTTP 400.
+   * Die Regel landet im Status DRAFT und wird erst durch activate
+   * aktiv (Vier-Augen-Prinzip).
+   */
+  create(req: RuleCreateRequest): Promise<RuleResponse> {
+    return firstValueFrom(
+      this.api.post<RuleResponse, RuleCreateRequest>('/api/v1/rules', req)
+    );
   }
 
   activate(ruleId: string, approverId: string): Promise<RuleResponse> {
