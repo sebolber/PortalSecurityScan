@@ -104,9 +104,13 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
             if (!results.isArray()) {
                 return Map.of();
             }
+            // Cache fuer den Detail-Fallback: OSV liefert im Batch nur
+            // Advisory-IDs (meist GHSA), die Aliase nur beim Detail-Call.
+            // Pro Batch-Aufruf wird jede Advisory-ID nur einmal aufgeloest.
+            Map<String, List<String>> aliasCache = new HashMap<>();
             Map<String, List<String>> out = new LinkedHashMap<>();
             for (int idx = 0; idx < results.size() && idx < purls.size(); idx++) {
-                List<String> cveIds = cveIdsAus(results.get(idx));
+                List<String> cveIds = cveIdsAus(results.get(idx), aliasCache);
                 if (!cveIds.isEmpty()) {
                     out.put(purls.get(idx), cveIds);
                 }
@@ -129,7 +133,8 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
         return body;
     }
 
-    private static List<String> cveIdsAus(JsonNode resultNode) {
+    private List<String> cveIdsAus(
+            JsonNode resultNode, Map<String, List<String>> aliasCache) {
         JsonNode vulns = resultNode.path("vulns");
         if (!vulns.isArray() || vulns.isEmpty()) {
             return List.of();
@@ -140,8 +145,47 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
             String id = v.path("id").asText("");
             if (id.startsWith("CVE-")) {
                 cves.add(id);
+                continue;
             }
+            // Aliase aus der Batch-Response bevorzugen (spart Request).
+            boolean aliasTreffer = false;
             JsonNode aliases = v.path("aliases");
+            if (aliases.isArray()) {
+                for (JsonNode alias : aliases) {
+                    String a = alias.asText("");
+                    if (a.startsWith("CVE-")) {
+                        cves.add(a);
+                        aliasTreffer = true;
+                    }
+                }
+            }
+            // Fallback: Detail-Call. OSV liefert im Batch kaum Aliasen;
+            // erst /v1/vulns/<id> gibt die CVE-Verknuepfung.
+            if (!aliasTreffer && !id.isEmpty()) {
+                cves.addAll(aliasCache.computeIfAbsent(
+                        id, this::resolveAliasesFromDetail));
+            }
+        }
+        return Collections.unmodifiableList(new ArrayList<>(cves));
+    }
+
+    /**
+     * Loest die CVE-Aliase fuer eine Advisory-ID via
+     * {@code GET /v1/vulns/<id>} auf. Rueckgabe ist leer bei Netz-/
+     * Protokollfehlern, damit ein Einzelausfall den gesamten Scan-Run
+     * nicht blockiert.
+     */
+    private List<String> resolveAliasesFromDetail(String advisoryId) {
+        try {
+            JsonNode detail = restClient.get()
+                    .uri("/v1/vulns/{id}", advisoryId)
+                    .retrieve()
+                    .body(JsonNode.class);
+            if (detail == null) {
+                return List.of();
+            }
+            LinkedHashSet<String> cves = new LinkedHashSet<>();
+            JsonNode aliases = detail.path("aliases");
             if (aliases.isArray()) {
                 for (JsonNode alias : aliases) {
                     String a = alias.asText("");
@@ -150,8 +194,16 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
                     }
                 }
             }
+            String detailId = detail.path("id").asText("");
+            if (detailId.startsWith("CVE-")) {
+                cves.add(detailId);
+            }
+            return List.copyOf(cves);
+        } catch (RuntimeException ex) {
+            log.warn("OSV-Detail-Abfrage fuer {} fehlgeschlagen: {}",
+                    advisoryId, ex.getMessage());
+            return List.of();
         }
-        return Collections.unmodifiableList(new ArrayList<>(cves));
     }
 
 }

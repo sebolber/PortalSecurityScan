@@ -117,6 +117,78 @@ class OsvComponentLookupTest {
     }
 
     @Test
+    @DisplayName("Detail-Fallback: leere Aliase loest CVE-IDs via /v1/vulns/<id>")
+    void detailFallbackOhneAliaseInBatch() {
+        OsvProperties p = defaultsEnabled();
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OsvComponentLookup lookup = new OsvComponentLookup(p, builder);
+
+        // 1) Batch-Response liefert nur die GHSA-ID, keine Aliase
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andExpect(method(HttpMethod.POST))
+                .andRespond(withSuccess("""
+                        {
+                          "results": [
+                            { "vulns": [ { "id": "GHSA-3p68-rc4w-qgx5" } ] }
+                          ]
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        // 2) Detail-Call liefert die Aliase
+        server.expect(requestTo("https://osv.test/v1/vulns/GHSA-3p68-rc4w-qgx5"))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess("""
+                        {
+                          "id": "GHSA-3p68-rc4w-qgx5",
+                          "aliases": ["CVE-2024-28849"]
+                        }
+                        """, MediaType.APPLICATION_JSON));
+
+        Map<String, List<String>> r = lookup.findCveIdsForPurls(List.of(
+                "pkg:npm/follow-redirects@1.15.5"));
+
+        assertThat(r.get("pkg:npm/follow-redirects@1.15.5"))
+                .containsExactly("CVE-2024-28849");
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Detail-Fallback: wird pro Advisory nur EINMAL aufgerufen (Cache)")
+    void detailFallbackCached() {
+        OsvProperties p = defaultsEnabled();
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OsvComponentLookup lookup = new OsvComponentLookup(p, builder);
+
+        // Zwei PURLs, beide mit identischer GHSA-ID -> nur EIN Detail-Call.
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withSuccess("""
+                        {
+                          "results": [
+                            { "vulns": [ { "id": "GHSA-zzzz-1111" } ] },
+                            { "vulns": [ { "id": "GHSA-zzzz-1111" } ] }
+                          ]
+                        }
+                        """, MediaType.APPLICATION_JSON));
+        server.expect(requestTo("https://osv.test/v1/vulns/GHSA-zzzz-1111"))
+                .andRespond(withSuccess("""
+                        { "id": "GHSA-zzzz-1111", "aliases": ["CVE-2030-0001"] }
+                        """, MediaType.APPLICATION_JSON));
+        // keine weitere Expectation -> MockRestServiceServer haette
+        // bei einem zweiten Detail-Call geworfen.
+
+        Map<String, List<String>> r = lookup.findCveIdsForPurls(List.of(
+                "pkg:npm/lib-a@1.0",
+                "pkg:npm/lib-b@1.0"));
+
+        assertThat(r).hasSize(2);
+        assertThat(r.get("pkg:npm/lib-a@1.0")).containsExactly("CVE-2030-0001");
+        assertThat(r.get("pkg:npm/lib-b@1.0")).containsExactly("CVE-2030-0001");
+        server.verify();
+    }
+
+    @Test
     @DisplayName("findCveIdsForPurls: extrahiert CVE-Aliase aus GHSA-Eintraegen")
     void ghsaAliasWirdAlsCveExtrahiert() {
         OsvProperties p = defaultsEnabled();
