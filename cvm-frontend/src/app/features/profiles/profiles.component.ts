@@ -11,6 +11,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
+import { monacoRouteProviders } from '../../shared/editor/monaco-providers';
 import { AuthService } from '../../core/auth/auth.service';
 import { CVM_ROLES } from '../../core/auth/cvm-roles';
 import {
@@ -77,8 +79,11 @@ compliance:
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MonacoEditorModule,
     AhsBannerComponent
   ],
+  // Iteration 54 (CVM-104): Monaco lazy in den Profiles-Chunk.
+  providers: [monacoRouteProviders()],
   templateUrl: './profiles.component.html',
   styleUrls: ['./profiles.component.scss']
 })

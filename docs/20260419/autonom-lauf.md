@@ -41,3 +41,6 @@ Naechstes: Iteration 52 Bundle-Budget-Reduktion.
 [10:33] Iteration 52 abgeschlossen: Bundle-Budget-Reduktion
 (2.13 MB -> 1.10 MB, ECharts+LoginCallback lazy) (commit 0d8c3529).
 Naechstes: Iteration 53 Rules-Editor im Frontend.
+[10:40] Iteration 53 abgeschlossen: Rules-Editor Update-Form
+(Backend + Frontend) (commit 43216d1a). Naechstes: Iteration 54
+Profil-YAML-Editor (Monaco + Diff).

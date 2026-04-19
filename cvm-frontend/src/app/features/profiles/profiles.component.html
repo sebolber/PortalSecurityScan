@@ -119,21 +119,24 @@
 
         @if (row.editorOffen) {
           <div class="cvm-profiles__editor">
-            <mat-form-field appearance="outline" class="cvm-profiles__editor-field">
-              <mat-label>YAML-Quelle</mat-label>
-              <textarea
-                matInput
-                rows="14"
+            <!--
+              Iteration 54 (CVM-104): Monaco YAML-Editor statt Textarea.
+              Syntax-Highlight, Auto-Indent, 2-Leerzeichen-Tabs.
+            -->
+            <label class="text-body cvm-profiles__editor-label">
+              YAML-Quelle
+            </label>
+            <div class="cvm-profiles__monaco">
+              <ngx-monaco-editor
+                [options]="{ language: 'yaml', theme: 'vs', automaticLayout: true, minimap: { enabled: false }, tabSize: 2 }"
                 [ngModel]="row.editorYaml"
                 (ngModelChange)="editorInhalt(row, $event)"
-                spellcheck="false"
-                class="cvm-profiles__textarea"
-              ></textarea>
-              <mat-hint>
-                Schema v1: schemaVersion, umgebung, architecture, network,
-                hardening, compliance.frameworks
-              </mat-hint>
-            </mat-form-field>
+              ></ngx-monaco-editor>
+            </div>
+            <p class="text-caption">
+              Schema v1: schemaVersion, umgebung, architecture, network,
+              hardening, compliance.frameworks
+            </p>
             <div class="cvm-profiles__editor-actions">
               <button
                 type="button"
