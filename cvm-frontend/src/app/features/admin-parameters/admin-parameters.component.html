@@ -165,9 +165,9 @@
           @if (laedt()) {
             <p>Laedt ...</p>
           } @else if (gefiltertesParameter().length === 0) {
-            <cvm-empty-state
-              titel="Keine Parameter"
-              hinweis="Lege oben einen neuen Parameter an."></cvm-empty-state>
+            <ahs-empty-state
+              title="Keine Parameter"
+              hint="Lege oben einen neuen Parameter an."></ahs-empty-state>
           } @else {
             <table mat-table [dataSource]="gefiltertesParameter()" class="tabelle">
               <ng-container matColumnDef="paramKey">
@@ -233,9 +233,9 @@
       <mat-card class="karte">
         <mat-card-content>
           @if (auditLog().length === 0) {
-            <cvm-empty-state
-              titel="Keine Eintraege"
-              hinweis="Es wurden noch keine Aenderungen protokolliert."></cvm-empty-state>
+            <ahs-empty-state
+              title="Keine Eintraege"
+              hint="Es wurden noch keine Aenderungen protokolliert."></ahs-empty-state>
           } @else {
             <table mat-table [dataSource]="auditLog()" class="tabelle">
               <ng-container matColumnDef="changedAt">
