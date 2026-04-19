@@ -1,5 +1,6 @@
 <cvm-alert-banner></cvm-alert-banner>
 
+<div cvmGlobalShortcuts (help)="oeffneShortcutSheet()">
 <header class="cvm-topbar">
   <a routerLink="/dashboard" class="cvm-brand" [attr.aria-label]="brandingLogoAlt()">
     @if (brandingLogoUrl()) {
@@ -213,6 +214,13 @@
   </aside>
 
   <main class="cvm-content" (click)="closeMenus()">
+    <cvm-breadcrumbs></cvm-breadcrumbs>
     <router-outlet></router-outlet>
   </main>
 </div>
+</div>
+
+<cvm-global-shortcuts-overlay
+  [visible]="shortcutsOpen()"
+  (close)="schliesseShortcutSheet()"
+></cvm-global-shortcuts-overlay>

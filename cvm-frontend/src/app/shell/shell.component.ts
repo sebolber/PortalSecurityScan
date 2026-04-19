@@ -13,7 +13,10 @@ import { ThemeService } from '../core/theme/theme.service';
 import { BrandingHttpService } from '../core/theme/branding.service';
 import { TenantsService, TenantView } from '../core/tenants/tenants.service';
 import { AlertBannerComponent } from './alert-banner.component';
+import { CvmBreadcrumbsComponent } from '../shared/components/cvm-breadcrumbs.component';
 import { CvmIconComponent } from '../shared/components/cvm-icon.component';
+import { GlobalShortcutsDirective } from '../shared/components/global-shortcuts.directive';
+import { GlobalShortcutsOverlayComponent } from '../shared/components/global-shortcuts-overlay.component';
 
 /**
  * Iteration 61B (CVM-62): Shell komplett auf Tailwind. Kein mat-toolbar,
@@ -30,7 +33,10 @@ import { CvmIconComponent } from '../shared/components/cvm-icon.component';
     RouterLink,
     RouterLinkActive,
     AlertBannerComponent,
-    CvmIconComponent
+    CvmBreadcrumbsComponent,
+    CvmIconComponent,
+    GlobalShortcutsDirective,
+    GlobalShortcutsOverlayComponent
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
@@ -116,6 +122,9 @@ export class ShellComponent implements OnInit {
 
   readonly userMenuOpen = signal(false);
 
+  // Iteration 91 (CVM-331): Globale Shortcut-Sheet.
+  readonly shortcutsOpen = signal(false);
+
   // Iteration 84 (CVM-324): Tenant-Popover mit Liste und
   // Set-Default-Aktion fuer Admins.
   readonly tenantMenuOpen = signal(false);
@@ -161,6 +170,14 @@ export class ShellComponent implements OnInit {
 
   toggleTheme(): void {
     this.theme.toggle();
+  }
+
+  oeffneShortcutSheet(): void {
+    this.shortcutsOpen.set(true);
+  }
+
+  schliesseShortcutSheet(): void {
+    this.shortcutsOpen.set(false);
   }
 
   toggleUserMenu(): void {

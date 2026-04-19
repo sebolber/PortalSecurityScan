@@ -74,7 +74,13 @@ Iterationen 80+ implementieren die Befunde.
     `profiles.draftLoeschen`, `admin-llm-configurations`,
     `admin-parameters`, `admin-theme` nutzen noch
     `window.confirm`.
-- **U-07a Breadcrumbs + globale Shortcut-Sheet** - Iteration 91.
+- ~~**U-07a Breadcrumbs + globale Shortcut-Sheet**~~ -
+  **Erledigt in Iteration 91** (CVM-331). Neue
+  `CvmBreadcrumbsComponent`, `GlobalShortcutsDirective` und
+  `GlobalShortcutsOverlayComponent`; `?` oeffnet den Shortcut-Sheet,
+  `g` + `d/q/s/w/r` navigiert zu Dashboard/Queue/Scan/Waiver/
+  Reports. 14 neue Karma-Specs. Offen: dynamische Breadcrumb-Titel
+  fuer Detail-Routen (CVE-/Finding-ID statt generischer Label).
 - **U-07b Globale Suche + Bell-Notifications** - Iteration 92.
 - **U-08 Dashboard-Handlungszentrale + Report-Listing** -
   Iteration 93-94. Benoetigt kleinen Backend-Endpoint

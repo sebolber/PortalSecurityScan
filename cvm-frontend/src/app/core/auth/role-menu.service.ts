@@ -349,6 +349,44 @@ export class RoleMenuService {
     return flat;
   }
 
+  /**
+   * Iteration 91 (CVM-331): Breadcrumb-Pfad von der Start-Seite zum
+   * aktuellen Menuepunkt. Nutzt Prefix-Matching; wenn der Menue-
+   * Eintrag ein Kind ist (z.B. `/admin/products`), wird der Parent
+   * (`/settings`) zwischen Start und aktuelle Seite eingefuegt.
+   */
+  breadcrumbFor(
+    path: string
+  ): readonly { label: string; path: string }[] {
+    const cleanPath = path.split(/[?#]/)[0];
+    const entries = this.allEntries();
+    let best: MenuEntry | null = null;
+    for (const entry of entries) {
+      if (
+        cleanPath === entry.path ||
+        cleanPath.startsWith(entry.path + '/')
+      ) {
+        if (!best || entry.path.length > best.path.length) {
+          best = entry;
+        }
+      }
+    }
+    if (!best || best.path === '/dashboard') {
+      return [{ label: 'Start', path: '/dashboard' }];
+    }
+    const parent = MENU.find(
+      (e) => e.children?.some((c) => c.id === best!.id) ?? false
+    );
+    const crumbs: { label: string; path: string }[] = [
+      { label: 'Start', path: '/dashboard' }
+    ];
+    if (parent) {
+      crumbs.push({ label: parent.label, path: parent.path });
+    }
+    crumbs.push({ label: best.label, path: best.path });
+    return crumbs;
+  }
+
   hasAccess(path: string, userRoles: readonly string[]): boolean {
     // Iteration 61 (CVM-62): Bisher war das ein exakter Vergleich. Damit
     // fielen Detail-URLs wie `/cves/CVE-2017-18640` oder
