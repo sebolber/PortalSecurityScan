@@ -126,6 +126,14 @@ public class TenantLookupService {
      * Iteration 62 (CVM-62): Setzt den angegebenen Mandanten als
      * Default und setzt die Flag bei allen anderen zurueck. Der neue
      * Default-Mandant muss aktiv sein.
+     *
+     * <p>Reihenfolge ist wichtig wegen {@code ux_tenant_default}
+     * (partieller UNIQUE-Index auf {@code is_default = TRUE}): Der alte
+     * Default muss in der DB auf FALSE geflusht sein, BEVOR der neue auf
+     * TRUE gesetzt wird. Hibernate sortiert Batch-UPDATEs sonst per
+     * Persister und koennte den neuen Default vor dem Unset des alten
+     * schreiben - das wuerde den Unique-Index verletzen. Loesung:
+     * Unset-Phase mit {@code flush()} erzwingen.
      */
     @Transactional
     public TenantView setDefault(UUID tenantId) {
@@ -139,16 +147,25 @@ public class TenantLookupService {
             throw new IllegalStateException(
                     "Default-Mandant muss aktiv sein. Erst aktivieren, dann als Default setzen.");
         }
+        if (neuerDefault.isDefaultTenant()) {
+            return TenantView.from(neuerDefault);
+        }
+        boolean changed = false;
         for (Tenant t : tenantRepository.findAll()) {
             if (t.isDefaultTenant() && !t.getId().equals(tenantId)) {
                 t.setDefaultTenant(false);
                 tenantRepository.save(t);
+                changed = true;
             }
         }
-        if (!neuerDefault.isDefaultTenant()) {
-            neuerDefault.setDefaultTenant(true);
-            tenantRepository.save(neuerDefault);
+        if (changed) {
+            // Erzwingt die UPDATE-Statements fuer die entfernten
+            // Defaults VOR dem neuen SET - sonst verletzt Hibernate
+            // den partiellen Unique-Index.
+            tenantRepository.flush();
         }
+        neuerDefault.setDefaultTenant(true);
+        tenantRepository.save(neuerDefault);
         return TenantView.from(neuerDefault);
     }
 
