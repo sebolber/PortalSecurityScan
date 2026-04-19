@@ -1,0 +1,273 @@
+<section class="admin-parameters">
+  <header class="kopf">
+    <h1>System-Parameter</h1>
+    <p class="untertitel">
+      Schluessel/Wert-Parameter fuer den aktuellen Mandanten. Sensible
+      Werte werden in der Tabelle und im Audit-Log maskiert.
+    </p>
+  </header>
+
+  @if (fehler(); as msg) {
+    <div class="fehler" role="alert">{{ msg }}</div>
+  }
+
+  <mat-tab-group (selectedTabChange)="$event.index === 1 ? ladeAuditLog() : null">
+    <mat-tab label="Parameter">
+      <mat-card class="karte">
+        <mat-card-header>
+          <mat-card-title>{{ bearbeiteId() ? 'Parameter bearbeiten' : 'Neuer Parameter' }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <form #form="ngForm" (ngSubmit)="speichere(form)" class="formular">
+            <mat-form-field appearance="outline">
+              <mat-label>Schluessel</mat-label>
+              <input matInput required name="paramKey" [disabled]="bearbeiteId() !== null"
+                     [ngModel]="formular().paramKey"
+                     (ngModelChange)="updateFeld('paramKey', $event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Anzeigename</mat-label>
+              <input matInput required name="label"
+                     [ngModel]="formular().label"
+                     (ngModelChange)="updateFeld('label', $event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Kategorie</mat-label>
+              <input matInput required name="category"
+                     [ngModel]="formular().category"
+                     (ngModelChange)="updateFeld('category', $event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Subkategorie</mat-label>
+              <input matInput name="subcategory"
+                     [ngModel]="formular().subcategory"
+                     (ngModelChange)="updateFeld('subcategory', $event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Typ</mat-label>
+              <mat-select name="type" required
+                          [ngModel]="formular().type"
+                          (ngModelChange)="updateFeld('type', $event)">
+                @for (t of typen; track t) {
+                  <mat-option [value]="t">{{ t }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Einheit</mat-label>
+              <input matInput name="unit"
+                     [ngModel]="formular().unit"
+                     (ngModelChange)="updateFeld('unit', $event)" />
+            </mat-form-field>
+
+            @if (!bearbeiteId()) {
+              <mat-form-field appearance="outline" class="voll">
+                <mat-label>Wert</mat-label>
+                <input matInput name="value"
+                       [type]="formular().sensitive ? 'password' : 'text'"
+                       [ngModel]="formular().value"
+                       (ngModelChange)="updateFeld('value', $event)" />
+              </mat-form-field>
+            }
+
+            <mat-form-field appearance="outline" class="voll">
+              <mat-label>Standardwert</mat-label>
+              <input matInput name="defaultValue"
+                     [ngModel]="formular().defaultValue"
+                     (ngModelChange)="updateFeld('defaultValue', $event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="voll">
+              <mat-label>Beschreibung</mat-label>
+              <textarea matInput rows="2" name="description"
+                        [ngModel]="formular().description"
+                        (ngModelChange)="updateFeld('description', $event)"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="voll">
+              <mat-label>Handbuch / Hinweis</mat-label>
+              <textarea matInput rows="2" name="handbook"
+                        [ngModel]="formular().handbook"
+                        (ngModelChange)="updateFeld('handbook', $event)"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="voll">
+              <mat-label>Validierungs-Regex</mat-label>
+              <input matInput name="validationRules"
+                     [ngModel]="formular().validationRules"
+                     (ngModelChange)="updateFeld('validationRules', $event)" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="voll">
+              <mat-label>Optionen (komma-separiert, fuer SELECT/MULTISELECT)</mat-label>
+              <input matInput name="options"
+                     [ngModel]="formular().options"
+                     (ngModelChange)="updateFeld('options', $event)" />
+            </mat-form-field>
+
+            <div class="toggle-zeile">
+              <mat-slide-toggle name="required"
+                                [ngModel]="formular().required"
+                                (ngModelChange)="updateFeld('required', $event)">
+                Pflicht
+              </mat-slide-toggle>
+              <mat-slide-toggle name="sensitive"
+                                [ngModel]="formular().sensitive"
+                                (ngModelChange)="updateFeld('sensitive', $event)">
+                Sensibel
+              </mat-slide-toggle>
+              <mat-slide-toggle name="hotReload"
+                                [ngModel]="formular().hotReload"
+                                (ngModelChange)="updateFeld('hotReload', $event)">
+                Hot-Reload
+              </mat-slide-toggle>
+              <mat-slide-toggle name="adminOnly"
+                                [ngModel]="formular().adminOnly"
+                                (ngModelChange)="updateFeld('adminOnly', $event)">
+                Nur Admin
+              </mat-slide-toggle>
+            </div>
+
+            <div class="aktionen">
+              <button mat-raised-button color="primary" type="submit"
+                      [disabled]="pending()">
+                {{ bearbeiteId() ? 'Speichern' : 'Anlegen' }}
+              </button>
+              <button mat-button type="button" (click)="neuerEintrag()">
+                Zuruecksetzen
+              </button>
+            </div>
+          </form>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="karte">
+        <mat-card-header>
+          <mat-card-title>Parameter ({{ gefiltertesParameter().length }})</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <mat-form-field appearance="outline" class="filter">
+            <mat-label>Kategorie filtern</mat-label>
+            <mat-select [ngModel]="kategorieFilter()"
+                        (ngModelChange)="kategorieFilter.set($event)">
+              <mat-option [value]="''">Alle</mat-option>
+              @for (k of kategorien(); track k) {
+                <mat-option [value]="k">{{ k }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          @if (laedt()) {
+            <p>Laedt ...</p>
+          } @else if (gefiltertesParameter().length === 0) {
+            <cvm-empty-state
+              titel="Keine Parameter"
+              hinweis="Lege oben einen neuen Parameter an."></cvm-empty-state>
+          } @else {
+            <table mat-table [dataSource]="gefiltertesParameter()" class="tabelle">
+              <ng-container matColumnDef="paramKey">
+                <th mat-header-cell *matHeaderCellDef>Schluessel</th>
+                <td mat-cell *matCellDef="let p">{{ p.paramKey }}</td>
+              </ng-container>
+              <ng-container matColumnDef="label">
+                <th mat-header-cell *matHeaderCellDef>Anzeigename</th>
+                <td mat-cell *matCellDef="let p">{{ p.label }}</td>
+              </ng-container>
+              <ng-container matColumnDef="category">
+                <th mat-header-cell *matHeaderCellDef>Kategorie</th>
+                <td mat-cell *matCellDef="let p">
+                  {{ p.category }}<span *ngIf="p.subcategory"> / {{ p.subcategory }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="type">
+                <th mat-header-cell *matHeaderCellDef>Typ</th>
+                <td mat-cell *matCellDef="let p">{{ p.type }}</td>
+              </ng-container>
+              <ng-container matColumnDef="value">
+                <th mat-header-cell *matHeaderCellDef>Wert</th>
+                <td mat-cell *matCellDef="let p">
+                  {{ p.value }}<span *ngIf="p.unit"> {{ p.unit }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="flags">
+                <th mat-header-cell *matHeaderCellDef>Flags</th>
+                <td mat-cell *matCellDef="let p">
+                  <mat-chip-set>
+                    <mat-chip *ngIf="p.required" color="warn" highlighted>Pflicht</mat-chip>
+                    <mat-chip *ngIf="p.sensitive" highlighted>Sensibel</mat-chip>
+                    <mat-chip *ngIf="p.hotReload" highlighted>Hot</mat-chip>
+                  </mat-chip-set>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="aktion">
+                <th mat-header-cell *matHeaderCellDef>Aktion</th>
+                <td mat-cell *matCellDef="let p">
+                  <button mat-icon-button (click)="wertAendern(p)" title="Wert aendern">
+                    <mat-icon>edit_note</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="wertZuruecksetzen(p)" title="Auf Standard">
+                    <mat-icon>restart_alt</mat-icon>
+                  </button>
+                  <button mat-icon-button (click)="zumBearbeiten(p)" title="Bearbeiten">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="loesche(p)" title="Loeschen">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="spalten"></tr>
+              <tr mat-row *matRowDef="let row; columns: spalten"></tr>
+            </table>
+          }
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+
+    <mat-tab label="Audit-Log">
+      <mat-card class="karte">
+        <mat-card-content>
+          @if (auditLog().length === 0) {
+            <cvm-empty-state
+              titel="Keine Eintraege"
+              hinweis="Es wurden noch keine Aenderungen protokolliert."></cvm-empty-state>
+          } @else {
+            <table mat-table [dataSource]="auditLog()" class="tabelle">
+              <ng-container matColumnDef="changedAt">
+                <th mat-header-cell *matHeaderCellDef>Zeit</th>
+                <td mat-cell *matCellDef="let a">{{ a.changedAt | date:'short' }}</td>
+              </ng-container>
+              <ng-container matColumnDef="paramKey">
+                <th mat-header-cell *matHeaderCellDef>Schluessel</th>
+                <td mat-cell *matCellDef="let a">{{ a.paramKey }}</td>
+              </ng-container>
+              <ng-container matColumnDef="oldValue">
+                <th mat-header-cell *matHeaderCellDef>Alt</th>
+                <td mat-cell *matCellDef="let a">{{ a.oldValue }}</td>
+              </ng-container>
+              <ng-container matColumnDef="newValue">
+                <th mat-header-cell *matHeaderCellDef>Neu</th>
+                <td mat-cell *matCellDef="let a">{{ a.newValue }}</td>
+              </ng-container>
+              <ng-container matColumnDef="changedBy">
+                <th mat-header-cell *matHeaderCellDef>Benutzer</th>
+                <td mat-cell *matCellDef="let a">{{ a.changedBy }}</td>
+              </ng-container>
+              <ng-container matColumnDef="reason">
+                <th mat-header-cell *matHeaderCellDef>Grund</th>
+                <td mat-cell *matCellDef="let a">{{ a.reason }}</td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="auditSpalten"></tr>
+              <tr mat-row *matRowDef="let row; columns: auditSpalten"></tr>
+            </table>
+          }
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+  </mat-tab-group>
+</section>
