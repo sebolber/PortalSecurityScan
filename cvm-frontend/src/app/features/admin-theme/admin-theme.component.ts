@@ -1,12 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   BrandingConfig,
   DEFAULT_BRANDING,
@@ -20,6 +14,8 @@ import {
 } from '../../core/theme/branding.service';
 import { ThemeService } from '../../core/theme/theme.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
 
 interface AssetSlot {
@@ -68,12 +64,8 @@ const ASSET_SLOTS: readonly AssetSlot[] = [
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
     AhsBannerComponent,
+    CvmIconComponent,
     SeverityBadgeComponent
   ],
   templateUrl: './admin-theme.component.html',
@@ -82,7 +74,7 @@ const ASSET_SLOTS: readonly AssetSlot[] = [
 export class AdminThemeComponent implements OnInit {
   private readonly branding = inject(BrandingHttpService);
   private readonly theme = inject(ThemeService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly assetSlots = ASSET_SLOTS;
   readonly draft = signal<BrandingConfig>({ ...DEFAULT_BRANDING });
@@ -171,11 +163,10 @@ export class AdminThemeComponent implements OnInit {
       const saved = await this.branding.rollback(entry.version);
       this.draft.set({ ...saved });
       this.theme.applyBranding(saved);
-      this.snackBar.open(
+      this.toast.success(
         'Branding auf Version ' + entry.version + ' zurueckgerollt (neue Version ' +
           saved.version + ').',
-        'OK',
-        { duration: 6000 }
+        6000
       );
       await this.ladeHistorie();
     } catch (err) {
@@ -220,11 +211,10 @@ export class AdminThemeComponent implements OnInit {
       });
       this.draft.set({ ...saved });
       this.theme.applyBranding(saved);
-      this.snackBar.open(
+      this.toast.success(
         'Branding gespeichert. Jede frueher gespeicherte Version kann '
           + 'ueber die Historie rechts wiederhergestellt werden.',
-        'OK',
-        { duration: 6000 }
+        6000
       );
       await this.ladeHistorie();
     } catch (err) {
@@ -261,7 +251,7 @@ export class AdminThemeComponent implements OnInit {
           Math.round(saved.sizeBytes / 1024) +
           ' KB). URL automatisch ins Formular uebernommen.'
       );
-      this.snackBar.open(slot.label + ' gespeichert', 'OK', { duration: 4000 });
+      this.toast.success(slot.label + ' gespeichert', 4000);
     } catch (err) {
       this.error.set(
         err instanceof Error && err.message
