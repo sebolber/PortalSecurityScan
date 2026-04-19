@@ -23,13 +23,17 @@
     MAIL/Alerts, SCAN, SCHEDULER, SECURITY) - erledigt in
     Iteration 42. Secrets bleiben weiterhin ausgespart bis
     Iteration 45.
-  - **Zugriffs-Wrapper** (`getEffective(...)`) in den bestehenden
-    `*Config`-Beans: ReachabilityConfig, OsvProperties, Feed*Config,
-    AutoAssessmentConfig, FixVerificationConfig, AnomalyConfig,
-    RuleExtractionConfig, AlertConfig, AssessmentConfig. Beans, die
-    einen `RestClient.Builder` im Konstruktor zementieren, entweder
-    lazy bauen oder explizit `restartRequired=true` kennzeichnen und
-    das UI ein "Neustart noetig"-Badge anzeigen lassen.
+  - **Zugriffs-Wrapper** (`getEffective(...)`) Teil 1 erledigt in
+    Iteration 43 fuer ReachabilityConfig, AutoAssessmentConfig,
+    neuer OsvEffectiveProperties, neuer FeedEffectiveProperties.
+    Teil 2 (FixVerificationConfig, RuleExtractionConfig, AlertConfig,
+    AssessmentConfig, `restartRequired=true`-Marker fuer Beans mit
+    zementiertem `RestClient.Builder`) folgt Iteration 44.
+  - **Callsite-Migration** fuer OSV/Feed-Clients
+    (`OsvComponentLookup`, `NvdFeedClient`, `GhsaFeedClient`,
+    `KevFeedClient`, `EpssFeedClient`) vom statischen
+    `Feed*Properties` auf die neuen `*EffectiveProperties`. Erfordert
+    Anpassung der Mock-Tests und bleibt als eigener Punkt offen.
   - **Secret-Behandlung** (AES-GCM, Hint statt Klartext, analog
     `SbomEncryption`) fuer Keys wie `cvm.llm.claude.api-key`,
     `cvm.ai.fix-verification.github.token`,
