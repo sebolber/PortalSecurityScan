@@ -1,5 +1,26 @@
 # Offene Punkte (kumulativ)
 
+## Stand 2026-04-19 nach Iteration 34 - offen
+
+- **Frontend-UI fuer LLM-Konfigurationen** (Iteration 34b). Backend
+  ist durch: neue Tabelle `llm_configuration`, CRUD-Endpoints unter
+  `/api/v1/admin/llm-configurations`, Secret AES-GCM-verschluesselt.
+  Fehlt: Angular-Seite `/admin/llm-configurations` mit Liste +
+  Formular (Provider-Dropdown, Model-Feld, BaseUrl-Default-Vorschau,
+  Secret-Maskierung, isActive-Toggle). Muss in den Shell-Menueeintrag
+  "Einstellungen" aufgenommen werden. Referenz: Plan in
+  `docs/20260419/iteration-34-plan.md`, Provider-Liste ueber
+  `GET /api/v1/admin/llm-configurations/providers`.
+- **LlmGateway-Anbindung an LlmConfiguration** (Iteration 34c). Die
+  bestehenden Adapter (Claude, Ollama) waehlen heute noch via
+  Spring-Profile. Sie sollen zur Laufzeit die aktive Konfig pro
+  Mandant ziehen, dabei das Secret ueber
+  `LlmConfigurationService.resolveSecret(id)` entschluesseln.
+- **OSV-Mirror** fuer air-gapped-Installationen (Iteration 35
+  Kandidat).
+- **OSV-Rate-Limit / Retry-After**.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+
 ## Stand 2026-04-19 nach Iteration 33 - offen
 
 - Iteration 33 (CVM-77) liefert PURL->CVE-Matching ueber OSV.
