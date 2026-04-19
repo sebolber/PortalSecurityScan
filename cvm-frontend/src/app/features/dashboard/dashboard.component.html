@@ -6,6 +6,28 @@
     </div>
   </header>
 
+  @if (zeigeOnboardingCta()) {
+    <section class="card border-primary"
+             data-testid="dashboard-onboarding-cta">
+      <div class="card-body flex items-center gap-4">
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary text-white">
+          <cvm-icon name="play" [size]="20"></cvm-icon>
+        </span>
+        <div class="grow">
+          <h2 class="card-title">Erstnutzer-Wizard</h2>
+          <p class="text-caption">
+            {{ onboardingState().done.length }} / 4 Schritten erledigt.
+            Wizard zeigt dir die naechsten Schritte zur Inbetriebnahme.
+          </p>
+        </div>
+        <a class="btn btn-primary btn-sm" routerLink="/onboarding">
+          <cvm-icon name="arrow-right" [size]="14"></cvm-icon>
+          Weiter
+        </a>
+      </div>
+    </section>
+  }
+
   <!-- Iteration 80 (CVM-320): Handlungskarten oberhalb der KPIs. -->
   <section
     class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"

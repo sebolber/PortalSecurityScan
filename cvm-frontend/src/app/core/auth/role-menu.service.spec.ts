@@ -127,7 +127,9 @@ describe('RoleMenuService', () => {
     const childIds = (settingsEntry?.children ?? []).map((c) => c.id);
     // Iteration 65 (CVM-302): Kinderliste auf Iteration-56/41/61-Stand
     // aktualisiert (Mandanten, System-Parameter, CVE-Import ergaenzt).
+    // Iteration 96 (CVM-336): Onboarding als erster Unterpunkt.
     expect(childIds).toEqual([
+      'onboarding',
       'profiles',
       'rules',
       'admin-products',

@@ -1,0 +1,85 @@
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Erstnutzer-Wizard</h1>
+      <p class="page-subtitle">
+        Vier Schritte, um den CVE-Relevance-Manager produktiv zu nehmen.
+      </p>
+    </div>
+  </header>
+
+  <section class="card" data-testid="onboarding-progress">
+    <div class="card-body flex items-center gap-4">
+      <div class="grow">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium">Fortschritt</span>
+          <span class="text-sm text-text-muted" data-testid="onboarding-percent">
+            {{ fortschritt() }}%
+          </span>
+        </div>
+        <div class="h-2 w-full rounded bg-surface-muted overflow-hidden">
+          <div class="h-full bg-primary transition-all"
+               [style.width.%]="fortschritt()"></div>
+        </div>
+      </div>
+      @if (fertig()) {
+        <span class="badge badge-success" data-testid="onboarding-complete">
+          Abgeschlossen
+        </span>
+      }
+      <button type="button"
+              class="btn btn-secondary btn-sm"
+              data-testid="onboarding-reset"
+              (click)="zuruecksetzen()">
+        <cvm-icon name="refresh" [size]="14"></cvm-icon>
+        Zuruecksetzen
+      </button>
+    </div>
+  </section>
+
+  <ol class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    @for (s of schritte(); track s.id) {
+      <li class="card"
+          [class.border-primary]="s.current && !s.done"
+          [attr.data-testid]="'onboarding-step-' + s.id">
+        <header class="card-header">
+          <div class="flex items-center gap-2">
+            @if (s.done) {
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-green-700">
+                <cvm-icon name="check" [size]="16"></cvm-icon>
+              </span>
+            } @else if (s.current) {
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-white">
+                <cvm-icon name="arrow-right" [size]="16"></cvm-icon>
+              </span>
+            } @else {
+              <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted text-text-muted">
+                <cvm-icon name="circle" [size]="16"></cvm-icon>
+              </span>
+            }
+            <h2 class="card-title">{{ s.titel }}</h2>
+          </div>
+        </header>
+        <div class="card-body flex flex-col gap-3">
+          <p class="text-body">{{ s.beschreibung }}</p>
+          <div class="flex items-center gap-2">
+            <a class="btn btn-primary btn-sm"
+               [routerLink]="s.ctaRoute">
+              <cvm-icon name="arrow-right" [size]="14"></cvm-icon>
+              {{ s.ctaLabel }}
+            </a>
+            @if (!s.done) {
+              <button type="button"
+                      class="btn btn-secondary btn-sm"
+                      [attr.data-testid]="'onboarding-mark-done-' + s.id"
+                      (click)="markiereErledigt(s.id)">
+                <cvm-icon name="check" [size]="14"></cvm-icon>
+                Als erledigt markieren
+              </button>
+            }
+          </div>
+        </div>
+      </li>
+    }
+  </ol>
+</div>

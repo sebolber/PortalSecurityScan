@@ -17,6 +17,7 @@ import {
   ReportResponse,
   ReportsService
 } from '../../core/reports/reports.service';
+import { OnboardingService } from '../onboarding/onboarding.service';
 import { ChartThemeService } from '../../core/theme/chart-theme.service';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
@@ -59,6 +60,7 @@ export class DashboardComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly reports = inject(ReportsService);
   private readonly alerts = inject(AlertBannerService);
+  private readonly onboarding = inject(OnboardingService);
 
   readonly texte = this.locale.messages.dashboard;
 
@@ -109,6 +111,14 @@ export class DashboardComponent implements OnInit {
       this.auth.hasRole(CVM_ROLES.ADMIN) ||
       this.auth.hasRole(CVM_ROLES.REPORTER) ||
       this.auth.hasRole(CVM_ROLES.VIEWER)
+  );
+
+  // Iteration 96 (CVM-336): Onboarding-CTA, solange Admin nicht fertig.
+  readonly onboardingState = this.onboarding.state;
+  readonly zeigeOnboardingCta = computed(
+    () =>
+      this.auth.hasRole(CVM_ROLES.ADMIN) &&
+      !this.onboarding.completed()
   );
 
   async ngOnInit(): Promise<void> {

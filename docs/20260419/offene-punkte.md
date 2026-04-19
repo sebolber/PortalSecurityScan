@@ -115,7 +115,14 @@ Iterationen 80+ implementieren die Befunde.
   nutzen jetzt den `CvmConfirmService`. 7 neue Karma-Specs. Offen:
   Rotations-Reminder und `window.confirm`-Cleanup in
   `admin-llm-configurations`/`admin-theme`/`profiles`.
-- **U-10 Erstnutzer-Wizard** - Iteration 96.
+- ~~**U-10 Erstnutzer-Wizard**~~ - **Erledigt in Iteration 96**
+  (CVM-336). Neuer `OnboardingService` mit localStorage-
+  Persistenz, `/onboarding`-Route mit vier Kacheln (Produkt,
+  Umgebung, Profil, Scan) + Fortschrittsbalken. Dashboard zeigt
+  CTA, solange der Wizard nicht abgeschlossen ist. Menue-Eintrag
+  als erster Unterpunkt unter "Einstellungen". 10 neue Karma-Specs.
+  Offen: automatische Prefilling-Erkennung (Produkte/Umgebungen)
+  und Persistenz im Keycloak-Profil.
 
 ## Stand 2026-04-19 - UI-Harmonisierung (Iteration 61) - laeuft
 

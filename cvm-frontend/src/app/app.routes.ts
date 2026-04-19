@@ -213,6 +213,15 @@ export const APP_ROUTES: Routes = [
             .then((m) => m.AnomalyComponent)
       },
       {
+        // Iteration 96 (CVM-336): Erstnutzer-Wizard.
+        path: 'onboarding',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/onboarding/onboarding.component')
+            .then((m) => m.OnboardingComponent)
+      },
+      {
         path: 'tenant-kpi',
         canActivate: [authGuard],
         data: { requiredRoles: [CVM_ROLES.ADMIN] },

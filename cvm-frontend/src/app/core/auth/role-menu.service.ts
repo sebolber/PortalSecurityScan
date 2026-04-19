@@ -114,6 +114,16 @@ const ADMIN_CVE_IMPORT_ENTRY: MenuEntry = {
   requiredRoles: [CVM_ROLES.ADMIN]
 };
 
+/** Iteration 96 (CVM-336): Erstnutzer-Wizard. */
+const ONBOARDING_ENTRY: MenuEntry = {
+  id: 'onboarding',
+  label: 'Erstnutzer-Wizard',
+  path: '/onboarding',
+  icon: 'play',
+  section: 'einstellungen',
+  requiredRoles: [CVM_ROLES.ADMIN]
+};
+
 const SETTINGS_ENTRY: MenuEntry = {
   id: 'settings',
   label: 'Einstellungen',
@@ -134,6 +144,7 @@ const SETTINGS_ENTRY: MenuEntry = {
     CVM_ROLES.ADMIN
   ],
   children: [
+    ONBOARDING_ENTRY,
     PROFILES_ENTRY,
     RULES_ENTRY,
     ADMIN_PRODUCTS_ENTRY,

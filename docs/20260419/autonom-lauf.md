@@ -284,3 +284,17 @@ parameters, theme nutzen noch window.confirm.
 [19:50] Iteration 91 abgeschlossen: U-07a Breadcrumbs +
 GlobalShortcutsDirective (? fuer Sheet, g+d/q/s/w/r fuer Nav).
 14 neue Specs; Karma 162. Naechstes: U-07b Suche + Notifications.
+[20:00] Iteration 92 abgeschlossen: U-07b Globale Suche (/)
++ Bell-Badge. 8 neue Specs; Karma 170.
+[20:03] Iteration 93 abgeschlossen: U-08 Teil 1 Report-Historie
+im UI. Neuer ReportsService.list + Card mit 20 neuesten Reports.
+2 neue Specs; Karma 172.
+[20:08] Iteration 94 abgeschlossen: U-08 Teil 2 Dashboard-
+Handlungszentrale mit T2-Ampel und Reports-Kurzliste. 5 neue
+Specs; Karma 177.
+[20:13] Iteration 95 abgeschlossen: U-09 Secret-Rotations-Dialog
+in admin-parameters (Show/Hide, Pflicht-Grund) + CvmConfirmService
+fuer wertZuruecksetzen/loesche. 7 neue Specs; Karma 184.
+[20:19] Iteration 96 abgeschlossen: U-10 Onboarding-Wizard mit
+OnboardingService (localStorage), 4 Schritten und Dashboard-CTA.
+10 neue Specs; Karma 194. UX-Plan komplett durch.
