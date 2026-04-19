@@ -58,4 +58,6 @@ fuer Profiles (commit 44927352). Naechstes: Iteration 58
 PURL-Canonicalization.
 [11:08] Iteration 58 abgeschlossen: PURL-Canonicalization im
 Domain-Modul + Integration in ComponentCveMatchingOnScanIngestedListener
-(commit c7d8f29e). Restzeit gering; Stopp-Checkpoint erreicht.
+(commit c7d8f29e).
+[11:18] Iteration 59 abgeschlossen: Tenant-Anlage (Backend + UI-
+Formular) (commit e00f0787). Timebox naehert sich dem Ende.
