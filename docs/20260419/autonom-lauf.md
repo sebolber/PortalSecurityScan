@@ -52,4 +52,7 @@ SLA-Ampel (commit 6a02c16f). Block C (ohne Tenant-UI) damit
 abgearbeitet.
 [10:57] Iteration 56 abgeschlossen: Tenant-Liste read-only
 (Backend + Frontend-Route + Menueintrag) (commit adb25529).
-Naechstes: Iteration 57 OsvComponentLookup callsite-migration.
+Naechstes: Iteration 57 Monaco-Diff.
+[11:01] Iteration 57 abgeschlossen: Monaco Side-by-Side Diff-Editor
+fuer Profiles (commit 44927352). Naechstes: Iteration 58
+PURL-Canonicalization.

@@ -133,7 +133,9 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   Iteration 51 (PUT/DELETE `/api/v1/profiles/{id}`); UI-Integration
   folgt mit Monaco (Iteration 54).
 - OSV-Mirror fuer air-gapped-Installationen.
-- PURL-Canonicalization, falls Trefferquote in Prod zu niedrig.
+- ~~PURL-Canonicalization~~ - erledigt in Iteration 58
+  (`com.ahs.cvm.domain.purl.PurlCanonicalizer`, Integration in
+  `ComponentCveMatchingOnScanIngestedListener`).
 - ~~Bundle-Budget-Reduktion~~ - erledigt in Iteration 52
   (2.13 MB -> 1.10 MB, ECharts und LoginCallback lazy).
 - ~~Rules-Editor im Frontend~~ - Update-Form erledigt in Iteration 53.

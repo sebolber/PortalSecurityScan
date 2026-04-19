@@ -81,7 +81,10 @@ public class ComponentCveMatchingOnScanIngestedListener {
             String purl = occ.getComponent() != null
                     ? occ.getComponent().getPurl() : null;
             if (purl != null && !purl.isBlank()) {
-                purls.add(purl);
+                // Iteration 58 (CVM-108): PURL kanonisieren, damit leichte
+                // Kosmetik-Unterschiede (Case, Qualifier-Reihenfolge)
+                // nicht zum Miss fuehren.
+                purls.add(com.ahs.cvm.domain.purl.PurlCanonicalizer.canonicalize(purl));
             }
         }
         if (purls.isEmpty()) {
@@ -98,11 +101,12 @@ public class ComponentCveMatchingOnScanIngestedListener {
         int neueFindings = 0;
         java.util.Set<String> zuAnreichern = new java.util.LinkedHashSet<>();
         for (ComponentOccurrence occ : occurrences) {
-            String purl = occ.getComponent() != null
+            String rawPurl = occ.getComponent() != null
                     ? occ.getComponent().getPurl() : null;
-            if (purl == null) {
+            if (rawPurl == null) {
                 continue;
             }
+            String purl = com.ahs.cvm.domain.purl.PurlCanonicalizer.canonicalize(rawPurl);
             List<String> cveIds = treffer.getOrDefault(purl, List.of());
             for (String cveId : cveIds) {
                 if (findingRepository
