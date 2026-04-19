@@ -40,6 +40,8 @@ import { CvmDialogComponent } from './cvm-dialog.component';
             <dd>Waiver</dd>
             <dt class="font-mono text-text-muted">g r</dt>
             <dd>Berichte</dd>
+            <dt class="font-mono text-text-muted">/</dt>
+            <dd>Globale Suche</dd>
           </dl>
         </section>
 

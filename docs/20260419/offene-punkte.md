@@ -81,7 +81,14 @@ Iterationen 80+ implementieren die Befunde.
   `g` + `d/q/s/w/r` navigiert zu Dashboard/Queue/Scan/Waiver/
   Reports. 14 neue Karma-Specs. Offen: dynamische Breadcrumb-Titel
   fuer Detail-Routen (CVE-/Finding-ID statt generischer Label).
-- **U-07b Globale Suche + Bell-Notifications** - Iteration 92.
+- ~~**U-07b Globale Suche + Bell-Notifications**~~ -
+  **Erledigt in Iteration 92** (CVM-332). Neue
+  `GlobalSearchComponent` wird per `/`-Shortcut geoeffnet, filtert
+  sichtbare Menue-Eintraege per Substring und bietet einen CVE-ID-
+  Deep-Link. Topbar zeigt zusaetzlich Search-Icon und Bell-Link auf
+  `/alerts/history` mit T2-Count-Badge. 8 neue Karma-Specs. Offen:
+  Backend-Volltextsuche (Queue/Waiver/Profile) und Inline-
+  Bell-Popover mit letzten Alerts.
 - **U-08 Dashboard-Handlungszentrale + Report-Listing** -
   Iteration 93-94. Benoetigt kleinen Backend-Endpoint
   `GET /reports`.

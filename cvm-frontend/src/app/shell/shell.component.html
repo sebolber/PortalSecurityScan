@@ -1,6 +1,6 @@
 <cvm-alert-banner></cvm-alert-banner>
 
-<div cvmGlobalShortcuts (help)="oeffneShortcutSheet()">
+<div cvmGlobalShortcuts (help)="oeffneShortcutSheet()" (search)="oeffneSuche()">
 <header class="cvm-topbar">
   <a routerLink="/dashboard" class="cvm-brand" [attr.aria-label]="brandingLogoAlt()">
     @if (brandingLogoUrl()) {
@@ -98,6 +98,34 @@
   }
 
   <div class="grow"></div>
+
+  @if (loggedIn()) {
+    <button
+      type="button"
+      class="btn-icon"
+      (click)="oeffneSuche()"
+      title="Globale Suche (/)"
+      aria-label="Globale Suche oeffnen"
+      data-testid="shell-search-button"
+    >
+      <cvm-icon name="search" [size]="18"></cvm-icon>
+    </button>
+    <a
+      routerLink="/alerts/history"
+      class="btn-icon relative"
+      title="Alert-Historie"
+      aria-label="Alert-Historie oeffnen"
+      data-testid="shell-alerts-button"
+    >
+      <cvm-icon name="bell" [size]="18"></cvm-icon>
+      @if (alertCount() > 0) {
+        <span
+          class="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 text-[10px] font-bold text-white bg-red-600 rounded-full"
+          data-testid="shell-alerts-badge"
+        >{{ alertCount() > 99 ? '99+' : alertCount() }}</span>
+      }
+    </a>
+  }
 
   <button
     type="button"
@@ -224,3 +252,8 @@
   [visible]="shortcutsOpen()"
   (close)="schliesseShortcutSheet()"
 ></cvm-global-shortcuts-overlay>
+
+<cvm-global-search
+  [visible]="searchOpen()"
+  (close)="schliesseSuche()"
+></cvm-global-search>

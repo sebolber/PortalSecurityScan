@@ -8,9 +8,10 @@ import {
 import { Router } from '@angular/router';
 
 /**
- * Iteration 91 (CVM-331): Globale Tastatur-Shortcuts. Haengt am
+ * Iteration 91/92 (CVM-331/332): Globale Tastatur-Shortcuts. Haengt am
  * Shell-Root. Shortcuts:
  *  - `?`         oeffnet den globalen Shortcut-Sheet
+ *  - `/`         oeffnet die globale Suche
  *  - `g` `d`     navigiert zu /dashboard
  *  - `g` `q`     navigiert zu /queue
  *  - `g` `s`     navigiert zu /scans/upload
@@ -26,6 +27,7 @@ import { Router } from '@angular/router';
 })
 export class GlobalShortcutsDirective {
   @Output() readonly help = new EventEmitter<void>();
+  @Output() readonly search = new EventEmitter<void>();
 
   private readonly router = inject(Router);
 
@@ -50,14 +52,14 @@ export class GlobalShortcutsDirective {
       return;
     }
 
-    if (event.key === '?' && !event.shiftKey && event.code !== 'Slash') {
+    if (event.key === '?') {
       event.preventDefault();
       this.help.emit();
       return;
     }
-    if (event.key === '?' || (event.key === '/' && event.shiftKey)) {
+    if (event.key === '/') {
       event.preventDefault();
-      this.help.emit();
+      this.search.emit();
       return;
     }
     if (event.key === 'g') {

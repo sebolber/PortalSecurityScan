@@ -15,6 +15,7 @@ import { TenantsService, TenantView } from '../core/tenants/tenants.service';
 import { AlertBannerComponent } from './alert-banner.component';
 import { CvmBreadcrumbsComponent } from '../shared/components/cvm-breadcrumbs.component';
 import { CvmIconComponent } from '../shared/components/cvm-icon.component';
+import { GlobalSearchComponent } from '../shared/components/global-search.component';
 import { GlobalShortcutsDirective } from '../shared/components/global-shortcuts.directive';
 import { GlobalShortcutsOverlayComponent } from '../shared/components/global-shortcuts-overlay.component';
 
@@ -35,6 +36,7 @@ import { GlobalShortcutsOverlayComponent } from '../shared/components/global-sho
     AlertBannerComponent,
     CvmBreadcrumbsComponent,
     CvmIconComponent,
+    GlobalSearchComponent,
     GlobalShortcutsDirective,
     GlobalShortcutsOverlayComponent
   ],
@@ -125,6 +127,14 @@ export class ShellComponent implements OnInit {
   // Iteration 91 (CVM-331): Globale Shortcut-Sheet.
   readonly shortcutsOpen = signal(false);
 
+  // Iteration 92 (CVM-332): Globale Suche.
+  readonly searchOpen = signal(false);
+
+  // Iteration 92 (CVM-332): Unread-Count aus AlertBannerService.
+  readonly alertCount = computed(
+    () => this.bannerService.status()?.count ?? 0
+  );
+
   // Iteration 84 (CVM-324): Tenant-Popover mit Liste und
   // Set-Default-Aktion fuer Admins.
   readonly tenantMenuOpen = signal(false);
@@ -178,6 +188,14 @@ export class ShellComponent implements OnInit {
 
   schliesseShortcutSheet(): void {
     this.shortcutsOpen.set(false);
+  }
+
+  oeffneSuche(): void {
+    this.searchOpen.set(true);
+  }
+
+  schliesseSuche(): void {
+    this.searchOpen.set(false);
   }
 
   toggleUserMenu(): void {

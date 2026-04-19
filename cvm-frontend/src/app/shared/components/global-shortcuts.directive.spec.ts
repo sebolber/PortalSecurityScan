@@ -6,12 +6,18 @@ import { GlobalShortcutsDirective } from './global-shortcuts.directive';
 @Component({
   standalone: true,
   imports: [GlobalShortcutsDirective],
-  template: `<div cvmGlobalShortcuts (help)="onHelp()"></div>`
+  template: `<div cvmGlobalShortcuts
+                   (help)="onHelp()"
+                   (search)="onSearch()"></div>`
 })
 class HostComponent {
   helpCount = 0;
+  searchCount = 0;
   onHelp(): void {
     this.helpCount++;
+  }
+  onSearch(): void {
+    this.searchCount++;
   }
 }
 
@@ -85,6 +91,13 @@ describe('GlobalShortcutsDirective', () => {
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }));
     expect(router.navigateByUrl).not.toHaveBeenCalled();
     input.remove();
+  });
+
+  it('Iteration 92: / emittiert search', () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    dispatch('/');
+    expect(fixture.componentInstance.searchCount).toBe(1);
   });
 
   it('g gefolgt von unbekanntem Key navigiert nicht', () => {
