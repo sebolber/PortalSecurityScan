@@ -142,6 +142,14 @@ export const APP_ROUTES: Routes = [
             .then((m) => m.AdminLlmConfigurationsComponent)
       },
       {
+        path: 'admin/parameters',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/admin-parameters/admin-parameters.component')
+            .then((m) => m.AdminParametersComponent)
+      },
+      {
         path: 'scans/upload',
         canActivate: [authGuard],
         data: {

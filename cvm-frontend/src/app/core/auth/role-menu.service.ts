@@ -85,6 +85,15 @@ const ADMIN_LLM_ENTRY: MenuEntry = {
   requiredRoles: [CVM_ROLES.ADMIN]
 };
 
+const ADMIN_PARAMETERS_ENTRY: MenuEntry = {
+  id: 'admin-parameters',
+  label: 'System-Parameter',
+  path: '/admin/parameters',
+  icon: 'tune',
+  section: 'einstellungen',
+  requiredRoles: [CVM_ROLES.ADMIN]
+};
+
 const SETTINGS_ENTRY: MenuEntry = {
   id: 'settings',
   label: 'Einstellungen',
@@ -110,7 +119,8 @@ const SETTINGS_ENTRY: MenuEntry = {
     ADMIN_PRODUCTS_ENTRY,
     ADMIN_ENVIRONMENTS_ENTRY,
     ADMIN_THEME_ENTRY,
-    ADMIN_LLM_ENTRY
+    ADMIN_LLM_ENTRY,
+    ADMIN_PARAMETERS_ENTRY
   ]
 };
 
