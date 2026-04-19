@@ -139,7 +139,7 @@ class ReachabilityAgentTest {
         assertThat(res.noteIfUnavailable()).contains("Timeout");
         ArgumentCaptor<AiCallAuditPort.AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditPort.AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.ERROR);
     }
 
@@ -154,7 +154,7 @@ class ReachabilityAgentTest {
         assertThat(res.available()).isFalse();
         ArgumentCaptor<AiCallAuditPort.AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditPort.AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.INVALID_OUTPUT);
     }
 

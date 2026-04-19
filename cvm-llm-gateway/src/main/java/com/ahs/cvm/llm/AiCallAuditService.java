@@ -86,7 +86,7 @@ public class AiCallAuditService {
 
         if (!costBudget.isUnderBudget(request.environmentId())) {
             UUID auditId = auditPort.persistPending(pending(request, client.modelId(), false));
-            auditPort.finalize(auditId, finalization(
+            auditPort.finalizeAudit(auditId, finalization(
                     AiCallStatus.DISABLED, null, null, null, null, BigDecimal.ZERO,
                     null, "Monatsbudget fuer LLM-Profil aufgebraucht"));
             log.warn("LLM-Call abgelehnt: Monatsbudget aufgebraucht (useCase={}, env={}).",
@@ -98,7 +98,7 @@ public class AiCallAuditService {
         String tenant = tenantOf(request);
         if (!rateLimiter.tryAcquire(tenant)) {
             UUID auditId = auditPort.persistPending(pending(request, client.modelId(), false));
-            auditPort.finalize(auditId, finalization(
+            auditPort.finalizeAudit(auditId, finalization(
                     AiCallStatus.RATE_LIMITED, null, null, null, null, BigDecimal.ZERO,
                     null, "Rate-Limit ueberschritten"));
             throw new LlmRateLimitException(tenant);
@@ -113,7 +113,7 @@ public class AiCallAuditService {
 
         if (injectionRisk && config.injectionMode() == InjectionMode.BLOCK) {
             log.warn("LLM-Call blockiert (Injection-Risiko): marker={}", verdict.marker());
-            auditPort.finalize(auditId, finalization(
+            auditPort.finalizeAudit(auditId, finalization(
                     AiCallStatus.INJECTION_RISK, null, null, null, null, BigDecimal.ZERO,
                     null, "Injection-Marker: " + String.join(", ", verdict.marker())));
             throw new InjectionRiskException(verdict.marker());
@@ -126,7 +126,7 @@ public class AiCallAuditService {
         } catch (RuntimeException ex) {
             log.warn("LLM-Call fehlgeschlagen: useCase={}, fehler={}",
                     request.useCase(), ex.getMessage());
-            auditPort.finalize(auditId, finalization(
+            auditPort.finalizeAudit(auditId, finalization(
                     AiCallStatus.ERROR, null, null, null,
                     (int) Duration.between(start, Instant.now(clock)).toMillis(),
                     BigDecimal.ZERO, null, ex.getClass().getSimpleName() + ": " + ex.getMessage()));
@@ -141,14 +141,14 @@ public class AiCallAuditService {
         if (!validationErrors.isEmpty()) {
             String grund = String.join("; ", validationErrors);
             log.warn("LLM-Output verworfen: {}", grund);
-            auditPort.finalize(auditId, finalization(
+            auditPort.finalizeAudit(auditId, finalization(
                     AiCallStatus.INVALID_OUTPUT, response.rawText(),
                     tokens(response, true), tokens(response, false),
                     latencyMs, cost, grund, null));
             throw new InvalidLlmOutputException(grund);
         }
 
-        auditPort.finalize(auditId, finalization(
+        auditPort.finalizeAudit(auditId, finalization(
                 AiCallStatus.OK, response.rawText(),
                 tokens(response, true), tokens(response, false),
                 latencyMs, cost, null, null));

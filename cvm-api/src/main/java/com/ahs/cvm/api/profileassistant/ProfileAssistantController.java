@@ -46,11 +46,11 @@ public class ProfileAssistantController {
 
     @PostMapping("/{sessionId}/finalize")
     @Operation(summary = "Erzeugt einen Profil-Draft aus dem Dialog.")
-    public ResponseEntity<FinalizeResult> finalize(
+    public ResponseEntity<FinalizeResult> finalizeDraft(
             @PathVariable UUID environmentId,
             @PathVariable UUID sessionId,
             @Valid @RequestBody FinalizeRequest body) {
-        return ResponseEntity.ok(service.finalize(sessionId, body.proposedBy()));
+        return ResponseEntity.ok(service.finalizeDraft(sessionId, body.proposedBy()));
     }
 
     public record StartRequest(@NotBlank String startedBy) {}

@@ -21,7 +21,7 @@ public interface AiCallAuditPort {
     UUID persistPending(AiCallAuditPending pending);
 
     /** Aktualisiert den bestehenden Eintrag mit dem Finalstatus. */
-    void finalize(UUID auditId, AiCallAuditFinalization finalization);
+    void finalizeAudit(UUID auditId, AiCallAuditFinalization finalization);
 
     /** Eingabe fuer {@link #persistPending(AiCallAuditPending)}. */
     record AiCallAuditPending(
@@ -38,7 +38,7 @@ public interface AiCallAuditPort {
             boolean injectionRisk,
             Instant createdAt) {}
 
-    /** Eingabe fuer {@link #finalize(UUID, AiCallAuditFinalization)}. */
+    /** Eingabe fuer {@link #finalizeAudit(UUID, AiCallAuditFinalization)}. */
     record AiCallAuditFinalization(
             AiCallStatus status,
             String rawResponse,

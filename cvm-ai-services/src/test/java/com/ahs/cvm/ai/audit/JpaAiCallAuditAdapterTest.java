@@ -79,7 +79,7 @@ class JpaAiCallAuditAdapterTest {
         given(repository.findById(id)).willReturn(Optional.of(pending));
         given(repository.save(any(AiCallAudit.class))).willAnswer(inv -> inv.getArgument(0));
 
-        adapter.finalize(id, new AiCallAuditFinalization(
+        adapter.finalizeAudit(id, new AiCallAuditFinalization(
                 AiCallStatus.OK, "raw", 10, 5, 100,
                 new BigDecimal("0.001"), null, null,
                 Instant.parse("2026-04-18T12:00:01Z")));
@@ -109,7 +109,7 @@ class JpaAiCallAuditAdapterTest {
                 .build();
         given(repository.findById(id)).willReturn(Optional.of(bereitsOk));
 
-        assertThatThrownBy(() -> adapter.finalize(id,
+        assertThatThrownBy(() -> adapter.finalizeAudit(id,
                         new AiCallAuditFinalization(
                                 AiCallStatus.OK, null, null, null, null,
                                 BigDecimal.ZERO, null, null, Instant.now())))
@@ -122,7 +122,7 @@ class JpaAiCallAuditAdapterTest {
         UUID id = UUID.randomUUID();
         given(repository.findById(id)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> adapter.finalize(id,
+        assertThatThrownBy(() -> adapter.finalizeAudit(id,
                         new AiCallAuditFinalization(
                                 AiCallStatus.OK, null, null, null, null,
                                 BigDecimal.ZERO, null, null, Instant.now())))

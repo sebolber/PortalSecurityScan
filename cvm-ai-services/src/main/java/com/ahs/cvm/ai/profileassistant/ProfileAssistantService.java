@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Dialogischer Profil-Assistent (Iteration 18, CVM-43).
  *
- * <p><strong>Invariante:</strong> {@link #finalize(UUID, String)} ruft
+ * <p><strong>Invariante:</strong> {@link #finalizeDraft(UUID, String)} ruft
  * {@link ContextProfileService#proposeNewVersion} - also den regulaeren
  * Draft-Workflow. Es gibt keinen Direkt-Schreibpfad auf das aktive
  * Profil.
@@ -118,7 +118,7 @@ public class ProfileAssistantService {
     }
 
     @Transactional
-    public FinalizeResult finalize(UUID sessionId, String proposedBy) {
+    public FinalizeResult finalizeDraft(UUID sessionId, String proposedBy) {
         ProfileAssistSession session = loadLiveSession(sessionId);
         List<Map<String, Object>> dialog = parseDialog(session.getDialogJson());
         String yaml = buildYaml(session.getEnvironment(), dialog);

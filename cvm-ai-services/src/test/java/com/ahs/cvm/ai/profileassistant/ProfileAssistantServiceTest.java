@@ -135,7 +135,7 @@ class ProfileAssistantServiceTest {
                         draftId, ENV_ID, 2, ProfileState.DRAFT, "yaml",
                         "u@x", null, null, Instant.now()));
 
-        FinalizeResult r = service.finalize(start.sessionId(), "a.admin@ahs.test");
+        FinalizeResult r = service.finalizeDraft(start.sessionId(), "a.admin@ahs.test");
 
         assertThat(r.draftProfileId()).isEqualTo(draftId);
         verify(profileService).proposeNewVersion(eq(ENV_ID), any(), eq("a.admin@ahs.test"));
@@ -167,7 +167,7 @@ class ProfileAssistantServiceTest {
                         UUID.randomUUID(), ENV_ID, 2, ProfileState.DRAFT, "y",
                         "u@x", null, null, Instant.now()));
 
-        service.finalize(start.sessionId(), "a.admin@ahs.test");
+        service.finalizeDraft(start.sessionId(), "a.admin@ahs.test");
 
         // Der Service darf nur proposeNewVersion ansprechen - weder approve,
         // latestActiveFor, noch diff. Pruefen via Mockito (keine anderen

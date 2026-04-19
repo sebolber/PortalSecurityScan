@@ -134,19 +134,19 @@ public class ReachabilityAgent {
             res = subprocess.run(sub);
         } catch (RuntimeException ex) {
             log.warn("Subprocess-Fehler: {}", ex.getMessage());
-            finalize(auditId, AiCallStatus.ERROR, "", null, null,
+            finalizeAuditSafely(auditId, AiCallStatus.ERROR, "", null, null,
                     "Subprocess-Fehler: " + ex.getMessage());
             return unavailable(request.findingId(), auditId,
                     "Subprocess-Fehler: " + ex.getMessage());
         }
         if (res.timedOut()) {
-            finalize(auditId, AiCallStatus.ERROR, res.stdout(), null,
+            finalizeAuditSafely(auditId, AiCallStatus.ERROR, res.stdout(), null,
                     (int) res.durationMs(), "timeout");
             return unavailable(request.findingId(), auditId,
                     "Reachability-Analyse Timeout.");
         }
         if (!res.ok()) {
-            finalize(auditId, AiCallStatus.ERROR, res.stdout(), null,
+            finalizeAuditSafely(auditId, AiCallStatus.ERROR, res.stdout(), null,
                     (int) res.durationMs(),
                     "Subprocess Exit " + res.exitCode());
             return unavailable(request.findingId(), auditId,
@@ -157,7 +157,7 @@ public class ReachabilityAgent {
         try {
             parsed = MAPPER.readTree(res.stdout());
         } catch (Exception ex) {
-            finalize(auditId, AiCallStatus.INVALID_OUTPUT, res.stdout(), null,
+            finalizeAuditSafely(auditId, AiCallStatus.INVALID_OUTPUT, res.stdout(), null,
                     (int) res.durationMs(),
                     "Output war kein JSON: " + ex.getMessage());
             return unavailable(request.findingId(), auditId,
@@ -165,7 +165,7 @@ public class ReachabilityAgent {
         }
         if (!parsed.has("findings") || !parsed.path("findings").has("callSites")
                 || !parsed.path("findings").path("callSites").isArray()) {
-            finalize(auditId, AiCallStatus.INVALID_OUTPUT, res.stdout(), null,
+            finalizeAuditSafely(auditId, AiCallStatus.INVALID_OUTPUT, res.stdout(), null,
                     (int) res.durationMs(),
                     "Output verletzt Reachability-Schema.");
             return unavailable(request.findingId(), auditId,
@@ -184,7 +184,7 @@ public class ReachabilityAgent {
         String summary = parsed.path("summary").asText("");
         String recommendation = parsed.path("recommendation").asText("VERIFY");
 
-        finalize(auditId, AiCallStatus.OK, res.stdout(), null,
+        finalizeAuditSafely(auditId, AiCallStatus.OK, res.stdout(), null,
                 (int) res.durationMs(), null);
 
         AiCallAudit audit = auditRepository.findById(auditId)
@@ -213,10 +213,10 @@ public class ReachabilityAgent {
                 recommendation, summary, sites, true, null);
     }
 
-    private void finalize(UUID auditId, AiCallStatus status, String rawResponse,
+    private void finalizeAuditSafely(UUID auditId, AiCallStatus status, String rawResponse,
             Integer completionTokens, Integer latencyMs, String errorMessage) {
         try {
-            auditPort.finalize(auditId, new AiCallAuditFinalization(
+            auditPort.finalizeAudit(auditId, new AiCallAuditFinalization(
                     status, rawResponse, null, completionTokens, latencyMs,
                     BigDecimal.ZERO, null, errorMessage, Instant.now()));
         } catch (RuntimeException ex) {

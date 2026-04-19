@@ -48,7 +48,7 @@ public class JpaAiCallAuditAdapter implements AiCallAuditPort {
 
     @Override
     @Transactional
-    public void finalize(UUID auditId, AiCallAuditFinalization finalization) {
+    public void finalizeAudit(UUID auditId, AiCallAuditFinalization finalization) {
         AiCallAudit audit = repository.findById(auditId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Audit-Eintrag nicht gefunden: " + auditId));

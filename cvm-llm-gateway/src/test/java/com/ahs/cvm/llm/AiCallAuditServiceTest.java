@@ -127,7 +127,7 @@ class AiCallAuditServiceTest {
         verify(client, never()).complete(any());
         ArgumentCaptor<AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.DISABLED);
         assertThat(cap.getValue().errorMessage()).contains("Monatsbudget");
     }
@@ -146,7 +146,7 @@ class AiCallAuditServiceTest {
         verify(auditPort).persistPending(any());
         ArgumentCaptor<AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.OK);
         assertThat(cap.getValue().latencyMs()).isEqualTo(250);
         assertThat(cap.getValue().costEur()).isEqualByComparingTo("0.001500");
@@ -163,7 +163,7 @@ class AiCallAuditServiceTest {
         verify(client, never()).complete(any());
         ArgumentCaptor<AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.INJECTION_RISK);
     }
 
@@ -195,7 +195,7 @@ class AiCallAuditServiceTest {
 
         ArgumentCaptor<AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.INVALID_OUTPUT);
         assertThat(cap.getValue().invalidOutputReason()).contains("CATASTROPHIC");
     }
@@ -212,7 +212,7 @@ class AiCallAuditServiceTest {
 
         ArgumentCaptor<AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.ERROR);
         assertThat(cap.getValue().errorMessage()).contains("timeout");
     }
@@ -229,7 +229,7 @@ class AiCallAuditServiceTest {
         verify(client, never()).complete(any());
         ArgumentCaptor<AiCallAuditFinalization> cap =
                 ArgumentCaptor.forClass(AiCallAuditFinalization.class);
-        verify(auditPort).finalize(any(UUID.class), cap.capture());
+        verify(auditPort).finalizeAudit(any(UUID.class), cap.capture());
         assertThat(cap.getValue().status()).isEqualTo(AiCallStatus.RATE_LIMITED);
     }
 }

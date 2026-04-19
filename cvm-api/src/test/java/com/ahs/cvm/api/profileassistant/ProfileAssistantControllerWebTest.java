@@ -66,7 +66,7 @@ class ProfileAssistantControllerWebTest {
     @DisplayName("Finalize: 200 mit Draft-Id")
     void finalize_() throws Exception {
         UUID draftId = UUID.randomUUID();
-        given(service.finalize(eq(SESSION), eq("a.admin@ahs.test")))
+        given(service.finalizeDraft(eq(SESSION), eq("a.admin@ahs.test")))
                 .willReturn(new FinalizeResult(SESSION, draftId, 3));
         mockMvc.perform(post("/api/v1/environments/" + ENV + "/profile/assist/"
                         + SESSION + "/finalize")
