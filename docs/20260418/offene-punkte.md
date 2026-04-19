@@ -1,6 +1,20 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 38 - offen
+## Stand 2026-04-19 nach Iteration 39 - offen
+
+- ~~**Criteria-basiertes Server-Paging fuer CVE-Listen**~~
+  erledigt in 39 (JPQL-Query mit optionalen Filtern + Pageable).
+- **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).
+- **OSV-Mirror** fuer air-gapped-Installationen.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+- **OpenAI-/Azure-/Adesso-LLM-Adapter**.
+- **Bundle-Budget-Reduktion**.
+
+> Iteration 39 am 2026-04-19 hat das CVE-Listing von Stream-Filter
+> auf JPA-Paging umgestellt. Details:
+> `docs/20260419/iteration-39-fortschritt.md`.
+
+## Stand 2026-04-19 nach Iteration 38 - offen (vorher)
 
 - ~~**Produkt-Soft-Delete**~~ erledigt in 38.
 - **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).

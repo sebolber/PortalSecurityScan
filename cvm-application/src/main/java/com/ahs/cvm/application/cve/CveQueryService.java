@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -111,52 +110,56 @@ public class CveQueryService {
             boolean onlyKev, int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = size <= 0 ? 20 : Math.min(size, 200);
-        List<Cve> all = repository.findAll(Sort.by(Sort.Direction.DESC,
-                "publishedAt", "cveId"));
-        List<CveView> gefiltert = all.stream()
-                .filter(c -> matchesSearch(c, searchTerm))
-                .filter(c -> matchesSeverity(c, severityFilter))
-                .filter(c -> !onlyKev || Boolean.TRUE.equals(c.getKevListed()))
-                .map(CveView::from)
-                .toList();
-        int from = safePage * safeSize;
-        int to = Math.min(from + safeSize, gefiltert.size());
-        List<CveView> slice = from >= gefiltert.size()
-                ? List.of()
-                : gefiltert.subList(from, to);
-        return new PageImpl<>(slice,
-                PageRequest.of(safePage, safeSize),
-                gefiltert.size());
+        String searchLower = (searchTerm == null || searchTerm.isBlank())
+                ? null
+                : searchTerm.trim().toLowerCase(Locale.ROOT);
+        BigDecimal minScore = untergrenze(severityFilter);
+        BigDecimal maxScore = obergrenze(severityFilter);
+        boolean informational = severityFilter == AhsSeverity.INFORMATIONAL;
+
+        // Server-seitiges Paging (Iteration 39, CVM-83). Die frueher
+        // genutzte Stream-Filter-Loesung fiel fuer grosse CVE-Tabellen
+        // in den OOM-Bereich.
+        Page<Cve> page0 = repository.searchPage(
+                searchLower,
+                minScore,
+                maxScore,
+                informational,
+                onlyKev,
+                PageRequest.of(safePage, safeSize,
+                        Sort.by(Sort.Direction.DESC, "publishedAt", "cveId")));
+
+        return page0.map(CveView::from);
     }
 
-    static boolean matchesSearch(Cve c, String term) {
-        if (term == null || term.isBlank()) {
-            return true;
-        }
-        String q = term.trim().toLowerCase(Locale.ROOT);
-        if (c.getCveId() != null && c.getCveId().toLowerCase(Locale.ROOT).contains(q)) {
-            return true;
-        }
-        return c.getSummary() != null
-                && c.getSummary().toLowerCase(Locale.ROOT).contains(q);
+    /**
+     * Liefert die inklusiv gemeinten Unter-Grenzen fuer die Severity-
+     * Filter. NULL = keine Grenze.
+     */
+    static BigDecimal untergrenze(AhsSeverity sev) {
+        if (sev == null) return null;
+        return switch (sev) {
+            case CRITICAL -> new BigDecimal("9.0");
+            case HIGH -> new BigDecimal("7.0");
+            case MEDIUM -> new BigDecimal("4.0");
+            case LOW -> new BigDecimal("0.1");
+            case INFORMATIONAL, NOT_APPLICABLE -> null;
+        };
     }
 
-    static boolean matchesSeverity(Cve c, AhsSeverity filter) {
-        if (filter == null) {
-            return true;
-        }
-        return ableiten(c.getCvssBaseScore()) == filter;
+    /**
+     * Liefert die exklusiv gemeinten Obergrenzen fuer die Severity-
+     * Filter. NULL = keine Grenze.
+     */
+    static BigDecimal obergrenze(AhsSeverity sev) {
+        if (sev == null) return null;
+        return switch (sev) {
+            case CRITICAL -> null;
+            case HIGH -> new BigDecimal("9.0");
+            case MEDIUM -> new BigDecimal("7.0");
+            case LOW -> new BigDecimal("4.0");
+            case INFORMATIONAL, NOT_APPLICABLE -> null;
+        };
     }
 
-    static AhsSeverity ableiten(BigDecimal score) {
-        if (score == null) {
-            return AhsSeverity.INFORMATIONAL;
-        }
-        double d = score.doubleValue();
-        if (d >= 9.0) return AhsSeverity.CRITICAL;
-        if (d >= 7.0) return AhsSeverity.HIGH;
-        if (d >= 4.0) return AhsSeverity.MEDIUM;
-        if (d > 0.0) return AhsSeverity.LOW;
-        return AhsSeverity.INFORMATIONAL;
-    }
 }
