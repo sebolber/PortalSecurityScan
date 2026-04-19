@@ -40,6 +40,13 @@ export const APP_ROUTES: Routes = [
           import('./features/cves/cves.component').then((m) => m.CvesComponent)
       },
       {
+        path: 'cves/:cveId',
+        canActivate: [authGuard],
+        loadComponent: () =>
+          import('./features/cve-detail/cve-detail.component')
+            .then((m) => m.CveDetailComponent)
+      },
+      {
         path: 'components',
         canActivate: [authGuard],
         loadComponent: () =>

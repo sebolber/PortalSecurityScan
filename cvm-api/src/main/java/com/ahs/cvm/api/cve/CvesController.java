@@ -1,5 +1,6 @@
 package com.ahs.cvm.api.cve;
 
+import com.ahs.cvm.application.cve.CveDetailView;
 import com.ahs.cvm.application.cve.CveQueryService;
 import com.ahs.cvm.application.cve.CveView;
 import com.ahs.cvm.domain.enums.AhsSeverity;
@@ -9,6 +10,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,6 +44,14 @@ public class CvesController {
                 result.getSize(),
                 result.getTotalElements(),
                 result.getTotalPages()));
+    }
+
+    @GetMapping("/{cveId}")
+    @Operation(summary = "CVE-Detail inkl. Findings und aktueller Assessments.")
+    public ResponseEntity<CveDetailView> detail(@PathVariable String cveId) {
+        return service.findDetail(cveId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     public record CvePageResponse(

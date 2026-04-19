@@ -40,6 +40,37 @@ export interface CveQueryParams {
   readonly size?: number;
 }
 
+export interface CveFindingEntry {
+  readonly findingId: string;
+  readonly scanId: string | null;
+  readonly componentOccurrenceId: string | null;
+  readonly componentKey: string | null;
+  readonly componentVersion: string | null;
+  readonly fixedInVersion: string | null;
+  readonly detectedAt: string | null;
+  readonly productVersionId: string | null;
+  readonly environmentId: string | null;
+}
+
+export interface CveAssessmentEntry {
+  readonly assessmentId: string;
+  readonly findingId: string | null;
+  readonly version: number;
+  readonly severity: CveSeverity;
+  readonly status: string;
+  readonly proposalSource: string;
+  readonly rationale: string | null;
+  readonly decidedBy: string | null;
+  readonly createdAt: string | null;
+  readonly validUntil: string | null;
+}
+
+export interface CveDetailView {
+  readonly cve: CveView;
+  readonly findings: readonly CveFindingEntry[];
+  readonly assessments: readonly CveAssessmentEntry[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CvesService {
   private readonly api = inject(ApiClient);
@@ -57,6 +88,14 @@ export class CvesService {
     query.set('size', String(params.size ?? 20));
     return firstValueFrom(
       this.api.get<CvePageResponse>(`/api/v1/cves?${query.toString()}`)
+    );
+  }
+
+  detail(cveId: string): Promise<CveDetailView> {
+    return firstValueFrom(
+      this.api.get<CveDetailView>(
+        `/api/v1/cves/${encodeURIComponent(cveId)}`
+      )
     );
   }
 }

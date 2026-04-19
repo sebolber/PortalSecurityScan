@@ -1,6 +1,21 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 35 - offen
+## Stand 2026-04-19 nach Iteration 36 - offen
+
+- ~~**CVE-Detailseite**~~ erledigt in 36 (Backend + Frontend +
+  Verlinkung aus der CVE-Liste).
+- **Cross-Link Queue-Detail -> CVE-Detail** (Folge-Iteration).
+- **OSV-Mirror** fuer air-gapped-Installationen.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+- **OpenAI-/Azure-/Adesso-LLM-Adapter**: fehlen, Fallback mit
+  Log-Warnung aktiv.
+- **Bundle-Budget-Reduktion**.
+
+> Iteration 36 am 2026-04-19 hat `CveDetailView` im Backend +
+> Angular-Komponente unter `/cves/:cveId` ausgeliefert. Details:
+> `docs/20260419/iteration-36-fortschritt.md`.
+
+## Stand 2026-04-19 nach Iteration 35 - offen (vorher)
 
 - ~~**OSV-Rate-Limit / Retry-After**~~ erledigt in 35
   (`retryOn429`, `maxRetryAfterSeconds`).

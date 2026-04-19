@@ -68,7 +68,8 @@
           <ng-container matColumnDef="cveId">
             <th mat-header-cell *matHeaderCellDef>CVE</th>
             <td mat-cell *matCellDef="let row">
-              <span class="cvm-cell-key">{{ row.cveId }}</span>
+              <a class="cvm-cell-key cvm-cell-link"
+                 [routerLink]="['/cves', row.cveId]">{{ row.cveId }}</a>
             </td>
           </ng-container>
 
