@@ -75,9 +75,13 @@
     Wert fuer sensitive Eintraege.
   - `cvm.encryption.sbom-secret` bleibt bewusst ausserhalb des
     Parameter-Stores (Master-Key fuer SBOM-Verschluesselung).
-  - **Offen**: `cvm.encryption.parameter-secret` muss in Produktion
-    per Vault/OpenShift-Secret gesetzt werden (dev-Default nicht fuer
-    Prod geeignet). Doku-Anforderung fuer das Deployment-Template.
+  - ~~**Offen**: `cvm.encryption.parameter-secret` muss in
+    Produktion per Vault/OpenShift-Secret gesetzt werden~~ -
+    **Erledigt in Iteration 69** (CVM-306). Deployment-Doku in
+    `docs/konzept/parameter-secret-deployment.md`: Bezugsquellen
+    pro Umgebung, OpenShift-Secret-Template, Rollout-Checkliste,
+    Dual-Write-Key-Rotation, Backup-Strategie, Abgrenzung zu
+    anderen Secrets, Fehlerbehandlung.
   - **Offen**: Callsite-Migration der Adapter (`ClaudeApiClient`,
     `NvdFeedClient`, `GhsaFeedClient`, `GitHubApiProvider`) vom
     `@Value` auf den Resolver (+ Lazy-Bean-Build, damit DB-Aenderung

@@ -126,3 +126,10 @@ komplett. Alle vier Secrets (Claude, NVD, GHSA, GitHub) sind
 im Katalog live-reloadable. SystemParameterCatalogTest
 vereinheitlicht die Secret-Erwartungen. Naechstes: Iteration 69
 Doku parameter-secret-deployment.md.
+[16:18] Iteration 69 abgeschlossen: Deployment-Doku
+docs/konzept/parameter-secret-deployment.md angelegt
+(Bezugsquellen, OpenShift-Template, Rollout-Checkliste,
+Dual-Write-Key-Rotation, Backup-Strategie, Abgrenzung und
+Fehlerbehandlung). Damit ist Block B (Parameter-Store-
+Callsite-Migration) abgeschlossen. Naechstes: Block C
+Reachability (Auto-Trigger / JGit / OSV).
