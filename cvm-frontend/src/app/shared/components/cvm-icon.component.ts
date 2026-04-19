@@ -207,7 +207,7 @@ const ICON_REGISTRY: Record<string, unknown> = {
   template: `
     @if (resolved(); as r) {
       <lucide-icon
-        [img]="r"
+        [img]="$any(r)"
         [size]="sizePx()"
         [strokeWidth]="strokeWidth"
         [attr.aria-hidden]="ariaHidden ? 'true' : null"
@@ -251,10 +251,14 @@ export class CvmIconComponent {
     return typeof s === 'number' ? s : parseInt(s, 10) || 20;
   });
 
-  readonly resolved = computed(() => {
+  readonly resolved = computed<unknown>(() => {
     const key = this._name();
     if (!key) return null;
     const normal = key.replace(/_/g, '-').toLowerCase();
-    return (ICON_REGISTRY[normal] ?? ICON_REGISTRY[key] ?? null) as unknown;
+    // Registry-Map ist absichtlich `unknown`, damit alle Lucide-Icons
+    // dort gebuendelt stehen koennen. `<lucide-icon [img]>` prueft den
+    // Typ zur Laufzeit - der Template-Type-Check wird ueber `$any`
+    // umgangen, Variante siehe Template.
+    return ICON_REGISTRY[normal] ?? ICON_REGISTRY[key] ?? null;
   });
 }

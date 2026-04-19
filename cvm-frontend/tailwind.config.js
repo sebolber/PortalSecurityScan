@@ -95,10 +95,8 @@ module.exports = {
         standard: 'var(--easing-standard)',
         emphasized: 'var(--easing-emphasized)'
       },
-      ringColor: {
-        DEFAULT: 'var(--color-focus)',
-        primary: 'var(--color-primary)'
-      }
+      // ringColor erbt aus `colors`-Extend oben, damit `ring-primary`,
+      // `ring-primary-muted`, `ring-focus` etc. alle verfuegbar sind.
     }
   },
   plugins: [require('@tailwindcss/forms')({ strategy: 'class' })]
