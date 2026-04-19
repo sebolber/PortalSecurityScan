@@ -96,12 +96,16 @@ import { braucheZweitfreigabe } from './vier-augen';
             <legend class="px-1 text-xs uppercase text-zinc-500">Mitigation</legend>
             <label class="mb-2 block">
               <span class="mb-1 block text-xs text-zinc-500">Strategie</span>
-              <input
-                type="text"
+              <select
                 class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
                 [(ngModel)]="strategy"
-                placeholder="UPGRADE / PATCH / CONFIG / ACCEPT"
-              />
+                name="strategy"
+              >
+                <option value="">(keine Angabe)</option>
+                @for (s of mitigationStrategien; track s) {
+                  <option [value]="s">{{ s }}</option>
+                }
+              </select>
             </label>
             <label class="mb-2 block">
               <span class="mb-1 block text-xs text-zinc-500">Ziel-Release</span>
@@ -198,6 +202,17 @@ export class QueueDetailComponent {
   @Output() readonly reject = new EventEmitter<string>();
 
   readonly severities = SEVERITY_REIHENFOLGE;
+
+  // Muss synchron zum Backend-Enum bleiben:
+  // com.ahs.cvm.domain.enums.MitigationStrategy.
+  readonly mitigationStrategien = [
+    'UPGRADE',
+    'PATCH',
+    'CONFIG_CHANGE',
+    'WORKAROUND',
+    'ACCEPT_RISK',
+    'NOT_APPLICABLE'
+  ] as const;
 
   zielSeverity: Severity = 'MEDIUM';
   rationale = '';
