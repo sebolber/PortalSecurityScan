@@ -339,7 +339,18 @@ export class RoleMenuService {
   }
 
   hasAccess(path: string, userRoles: readonly string[]): boolean {
-    const entry = this.allEntries().find((m) => m.path === path);
+    // Iteration 61 (CVM-62): Bisher war das ein exakter Vergleich. Damit
+    // fielen Detail-URLs wie `/cves/CVE-2017-18640` oder
+    // `/admin/products/abc-123` durchs Raster, weil nur `/cves` bzw.
+    // `/admin/products` im Menue steht. Der Guard schickte sie ans
+    // Dashboard. Jetzt wird der laengste Menue-Pfad gesucht, der Prefix
+    // der aufgerufenen URL ist (Segment-genau, damit `/cvesx` nicht auf
+    // `/cves` matcht). Query- und Fragment-Anteile werden abgeschnitten.
+    const cleanPath = path.split(/[?#]/)[0];
+    const matches = this.allEntries()
+      .filter((m) => cleanPath === m.path || cleanPath.startsWith(m.path + '/'))
+      .sort((a, b) => b.path.length - a.path.length);
+    const entry = matches[0];
     if (!entry) {
       return false;
     }
