@@ -14,9 +14,12 @@ import jakarta.persistence.Converter;
  * of type bytea}.
  *
  * <p>Der Konverter schreibt stattdessen das Textformat
- * ({@code "[1.0,2.0,...]"}) in die Spalte. Die pgvector-Extension
- * castet Text automatisch auf {@code vector} - INSERT und UPDATE
- * funktionieren damit ohne Custom-Dialect.
+ * ({@code "[1.0,2.0,...]"}) in die Spalte. Zusaetzlich bindet die
+ * Entity das Feld ueber {@code @JdbcTypeCode(SqlTypes.OTHER)}, sodass
+ * der PostgreSQL-JDBC-Treiber den Wert als "unknown" sendet; pgvector
+ * laesst den Text dann automatisch auf {@code vector} parsen. Ohne das
+ * {@code OTHER} bindet Hibernate standardmaessig als {@code VARCHAR},
+ * und pgvector verweigert den impliziten Cast auf gebundene Parameter.
  */
 @Converter(autoApply = false)
 public class PGvectorConverter implements AttributeConverter<PGvector, String> {

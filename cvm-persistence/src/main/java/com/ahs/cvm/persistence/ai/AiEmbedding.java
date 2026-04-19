@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Persistierter Embedding-Chunk fuer die RAG-Suche (Iteration 12,
@@ -53,6 +55,10 @@ public class AiEmbedding {
     @Column(name = "embedding", nullable = false, updatable = false,
             columnDefinition = "vector(1536)")
     @Convert(converter = PGvectorConverter.class)
+    // pgvector castet nicht implizit von varchar auf vector; mit
+    // Types.OTHER bindet der PG-JDBC-Treiber den String als "unknown",
+    // sodass Postgres den Typ aus der Spalte herleitet.
+    @JdbcTypeCode(SqlTypes.OTHER)
     private PGvector embedding;
 
     @Column(name = "model_id", nullable = false, updatable = false)
