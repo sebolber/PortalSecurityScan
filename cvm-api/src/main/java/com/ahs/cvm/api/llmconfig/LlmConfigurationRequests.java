@@ -36,5 +36,18 @@ public final class LlmConfigurationRequests {
             BigDecimal temperature,
             Boolean active) {}
 
+    /**
+     * Request fuer den Verbindungstest. {@code id} ist optional - ohne
+     * id ist der Test rein ad-hoc (z.B. neues Formular), mit id werden
+     * Felder aus der gespeicherten Konfiguration inklusive
+     * entschluesseltem Secret ergaenzt.
+     */
+    public record Test(
+            java.util.UUID id,
+            String provider,
+            String model,
+            String baseUrl,
+            String secret) {}
+
     private LlmConfigurationRequests() {}
 }

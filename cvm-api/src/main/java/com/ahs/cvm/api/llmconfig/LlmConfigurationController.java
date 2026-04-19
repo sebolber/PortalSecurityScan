@@ -2,6 +2,8 @@ package com.ahs.cvm.api.llmconfig;
 
 import com.ahs.cvm.application.llmconfig.LlmConfigurationCommands;
 import com.ahs.cvm.application.llmconfig.LlmConfigurationService;
+import com.ahs.cvm.application.llmconfig.LlmConfigurationTestCommand;
+import com.ahs.cvm.application.llmconfig.LlmConfigurationTestResult;
 import com.ahs.cvm.application.llmconfig.LlmConfigurationView;
 import com.ahs.cvm.application.llmconfig.ProviderDefaults;
 import io.swagger.v3.oas.annotations.Operation;
@@ -132,5 +134,37 @@ public class LlmConfigurationController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/test")
+    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @Operation(summary = "Ad-hoc-Verbindungstest gegen einen LLM-Provider",
+            description = "Feuert einen minimalen Ping-Call ab (kein Audit).")
+    public ResponseEntity<LlmConfigurationTestResult> test(
+            @RequestBody LlmConfigurationRequests.Test req) {
+        return ResponseEntity.ok(service.testConnection(
+                toTestCommand(null, req)));
+    }
+
+    @PostMapping("/{id}/test")
+    @PreAuthorize("hasRole('CVM_ADMIN')")
+    @Operation(summary = "Verbindungstest fuer eine gespeicherte Konfiguration",
+            description = "Fuellt nicht gesetzte Felder (inkl. Secret) aus der DB.")
+    public ResponseEntity<LlmConfigurationTestResult> testSaved(
+            @PathVariable UUID id,
+            @RequestBody(required = false) LlmConfigurationRequests.Test req) {
+        return ResponseEntity.ok(service.testConnection(
+                toTestCommand(id, req)));
+    }
+
+    private static LlmConfigurationTestCommand toTestCommand(
+            UUID id, LlmConfigurationRequests.Test req) {
+        if (req == null) {
+            return new LlmConfigurationTestCommand(id, null, null, null, null);
+        }
+        UUID effectiveId = id != null ? id : req.id();
+        return new LlmConfigurationTestCommand(
+                effectiveId, req.provider(), req.model(),
+                req.baseUrl(), req.secret());
     }
 }

@@ -14,9 +14,12 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   LlmConfigurationCreateRequest,
   LlmConfigurationService,
+  LlmConfigurationTestRequest,
+  LlmConfigurationTestResult,
   LlmConfigurationUpdateRequest,
   LlmConfigurationView,
   LlmProviderInfo
@@ -78,6 +81,7 @@ function leeresFormular(): FormState {
     MatSelectModule,
     MatSlideToggleModule,
     MatTableModule,
+    MatTooltipModule,
     EmptyStateComponent,
     UuidChipComponent
   ],
@@ -105,6 +109,8 @@ export class AdminLlmConfigurationsComponent implements OnInit {
   readonly laedt = signal(true);
   readonly fehler = signal<string | null>(null);
   readonly pending = signal(false);
+  readonly testend = signal<string | null>(null);
+  readonly testErgebnis = signal<LlmConfigurationTestResult | null>(null);
   readonly bearbeiteId = signal<string | null>(null);
   readonly formular = signal<FormState>(leeresFormular());
 
@@ -160,10 +166,12 @@ export class AdminLlmConfigurationsComponent implements OnInit {
   neuerEintrag(): void {
     this.bearbeiteId.set(null);
     this.formular.set(leeresFormular());
+    this.testErgebnis.set(null);
   }
 
   zumBearbeiten(eintrag: LlmConfigurationView): void {
     this.bearbeiteId.set(eintrag.id);
+    this.testErgebnis.set(null);
     this.formular.set({
       name: eintrag.name,
       description: eintrag.description ?? '',
@@ -263,6 +271,77 @@ export class AdminLlmConfigurationsComponent implements OnInit {
           ? err.message
           : 'Loeschen fehlgeschlagen.'
       );
+    }
+  }
+
+  /**
+   * Test der aktuellen Formularwerte. Wenn gerade eine gespeicherte
+   * Konfiguration bearbeitet wird und der Admin kein neues Secret
+   * eingetippt hat, faellt der Server auf das DB-Secret zurueck - das
+   * Feld bleibt leer, damit der Klartext nie durch die UI geht.
+   */
+  async testeFormular(): Promise<void> {
+    const aktuell = this.formular();
+    if (!aktuell.provider || !aktuell.model) {
+      this.fehler.set('Provider und Modell sind fuer den Test erforderlich.');
+      return;
+    }
+    const id = this.bearbeiteId();
+    const payload: LlmConfigurationTestRequest = {
+      provider: aktuell.provider,
+      model: aktuell.model,
+      baseUrl: aktuell.baseUrl ? aktuell.baseUrl : null,
+      secret: aktuell.secret ? aktuell.secret : null
+    };
+    this.testErgebnis.set(null);
+    this.testend.set(id ?? '__formular__');
+    this.fehler.set(null);
+    try {
+      const ergebnis = id
+        ? await this.service.testSaved(id, payload)
+        : await this.service.testAdhoc(payload);
+      this.testErgebnis.set(ergebnis);
+      this.snack.open(
+        (ergebnis.success ? 'Test erfolgreich: ' : 'Test fehlgeschlagen: ')
+          + ergebnis.message,
+        'OK',
+        { duration: ergebnis.success ? 4000 : 8000 }
+      );
+    } catch (err) {
+      this.fehler.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Testlauf fehlgeschlagen.'
+      );
+    } finally {
+      this.testend.set(null);
+    }
+  }
+
+  /**
+   * Test einer gespeicherten Konfiguration direkt aus der Tabelle -
+   * ohne das Formular zu veraendern. Secret und andere Felder kommen
+   * aus der DB.
+   */
+  async testeGespeichert(eintrag: LlmConfigurationView): Promise<void> {
+    this.testend.set(eintrag.id);
+    this.fehler.set(null);
+    try {
+      const ergebnis = await this.service.testSaved(eintrag.id);
+      this.snack.open(
+        (ergebnis.success ? 'Test erfolgreich: ' : 'Test fehlgeschlagen: ')
+          + ergebnis.message,
+        'OK',
+        { duration: ergebnis.success ? 4000 : 8000 }
+      );
+    } catch (err) {
+      this.fehler.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Testlauf fehlgeschlagen.'
+      );
+    } finally {
+      this.testend.set(null);
     }
   }
 

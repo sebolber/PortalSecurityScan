@@ -133,4 +133,67 @@ describe('LlmConfigurationService', () => {
     req.flush(null);
     await expectAsync(promise).toBeResolved();
   });
+
+  it('testAdhoc() postet an /test und liefert TestResult', async () => {
+    const promise = service.testAdhoc({
+      provider: 'openai',
+      model: 'gpt-4o',
+      baseUrl: null,
+      secret: 'sk-test'
+    });
+    const req = http.expectOne(
+      'http://api.test/api/v1/admin/llm-configurations/test'
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.provider).toBe('openai');
+    req.flush({
+      success: true,
+      provider: 'openai',
+      model: 'gpt-4o',
+      httpStatus: 200,
+      latencyMs: 42,
+      message: 'OK'
+    });
+    const res = await promise;
+    expect(res.success).toBeTrue();
+    expect(res.httpStatus).toBe(200);
+  });
+
+  it('testSaved() postet an /{id}/test mit Overrides', async () => {
+    const promise = service.testSaved('id-9', { model: 'gpt-4o-mini' });
+    const req = http.expectOne(
+      'http://api.test/api/v1/admin/llm-configurations/id-9/test'
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.model).toBe('gpt-4o-mini');
+    req.flush({
+      success: false,
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      httpStatus: 401,
+      latencyMs: 12,
+      message: 'HTTP 401: Unauthorized'
+    });
+    const res = await promise;
+    expect(res.success).toBeFalse();
+    expect(res.message).toContain('401');
+  });
+
+  it('testSaved() ohne Overrides postet leeren Body', async () => {
+    const promise = service.testSaved('id-9');
+    const req = http.expectOne(
+      'http://api.test/api/v1/admin/llm-configurations/id-9/test'
+    );
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({});
+    req.flush({
+      success: true,
+      provider: 'ollama',
+      model: 'llama3',
+      httpStatus: 200,
+      latencyMs: 5,
+      message: 'OK'
+    });
+    await expectAsync(promise).toBeResolved();
+  });
 });

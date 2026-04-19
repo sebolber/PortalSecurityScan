@@ -51,6 +51,23 @@ export interface LlmConfigurationUpdateRequest {
   readonly active?: boolean | null;
 }
 
+export interface LlmConfigurationTestRequest {
+  readonly id?: string | null;
+  readonly provider?: string | null;
+  readonly model?: string | null;
+  readonly baseUrl?: string | null;
+  readonly secret?: string | null;
+}
+
+export interface LlmConfigurationTestResult {
+  readonly success: boolean;
+  readonly provider: string | null;
+  readonly model: string | null;
+  readonly httpStatus: number | null;
+  readonly latencyMs: number;
+  readonly message: string;
+}
+
 /**
  * Frontend-Service fuer die LLM-Konfigurationen (Iteration 34b,
  * CVM-78). Kapselt die REST-Aufrufe gegen
@@ -106,6 +123,39 @@ export class LlmConfigurationService {
   delete(id: string): Promise<void> {
     return firstValueFrom(
       this.api.delete<void>(this.basePath + '/' + id)
+    );
+  }
+
+  /**
+   * Ad-hoc-Test einer Konfiguration (z.B. neues Formular). Alle
+   * Felder werden aus dem Request entnommen; Secret ist Pflicht fuer
+   * Cloud-Provider.
+   */
+  testAdhoc(
+    request: LlmConfigurationTestRequest
+  ): Promise<LlmConfigurationTestResult> {
+    return firstValueFrom(
+      this.api.post<LlmConfigurationTestResult, LlmConfigurationTestRequest>(
+        this.basePath + '/test',
+        request
+      )
+    );
+  }
+
+  /**
+   * Test einer gespeicherten Konfiguration. Fehlende Felder im
+   * Request werden serverseitig aus der DB ergaenzt - insbesondere das
+   * Secret, damit der Admin es zum Testen nicht erneut eintippen muss.
+   */
+  testSaved(
+    id: string,
+    overrides: LlmConfigurationTestRequest = {}
+  ): Promise<LlmConfigurationTestResult> {
+    return firstValueFrom(
+      this.api.post<LlmConfigurationTestResult, LlmConfigurationTestRequest>(
+        this.basePath + '/' + id + '/test',
+        overrides
+      )
     );
   }
 }

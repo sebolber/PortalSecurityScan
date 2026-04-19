@@ -31,6 +31,7 @@ class LlmConfigurationServiceTest {
     private LlmConfigurationRepository repository;
     private TenantLookupService tenantLookup;
     private SbomEncryption encryption;
+    private LlmConnectionTester tester;
     private LlmConfigurationService service;
 
     @BeforeEach
@@ -38,7 +39,8 @@ class LlmConfigurationServiceTest {
         repository = mock(LlmConfigurationRepository.class);
         tenantLookup = mock(TenantLookupService.class);
         encryption = new SbomEncryption("iteration-34-test-secret");
-        service = new LlmConfigurationService(repository, tenantLookup, encryption);
+        tester = mock(LlmConnectionTester.class);
+        service = new LlmConfigurationService(repository, tenantLookup, encryption, tester);
         TenantContext.set(TENANT);
         given(repository.save(any(LlmConfiguration.class)))
                 .willAnswer(inv -> {
@@ -232,5 +234,98 @@ class LlmConfigurationServiceTest {
 
         Optional<String> recovered = service.resolveSecret(existing.getId());
         assertThat(recovered).contains("sk-secret-plaintext");
+    }
+
+    @Test
+    @DisplayName("testConnection ad-hoc: reicht den Command 1:1 an den Tester weiter")
+    void testConnectionAdhoc() {
+        LlmConfigurationTestResult expected = LlmConfigurationTestResult.success(
+                "openai", "gpt-4o", 200, 42L, "OK");
+        given(tester.test(any(LlmConfigurationTestCommand.class)))
+                .willReturn(expected);
+
+        LlmConfigurationTestResult result = service.testConnection(
+                new LlmConfigurationTestCommand(
+                        null, "openai", "gpt-4o",
+                        "https://api.openai.com/v1", "sk-test"));
+
+        assertThat(result).isSameAs(expected);
+        org.mockito.ArgumentCaptor<LlmConfigurationTestCommand> cap =
+                org.mockito.ArgumentCaptor.forClass(LlmConfigurationTestCommand.class);
+        verify(tester).test(cap.capture());
+        assertThat(cap.getValue().id()).isNull();
+        assertThat(cap.getValue().apiKey()).isEqualTo("sk-test");
+    }
+
+    @Test
+    @DisplayName("testConnection mit id: fehlende Felder werden aus DB ergaenzt, Secret entschluesselt")
+    void testConnectionMitId() {
+        LlmConfiguration existing = LlmConfiguration.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT)
+                .name("Saved")
+                .provider("anthropic")
+                .model("claude-sonnet-4-6")
+                .baseUrl("https://api.anthropic.com")
+                .secretRef(encryption.encrypt("sk-gespeichert"
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                        != null
+                    ? java.util.Base64.getEncoder().encodeToString(
+                        encryption.encrypt("sk-gespeichert"
+                                .getBytes(java.nio.charset.StandardCharsets.UTF_8)))
+                    : null)
+                .active(true)
+                .build();
+        setzeMinimalZeitstempel(existing);
+        given(repository.findById(existing.getId()))
+                .willReturn(Optional.of(existing));
+        given(tester.test(any(LlmConfigurationTestCommand.class)))
+                .willReturn(LlmConfigurationTestResult.success(
+                        "anthropic", "claude-sonnet-4-6", 200, 10L, "OK"));
+
+        service.testConnection(new LlmConfigurationTestCommand(
+                existing.getId(), null, null, null, null));
+
+        org.mockito.ArgumentCaptor<LlmConfigurationTestCommand> cap =
+                org.mockito.ArgumentCaptor.forClass(LlmConfigurationTestCommand.class);
+        verify(tester).test(cap.capture());
+        LlmConfigurationTestCommand sent = cap.getValue();
+        assertThat(sent.provider()).isEqualTo("anthropic");
+        assertThat(sent.model()).isEqualTo("claude-sonnet-4-6");
+        assertThat(sent.baseUrl()).isEqualTo("https://api.anthropic.com");
+        assertThat(sent.apiKey()).isEqualTo("sk-gespeichert");
+    }
+
+    @Test
+    @DisplayName("testConnection mit id: explizite Request-Felder ueberschreiben DB-Werte")
+    void testConnectionMitIdUeberschreibt() {
+        LlmConfiguration existing = LlmConfiguration.builder()
+                .id(UUID.randomUUID())
+                .tenantId(TENANT)
+                .name("Saved")
+                .provider("openai")
+                .model("gpt-4o")
+                .baseUrl("https://api.openai.com/v1")
+                .secretRef(java.util.Base64.getEncoder().encodeToString(
+                        encryption.encrypt("sk-alt"
+                                .getBytes(java.nio.charset.StandardCharsets.UTF_8))))
+                .active(false)
+                .build();
+        setzeMinimalZeitstempel(existing);
+        given(repository.findById(existing.getId()))
+                .willReturn(Optional.of(existing));
+        given(tester.test(any(LlmConfigurationTestCommand.class)))
+                .willReturn(LlmConfigurationTestResult.success(
+                        "openai", "gpt-4o-mini", 200, 5L, "OK"));
+
+        service.testConnection(new LlmConfigurationTestCommand(
+                existing.getId(), null, "gpt-4o-mini", null, "sk-neu"));
+
+        org.mockito.ArgumentCaptor<LlmConfigurationTestCommand> cap =
+                org.mockito.ArgumentCaptor.forClass(LlmConfigurationTestCommand.class);
+        verify(tester).test(cap.capture());
+        assertThat(cap.getValue().model()).isEqualTo("gpt-4o-mini");
+        assertThat(cap.getValue().apiKey()).isEqualTo("sk-neu");
+        assertThat(cap.getValue().baseUrl()).isEqualTo("https://api.openai.com/v1");
     }
 }

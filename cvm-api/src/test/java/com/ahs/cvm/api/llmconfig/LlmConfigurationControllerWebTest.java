@@ -15,6 +15,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.ahs.cvm.application.llmconfig.LlmConfigurationCommands;
 import com.ahs.cvm.application.llmconfig.LlmConfigurationService;
 import com.ahs.cvm.application.llmconfig.LlmConfigurationService.LlmConfigurationNotFoundException;
+import com.ahs.cvm.application.llmconfig.LlmConfigurationTestCommand;
+import com.ahs.cvm.application.llmconfig.LlmConfigurationTestResult;
 import com.ahs.cvm.application.llmconfig.LlmConfigurationView;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -158,5 +160,59 @@ class LlmConfigurationControllerWebTest {
                 .willReturn(java.util.Optional.empty());
         mockMvc.perform(get("/api/v1/admin/llm-configurations/active"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("POST /test (ad-hoc): delegiert an Service.testConnection und liefert Ergebnis")
+    void testAdhoc() throws Exception {
+        given(service.testConnection(any(LlmConfigurationTestCommand.class)))
+                .willReturn(LlmConfigurationTestResult.success(
+                        "openai", "gpt-4o", 200, 42L, "OK, Tokens=2/1"));
+
+        Map<String, Object> body = Map.of(
+                "provider", "openai",
+                "model", "gpt-4o",
+                "baseUrl", "https://api.openai.com/v1",
+                "secret", "sk-test");
+
+        mockMvc.perform(post("/api/v1/admin/llm-configurations/test")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.httpStatus").value(200))
+                .andExpect(jsonPath("$.provider").value("openai"))
+                .andExpect(jsonPath("$.message").value("OK, Tokens=2/1"));
+    }
+
+    @Test
+    @DisplayName("POST /{id}/test: Pfad-Id wird in den TestCommand uebernommen")
+    void testSavedPfadId() throws Exception {
+        UUID id = UUID.randomUUID();
+        given(service.testConnection(any(LlmConfigurationTestCommand.class)))
+                .willReturn(LlmConfigurationTestResult.failure(
+                        "anthropic", "claude-sonnet-4-6", 401, 80L,
+                        "HTTP 401: Unauthorized"));
+
+        mockMvc.perform(post("/api/v1/admin/llm-configurations/" + id + "/test")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.httpStatus").value(401))
+                .andExpect(jsonPath("$.message").value("HTTP 401: Unauthorized"));
+    }
+
+    @Test
+    @DisplayName("POST /{id}/test ohne Body: nimmt nur die Pfad-Id und laedt alles aus DB")
+    void testSavedOhneBody() throws Exception {
+        UUID id = UUID.randomUUID();
+        given(service.testConnection(any(LlmConfigurationTestCommand.class)))
+                .willReturn(LlmConfigurationTestResult.success(
+                        "ollama", "llama3", 200, 12L, "OK"));
+
+        mockMvc.perform(post("/api/v1/admin/llm-configurations/" + id + "/test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 }

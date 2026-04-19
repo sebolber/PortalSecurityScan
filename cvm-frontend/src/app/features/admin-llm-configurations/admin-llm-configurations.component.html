@@ -136,19 +136,41 @@
         <div class="cvm-llm-config-actions">
           <button mat-raised-button color="primary"
                   type="submit"
-                  [disabled]="pending()">
+                  [disabled]="pending() || testend() !== null">
             <mat-icon>save</mat-icon>
             {{ pending() ? 'Wird gespeichert...' : (bearbeiteId() ? 'Speichern' : 'Anlegen') }}
+          </button>
+          <button mat-stroked-button type="button"
+                  (click)="testeFormular()"
+                  [disabled]="pending() || testend() !== null || !formular().provider || !formular().model">
+            <mat-icon>network_check</mat-icon>
+            {{ testend() !== null ? 'Teste...' : 'Verbindung testen' }}
           </button>
           @if (bearbeiteId()) {
             <button mat-stroked-button type="button"
                     (click)="neuerEintrag()"
-                    [disabled]="pending()">
+                    [disabled]="pending() || testend() !== null">
               <mat-icon>close</mat-icon>
               Abbrechen
             </button>
           }
         </div>
+        @if (testErgebnis(); as t) {
+          <div class="cvm-llm-config-test-result"
+               [class.cvm-llm-config-test-ok]="t.success"
+               [class.cvm-llm-config-test-fail]="!t.success"
+               role="status">
+            <mat-icon aria-hidden="true">{{ t.success ? 'check_circle' : 'cancel' }}</mat-icon>
+            <div>
+              <strong>{{ t.success ? 'Verbindung OK' : 'Verbindung fehlgeschlagen' }}</strong>
+              <span class="cvm-llm-config-test-sub">
+                {{ t.message }}
+                @if (t.httpStatus) { &middot; HTTP {{ t.httpStatus }} }
+                &middot; {{ t.latencyMs }} ms
+              </span>
+            </div>
+          </div>
+        }
       </form>
     </mat-card-content>
   </mat-card>
@@ -229,6 +251,13 @@
           <ng-container matColumnDef="aktion">
             <th mat-header-cell *matHeaderCellDef>Aktion</th>
             <td mat-cell *matCellDef="let k">
+              <button mat-icon-button type="button"
+                      (click)="testeGespeichert(k)"
+                      [disabled]="testend() !== null"
+                      [attr.aria-label]="'Verbindung testen: ' + k.name"
+                      matTooltip="Verbindung testen">
+                <mat-icon>{{ testend() === k.id ? 'hourglass_top' : 'network_check' }}</mat-icon>
+              </button>
               <button mat-icon-button type="button"
                       (click)="zumBearbeiten(k)"
                       aria-label="Bearbeiten">

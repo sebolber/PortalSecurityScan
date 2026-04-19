@@ -31,14 +31,17 @@ public class LlmConfigurationService {
     private final LlmConfigurationRepository repository;
     private final TenantLookupService tenantLookup;
     private final SbomEncryption encryption;
+    private final LlmConnectionTester tester;
 
     public LlmConfigurationService(
             LlmConfigurationRepository repository,
             TenantLookupService tenantLookup,
-            SbomEncryption encryption) {
+            SbomEncryption encryption,
+            LlmConnectionTester tester) {
         this.repository = repository;
         this.tenantLookup = tenantLookup;
         this.encryption = encryption;
+        this.tester = tester;
     }
 
     @Transactional(readOnly = true)
@@ -191,6 +194,42 @@ public class LlmConfigurationService {
         LlmConfiguration cfg = loadOwn(id, tenantId);
         repository.delete(cfg);
         log.info("LLM-Konfiguration geloescht: id={}, tenantId={}", id, tenantId);
+    }
+
+    /**
+     * Fuehrt einen Verbindungstest gegen einen LLM-Provider aus.
+     *
+     * <p>Wenn der uebergebene Command eine {@code id} enthaelt, werden
+     * fehlende Felder (baseUrl, model, apiKey) aus der gespeicherten
+     * Konfiguration ergaenzt - das Secret wird dabei entschluesselt,
+     * verlaesst aber den Prozess nicht. Ohne id ist der Test rein
+     * ad-hoc gegen die im Command mitgegebenen Werte.
+     *
+     * <p>Zu keinem Zeitpunkt wird ein Audit-Eintrag erzeugt: ein
+     * Verbindungstest ist kein fachlicher LLM-Call.
+     */
+    @Transactional(readOnly = true)
+    public LlmConfigurationTestResult testConnection(
+            LlmConfigurationTestCommand cmd) {
+        if (cmd == null) {
+            throw new IllegalArgumentException("Test-Kommando fehlt.");
+        }
+        String provider = cmd.provider();
+        String model = cmd.model();
+        String baseUrl = cmd.baseUrl();
+        String apiKey = cmd.apiKey();
+        if (cmd.id() != null) {
+            UUID tenantId = resolveTenantId();
+            LlmConfiguration cfg = loadOwn(cmd.id(), tenantId);
+            if (provider == null || provider.isBlank()) provider = cfg.getProvider();
+            if (model == null || model.isBlank()) model = cfg.getModel();
+            if (baseUrl == null || baseUrl.isBlank()) baseUrl = cfg.getBaseUrl();
+            if (apiKey == null || apiKey.isBlank()) {
+                apiKey = decryptIfPresent(cfg.getSecretRef()).orElse(null);
+            }
+        }
+        return tester.test(new LlmConfigurationTestCommand(
+                cmd.id(), provider, model, baseUrl, apiKey));
     }
 
     /**
