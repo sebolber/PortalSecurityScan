@@ -57,6 +57,7 @@ public final class SystemParameterCatalog {
         addScan(list);
         addScheduler(list);
         addSecurity(list);
+        addSecrets(list);
         ensureUnique(list);
         return Collections.unmodifiableList(list);
     }
@@ -529,6 +530,41 @@ public final class SystemParameterCatalog {
                 "Wirkt nur beim Boot - Aenderung erfordert Neustart.",
                 CATEGORY_SECURITY, "cors",
                 SystemParameterType.STRING, "http://localhost:4200", true, null, null, null, false, false, true, true));
+    }
+
+    private static void addSecrets(List<SystemParameterCatalogEntry> list) {
+        // Iteration 45: sensitive=true + restartRequired=true.
+        // defaultValue absichtlich null - Bootstrap seedet keinen Wert.
+        // cvm.encryption.sbom-secret ist der Master-Key fuer SBOM-AES-GCM
+        // und bleibt bewusst in application.yaml (Henne-Ei).
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.llm.claude.api-key",
+                "Anthropic API-Key",
+                "API-Key fuer den Claude-Fallback-Adapter.",
+                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                CATEGORY_AI_LLM, "claude",
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.feed.nvd.api-key",
+                "NVD API-Key",
+                "API-Key fuer den NVD-Feed. Optional, erhoeht das Rate-Limit.",
+                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                CATEGORY_ENRICHMENT, "nvd",
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.feed.ghsa.api-key",
+                "GitHub GHSA-Token",
+                "Personal Access Token fuer die GHSA-GraphQL-API.",
+                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                CATEGORY_ENRICHMENT, "ghsa",
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.fix-verification.github.token",
+                "Fix-Verifikation GitHub-Token",
+                "Personal Access Token fuer die GitHub-REST-API (Fix-Verifikation).",
+                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                CATEGORY_SCAN, "fix-verification",
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
     }
 
     private static void ensureUnique(List<SystemParameterCatalogEntry> list) {

@@ -20,10 +20,13 @@ class SystemParameterResolverTest {
     private SystemParameterResolver resolver;
     private UUID tenantId;
 
+    private SystemParameterSecretCipher cipher;
+
     @BeforeEach
     void setUp() {
         parameterRepository = mock(SystemParameterRepository.class);
-        resolver = new SystemParameterResolver(parameterRepository);
+        cipher = new SystemParameterSecretCipher("resolver-test-key");
+        resolver = new SystemParameterResolver(parameterRepository, cipher);
         tenantId = UUID.randomUUID();
     }
 
@@ -86,6 +89,26 @@ class SystemParameterResolverTest {
         given(parameterRepository.findByTenantIdAndParamKey(tenantId, "cvm.int"))
                 .willReturn(Optional.of(parameter("cvm.int", "not-a-number")));
         assertThat(resolver.resolveInt("cvm.int", 42)).isEqualTo(42);
+    }
+
+    @Test
+    @DisplayName("Sensitive Parameter werden vor der Rueckgabe entschluesselt")
+    void sensitive_wird_entschluesselt() {
+        TenantContext.set(tenantId);
+        SystemParameter secret = SystemParameter.builder()
+                .id(UUID.randomUUID())
+                .tenantId(tenantId)
+                .paramKey("cvm.llm.claude.api-key")
+                .label("Key")
+                .category("AI_LLM")
+                .type(com.ahs.cvm.domain.enums.SystemParameterType.PASSWORD)
+                .sensitive(true)
+                .value(cipher.encrypt("sk-geheim"))
+                .build();
+        given(parameterRepository.findByTenantIdAndParamKey(tenantId, "cvm.llm.claude.api-key"))
+                .willReturn(Optional.of(secret));
+
+        assertThat(resolver.resolve("cvm.llm.claude.api-key")).contains("sk-geheim");
     }
 
     @Test

@@ -23,6 +23,7 @@ public class SystemParameterService {
     private final SystemParameterRepository parameterRepository;
     private final SystemParameterAuditLogRepository auditLogRepository;
     private final SystemParameterValidator validator;
+    private final SystemParameterSecretCipher secretCipher;
 
     public List<SystemParameterView> list(String category) {
         UUID tenantId = currentTenant();
@@ -43,6 +44,7 @@ public class SystemParameterService {
             throw new IllegalArgumentException("Parameter mit Schlüssel '" + cmd.paramKey() + "' existiert bereits");
         });
 
+        String rawValue = cmd.value();
         SystemParameter entity = SystemParameter.builder()
                 .paramKey(cmd.paramKey())
                 .label(cmd.label())
@@ -51,7 +53,6 @@ public class SystemParameterService {
                 .category(cmd.category())
                 .subcategory(cmd.subcategory())
                 .type(cmd.type())
-                .value(cmd.value())
                 .defaultValue(cmd.defaultValue())
                 .required(cmd.required())
                 .validationRules(cmd.validationRules())
@@ -66,11 +67,12 @@ public class SystemParameterService {
                 .updatedBy(actor)
                 .build();
 
-        validator.validate(entity, entity.getValue());
+        validator.validate(entity, rawValue);
+        entity.setValue(encryptIfSensitive(entity, rawValue));
         SystemParameter saved = parameterRepository.save(entity);
 
-        if (saved.getValue() != null && !saved.getValue().isBlank()) {
-            writeAudit(saved, null, saved.getValue(), actor, "Anlage");
+        if (rawValue != null && !rawValue.isBlank()) {
+            writeAudit(saved, null, rawValue, actor, "Anlage");
         }
         return SystemParameterView.from(saved);
     }
@@ -103,12 +105,12 @@ public class SystemParameterService {
     public SystemParameterView changeValue(UUID id, SystemParameterCommands.ChangeValueCommand cmd, String actor) {
         SystemParameter entity = load(id);
         validator.validate(entity, cmd.value());
-        String oldValue = entity.getValue();
-        entity.setValue(cmd.value());
+        String oldPlain = decryptIfSensitive(entity, entity.getValue());
+        entity.setValue(encryptIfSensitive(entity, cmd.value()));
         entity.setUpdatedBy(actor);
         SystemParameter saved = parameterRepository.save(entity);
-        if (!Objects.equals(oldValue, cmd.value())) {
-            writeAudit(saved, oldValue, cmd.value(), actor, cmd.reason());
+        if (!Objects.equals(oldPlain, cmd.value())) {
+            writeAudit(saved, oldPlain, cmd.value(), actor, cmd.reason());
         }
         return SystemParameterView.from(saved);
     }
@@ -116,12 +118,13 @@ public class SystemParameterService {
     @Transactional
     public SystemParameterView reset(UUID id, String actor) {
         SystemParameter entity = load(id);
-        String oldValue = entity.getValue();
-        entity.setValue(entity.getDefaultValue());
+        String oldPlain = decryptIfSensitive(entity, entity.getValue());
+        String newPlain = entity.getDefaultValue();
+        entity.setValue(encryptIfSensitive(entity, newPlain));
         entity.setUpdatedBy(actor);
         SystemParameter saved = parameterRepository.save(entity);
-        if (!Objects.equals(oldValue, entity.getDefaultValue())) {
-            writeAudit(saved, oldValue, entity.getDefaultValue(), actor, "Reset auf Standardwert");
+        if (!Objects.equals(oldPlain, newPlain)) {
+            writeAudit(saved, oldPlain, newPlain, actor, "Reset auf Standardwert");
         }
         return SystemParameterView.from(saved);
     }
@@ -129,8 +132,29 @@ public class SystemParameterService {
     @Transactional
     public void delete(UUID id, String actor) {
         SystemParameter entity = load(id);
-        writeAudit(entity, entity.getValue(), null, actor, "Löschung");
+        String oldPlain = decryptIfSensitive(entity, entity.getValue());
+        writeAudit(entity, oldPlain, null, actor, "Löschung");
         parameterRepository.delete(entity);
+    }
+
+    private String encryptIfSensitive(SystemParameter entity, String rawValue) {
+        if (!entity.isSensitive() || rawValue == null || rawValue.isEmpty()) {
+            return rawValue;
+        }
+        if (secretCipher.isEncrypted(rawValue)) {
+            return rawValue;
+        }
+        return secretCipher.encrypt(rawValue);
+    }
+
+    private String decryptIfSensitive(SystemParameter entity, String storedValue) {
+        if (!entity.isSensitive() || storedValue == null) {
+            return storedValue;
+        }
+        if (!secretCipher.isEncrypted(storedValue)) {
+            return storedValue;
+        }
+        return secretCipher.decrypt(storedValue);
     }
 
     public List<SystemParameterAuditLogView> auditLog(UUID parameterId) {

@@ -109,6 +109,25 @@ class SystemParameterCatalogBootstrapTest {
     }
 
     @Test
+    @DisplayName("Sensitive Katalog-Eintraege werden ohne Wert angelegt (kein Secret wird geseedet)")
+    void sensitive_ohne_wert() {
+        UUID tenantId = UUID.randomUUID();
+        given(tenantRepository.findAll()).willReturn(List.of(aktiverTenant(tenantId)));
+        given(parameterRepository.findByTenantIdOrderByCategoryAscLabelAsc(tenantId))
+                .willReturn(List.of());
+
+        bootstrap.seedAllTenants();
+
+        // Alle gespeicherten Secrets haben value == null
+        List<SystemParameter> secrets = gespeichert.stream()
+                .filter(SystemParameter::isSensitive)
+                .toList();
+        assertThat(secrets).isNotEmpty();
+        assertThat(secrets).allMatch(p -> p.getValue() == null,
+                "Sensitive Eintraege duerfen beim Seeden keinen Wert tragen");
+    }
+
+    @Test
     @DisplayName("Mehrere Mandanten: jeder erhaelt einen vollstaendigen Katalog")
     void seedet_mehrere_mandanten() {
         UUID a = UUID.randomUUID();

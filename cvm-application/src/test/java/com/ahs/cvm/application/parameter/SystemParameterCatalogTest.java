@@ -58,11 +58,32 @@ class SystemParameterCatalogTest {
     }
 
     @Test
-    @DisplayName("Keine Secrets in Iteration 41 (sensitive=false fuer alle Block-A1-Keys)")
-    void keine_secrets_in_iteration_41() {
-        assertThat(SystemParameterCatalog.entries())
-                .allMatch(e -> !e.sensitive(),
-                        "Iteration 41 darf keine sensiblen Parameter anlegen; Secrets folgen in Iteration 45");
+    @DisplayName("Secrets (sensitive=true) tragen kein defaultValue, sind PASSWORD und restartRequired=true")
+    void secrets_korrekt_konfiguriert() {
+        String[] secretKeys = {
+                "cvm.llm.claude.api-key",
+                "cvm.feed.nvd.api-key",
+                "cvm.feed.ghsa.api-key",
+                "cvm.ai.fix-verification.github.token"
+        };
+        for (String key : secretKeys) {
+            SystemParameterCatalogEntry entry = findEntry(key);
+            assertThat(entry.sensitive()).as("sensitive fuer %s", key).isTrue();
+            assertThat(entry.restartRequired()).as("restartRequired fuer %s", key).isTrue();
+            assertThat(entry.type()).as("type fuer %s", key)
+                    .isEqualTo(SystemParameterType.PASSWORD);
+            assertThat(entry.defaultValue()).as("defaultValue fuer %s", key).isNull();
+        }
+    }
+
+    @Test
+    @DisplayName("Nicht-Secret-Eintraege sind sensitive=false")
+    void nicht_secrets_sind_nicht_sensitive() {
+        long sensitiveCount = SystemParameterCatalog.entries().stream()
+                .filter(SystemParameterCatalogEntry::sensitive)
+                .count();
+        // Vier Secrets (Iteration 45).
+        assertThat(sensitiveCount).isEqualTo(4);
     }
 
     @Test

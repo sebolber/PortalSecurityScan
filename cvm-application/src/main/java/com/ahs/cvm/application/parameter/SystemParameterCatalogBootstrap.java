@@ -68,6 +68,9 @@ public class SystemParameterCatalogBootstrap {
             if (vorhanden.contains(entry.paramKey())) {
                 continue;
             }
+            // Sensitive Secrets bekommen nie einen Seed-Wert - auch wenn
+            // der Katalog aus Versehen einen mitliefern wuerde.
+            String startValue = entry.sensitive() ? null : entry.defaultValue();
             SystemParameter entity = SystemParameter.builder()
                     .tenantId(tenantId)
                     .paramKey(entry.paramKey())
@@ -77,7 +80,7 @@ public class SystemParameterCatalogBootstrap {
                     .category(entry.category())
                     .subcategory(entry.subcategory())
                     .type(entry.type())
-                    .value(entry.defaultValue())
+                    .value(startValue)
                     .defaultValue(entry.defaultValue())
                     .required(entry.required())
                     .validationRules(entry.validationRules())

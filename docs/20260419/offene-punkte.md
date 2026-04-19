@@ -35,11 +35,22 @@
     `KevFeedClient`, `EpssFeedClient`) vom statischen
     `Feed*Properties` auf die neuen `*EffectiveProperties`. Erfordert
     Anpassung der Mock-Tests und bleibt als eigener Punkt offen.
-  - **Secret-Behandlung** (AES-GCM, Hint statt Klartext, analog
-    `SbomEncryption`) fuer Keys wie `cvm.llm.claude.api-key`,
-    `cvm.ai.fix-verification.github.token`,
+  - **Secret-Behandlung** erledigt in Iteration 45: neuer
+    `SystemParameterSecretCipher` (AES-GCM analog `SbomEncryption`),
+    Verschluesselung auf Service-Ebene, Entschluesselung im Resolver,
+    vier Secret-Eintraege (`cvm.llm.claude.api-key`,
     `cvm.feed.nvd.api-key`, `cvm.feed.ghsa.api-key`,
-    `cvm.encryption.sbom-secret`.
+    `cvm.ai.fix-verification.github.token`), Bootstrap seedet keinen
+    Wert fuer sensitive Eintraege.
+  - `cvm.encryption.sbom-secret` bleibt bewusst ausserhalb des
+    Parameter-Stores (Master-Key fuer SBOM-Verschluesselung).
+  - **Offen**: `cvm.encryption.parameter-secret` muss in Produktion
+    per Vault/OpenShift-Secret gesetzt werden (dev-Default nicht fuer
+    Prod geeignet). Doku-Anforderung fuer das Deployment-Template.
+  - **Offen**: Callsite-Migration der Adapter (`ClaudeApiClient`,
+    `NvdFeedClient`, `GhsaFeedClient`, `GitHubApiProvider`) vom
+    `@Value` auf den Resolver (+ Lazy-Bean-Build, damit DB-Aenderung
+    ohne Neustart greift).
   - **ArchUnit-Regel**: nur das Parameter-Modul greift aufs
     Repository.
   - **End-to-End-Test** fuer mindestens einen Parameter

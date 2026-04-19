@@ -13,3 +13,6 @@ Teil 1 (ReachabilityConfig, OsvProperties, Feed*Config, AutoAssessmentConfig).
 (Reachability, AutoAssessment, OSV, Feeds) + SystemParameterResolver
 (commit a49a6f0b). Naechstes: Iteration 44 getEffective-Wrapper Teil 2
 (FixVerification, RuleExtraction, Alert, Assessment + restartRequired-Marker).
+[09:31] Iteration 44 abgeschlossen: Parameter-Store-Lesepfad Teil 2 +
+restartRequired-Marker + UI-Chip (commit 23550a99). Naechstes:
+Iteration 45 Secret-Behandlung AES-GCM.

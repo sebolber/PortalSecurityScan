@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SystemParameterResolver {
 
     private final SystemParameterRepository parameterRepository;
+    private final SystemParameterSecretCipher secretCipher;
 
     @Transactional(readOnly = true)
     public Optional<String> resolve(String paramKey) {
@@ -32,7 +33,7 @@ public class SystemParameterResolver {
         }
         return parameterRepository
                 .findByTenantIdAndParamKey(tenantId.get(), paramKey)
-                .map(SystemParameter::getValue)
+                .map(p -> p.isSensitive() ? secretCipher.decrypt(p.getValue()) : p.getValue())
                 .filter(v -> v != null && !v.isBlank());
     }
 
