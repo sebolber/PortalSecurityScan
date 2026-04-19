@@ -188,3 +188,8 @@ PurlSymbolDeriver und ruft ReachabilityAgent.analyze async.
 Damit ist die Auto-Trigger-Kette komplett verdrahtet. Wegen
 Sandbox-Limits kein neuer Integrationstest (Subprocess-
 abhaengig).
+[17:34] Iteration 78 abgeschlossen: OSV-Mirror Versions-Filter.
+affected.versions wird jetzt beim Index-Bau gespeichert;
+findCveIdsForPurls matcht exakt gegen die Liste. Query ohne
+Version oder leere Liste -> konservatives Match (keine
+Regression). Vier neue OsvJsonlMirrorTest-Cases.

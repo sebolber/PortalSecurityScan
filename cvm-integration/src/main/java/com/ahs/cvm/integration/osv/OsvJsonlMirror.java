@@ -22,17 +22,16 @@ import org.slf4j.LoggerFactory;
  * CVM-309). Erwartet ein JSONL-File - genau eine OSV-Advisory pro
  * Zeile, Format wie in den OSV.dev-Exports.
  *
- * <p>Die Klasse ist bewusst eigenstaendig (keine Spring-
- * Abhaengigkeit), damit sie aus Unit-Tests und einem optionalen
- * CLI-Refresh-Job direkt instanziiert werden kann. Die
- * {@link OsvJsonlMirrorLookup}-Komponente verpackt sie als
- * {@link com.ahs.cvm.application.cve.ComponentVulnerabilityLookup}
- * in den Spring-Context.
+ * <p>Iteration 78 (CVM-315): beruecksichtigt den optionalen
+ * {@code affected[*].versions}-Array. Ist er nicht leer, matcht die
+ * Advisory nur Queries, deren PURL-Version in der Liste vorkommt.
+ * Bei leerer/fehlender Liste bleibt das bisherige "match all"-
+ * Verhalten erhalten (konservativer Default fuer
+ * air-gapped-Faelle, in denen die Dump-Qualitaet schwankt).
  *
- * <p>Aktuell kein Versionsbereich-Matching: ein Advisory, das einen
- * PURL erwaehnt, liefert fuer diesen PURL alle referenzierten CVE-
- * Aliase. Das ist fuer den air-gapped-MVP genug; genauere Filter
- * sind ein Follow-up.
+ * <p>Die Klasse bleibt eigenstaendig (keine Spring-Abhaengigkeit),
+ * damit sie aus Unit-Tests und einem optionalen CLI-Refresh-Job
+ * direkt instanziiert werden kann.
  */
 public final class OsvJsonlMirror {
 
@@ -40,7 +39,7 @@ public final class OsvJsonlMirror {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final Path jsonlFile;
-    private final AtomicReference<Map<String, List<String>>> index =
+    private final AtomicReference<Map<String, List<AdvisoryEntry>>> index =
             new AtomicReference<>(Map.of());
 
     public OsvJsonlMirror(Path jsonlFile) {
@@ -54,13 +53,13 @@ public final class OsvJsonlMirror {
      * {@link #findCveIdsForPurls(List)} weiterhin die alten Daten.
      */
     public void reload() {
-        Map<String, List<String>> neu = baueIndex(jsonlFile);
+        Map<String, List<AdvisoryEntry>> neu = baueIndex(jsonlFile);
         index.set(neu);
-        log.info("OSV-Mirror geladen: {} PURL-Eintraege aus {}",
+        log.info("OSV-Mirror geladen: {} Basis-PURLs aus {}",
                 neu.size(), jsonlFile);
     }
 
-    /** Aktuelle Index-Groesse, vor allem fuer Logs / Health-Checks. */
+    /** Aktuelle Anzahl unterschiedlicher Basis-PURLs. */
     public int size() {
         return index.get().size();
     }
@@ -69,36 +68,46 @@ public final class OsvJsonlMirror {
         if (purls == null || purls.isEmpty()) {
             return Map.of();
         }
-        Map<String, List<String>> snapshot = index.get();
+        Map<String, List<AdvisoryEntry>> snapshot = index.get();
         Map<String, List<String>> out = new LinkedHashMap<>();
         for (String purl : purls) {
-            List<String> cves = snapshot.get(purl);
-            if (cves != null && !cves.isEmpty()) {
-                out.put(purl, cves);
+            PurlParts parts = PurlParts.parse(purl);
+            List<AdvisoryEntry> entries = snapshot.get(parts.base());
+            if (entries == null || entries.isEmpty()) {
+                continue;
+            }
+            LinkedHashSet<String> treffer = new LinkedHashSet<>();
+            for (AdvisoryEntry e : entries) {
+                if (e.matches(parts.version())) {
+                    treffer.addAll(e.cveIds());
+                }
+            }
+            if (!treffer.isEmpty()) {
+                out.put(purl, List.copyOf(treffer));
             }
         }
         return out;
     }
 
-    private static Map<String, List<String>> baueIndex(Path jsonlFile) {
+    private static Map<String, List<AdvisoryEntry>> baueIndex(Path jsonlFile) {
         if (jsonlFile == null || !Files.isRegularFile(jsonlFile)) {
             log.warn("OSV-Mirror-File nicht gefunden: {}", jsonlFile);
             return Map.of();
         }
-        Map<String, LinkedHashSet<String>> acc = new LinkedHashMap<>();
+        Map<String, List<AdvisoryEntry>> acc = new LinkedHashMap<>();
         try (Stream<String> lines = Files.lines(jsonlFile)) {
             lines.forEach(line -> verarbeiteZeile(line, acc));
         } catch (IOException ex) {
             log.warn("OSV-Mirror-File {} nicht lesbar: {}", jsonlFile, ex.getMessage());
             return Map.of();
         }
-        Map<String, List<String>> out = new LinkedHashMap<>();
-        acc.forEach((purl, cves) -> out.put(purl, List.copyOf(cves)));
+        Map<String, List<AdvisoryEntry>> out = new LinkedHashMap<>();
+        acc.forEach((base, list) -> out.put(base, List.copyOf(list)));
         return Collections.unmodifiableMap(out);
     }
 
     private static void verarbeiteZeile(
-            String line, Map<String, LinkedHashSet<String>> acc) {
+            String line, Map<String, List<AdvisoryEntry>> acc) {
         if (line == null || line.isBlank()) {
             return;
         }
@@ -113,9 +122,19 @@ public final class OsvJsonlMirror {
         if (cveIds.isEmpty()) {
             return;
         }
-        List<String> purls = purlsVonAdvisory(advisory);
-        for (String purl : purls) {
-            acc.computeIfAbsent(purl, k -> new LinkedHashSet<>()).addAll(cveIds);
+        JsonNode affected = advisory.path("affected");
+        if (!affected.isArray()) {
+            return;
+        }
+        for (JsonNode entry : affected) {
+            String purl = entry.path("package").path("purl").asText("");
+            if (purl.isBlank()) {
+                continue;
+            }
+            Set<String> versions = versionenVonAffected(entry);
+            PurlParts parts = PurlParts.parse(purl);
+            AdvisoryEntry ae = new AdvisoryEntry(List.copyOf(cveIds), versions);
+            acc.computeIfAbsent(parts.base(), k -> new ArrayList<>()).add(ae);
         }
     }
 
@@ -137,18 +156,65 @@ public final class OsvJsonlMirror {
         return cves;
     }
 
-    private static List<String> purlsVonAdvisory(JsonNode advisory) {
-        List<String> purls = new ArrayList<>();
-        JsonNode affected = advisory.path("affected");
-        if (!affected.isArray()) {
-            return purls;
+    private static Set<String> versionenVonAffected(JsonNode affectedEntry) {
+        JsonNode versions = affectedEntry.path("versions");
+        if (!versions.isArray() || versions.isEmpty()) {
+            return Set.of();
         }
-        for (JsonNode entry : affected) {
-            String purl = entry.path("package").path("purl").asText("");
-            if (!purl.isBlank()) {
-                purls.add(purl);
+        LinkedHashSet<String> out = new LinkedHashSet<>();
+        for (JsonNode v : versions) {
+            String s = v.asText("");
+            if (!s.isBlank()) {
+                out.add(s);
             }
         }
-        return purls;
+        return Collections.unmodifiableSet(out);
+    }
+
+    /**
+     * Paket-PURL (ohne Version) plus der getrennte Versions-Anteil.
+     * Iteration 78 (CVM-315).
+     */
+    record PurlParts(String base, String version) {
+        static PurlParts parse(String purl) {
+            if (purl == null || purl.isBlank()) {
+                return new PurlParts("", null);
+            }
+            // PURLs haben das Format pkg:type/namespace/name@version?qualifiers.
+            // Wir trennen am letzten '@' vor einem optionalen '?'. Einfacher
+            // und korrekt genug: erstes '@' wird als Trenner genommen, '?'
+            // wird separat abgeschnitten.
+            String qualifiersStripped = purl;
+            int queryIndex = purl.indexOf('?');
+            if (queryIndex >= 0) {
+                qualifiersStripped = purl.substring(0, queryIndex);
+            }
+            int at = qualifiersStripped.indexOf('@');
+            if (at < 0) {
+                return new PurlParts(qualifiersStripped, null);
+            }
+            return new PurlParts(
+                    qualifiersStripped.substring(0, at),
+                    qualifiersStripped.substring(at + 1));
+        }
+    }
+
+    /**
+     * Eine einzelne Advisory-PURL-Zuordnung im Index.
+     * {@code versions} leer => matcht alle Versions; gesetzt => nur
+     * Queries, deren PURL-Version in der Menge liegt.
+     */
+    record AdvisoryEntry(List<String> cveIds, Set<String> versions) {
+        boolean matches(String queryVersion) {
+            if (versions == null || versions.isEmpty()) {
+                return true;
+            }
+            if (queryVersion == null || queryVersion.isBlank()) {
+                // Query ohne Version -> konservativ matchen, damit
+                // Scans ohne Version-Info keine Findings verlieren.
+                return true;
+            }
+            return versions.contains(queryVersion);
+        }
     }
 }
