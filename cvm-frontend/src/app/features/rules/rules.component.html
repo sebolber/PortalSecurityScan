@@ -30,7 +30,10 @@
   @if (editorOpen()) {
     <mat-card class="cvm-rules-editor">
       <mat-card-header>
-        <mat-card-title>Neue Regel (DRAFT)</mat-card-title>
+        <mat-card-title>
+          @if (editingRuleId()) { Regel bearbeiten (DRAFT) }
+          @else { Neue Regel (DRAFT) }
+        </mat-card-title>
         <mat-card-subtitle>
           Anlage durch <code>CVM_RULE_AUTHOR</code>; Aktivierung im
           Vier-Augen-Prinzip durch anderen User mit
@@ -157,6 +160,8 @@
             >
               @if (creating()) {
                 Speichere...
+              } @else if (editingRuleId()) {
+                Aenderungen speichern
               } @else {
                 Draft anlegen
               }
@@ -251,6 +256,17 @@
               >
                 <mat-icon>play_arrow</mat-icon>
                 Dry-Run (180 Tage)
+              </button>
+            }
+            @if (canAuthor() && rule.status === 'DRAFT') {
+              <button
+                mat-stroked-button
+                [disabled]="isPending(rule.id)"
+                (click)="bearbeite(rule)"
+                title="DRAFT-Felder bearbeiten"
+              >
+                <mat-icon>edit</mat-icon>
+                Bearbeiten
               </button>
             }
             @if (canActivate() && rule.status === 'DRAFT') {

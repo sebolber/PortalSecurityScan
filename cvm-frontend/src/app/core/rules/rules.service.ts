@@ -65,6 +65,15 @@ export class RulesService {
     );
   }
 
+  /** Iteration 53 (CVM-103): DRAFT-Regel aktualisieren. */
+  update(ruleId: string, req: RuleCreateRequest): Promise<RuleResponse> {
+    return firstValueFrom(
+      this.api.put<RuleResponse, RuleCreateRequest>(
+        `/api/v1/rules/${ruleId}`, req
+      )
+    );
+  }
+
   activate(ruleId: string, approverId: string): Promise<RuleResponse> {
     return firstValueFrom(this.api.post<RuleResponse, RuleActivateRequest>(
       `/api/v1/rules/${ruleId}/activate`,

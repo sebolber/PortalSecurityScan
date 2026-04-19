@@ -93,6 +93,9 @@ export class RulesComponent implements OnInit {
   readonly creating = signal<boolean>(false);
   readonly createError = signal<string | null>(null);
 
+  /** Iteration 53 (CVM-103): null = Create-Modus; gesetzt = Update-Modus. */
+  readonly editingRuleId = signal<string | null>(null);
+
   /** Letztes Dry-Run-Ergebnis pro Rule-ID. */
   readonly dryRuns = signal<Record<string, DryRunResponse | undefined>>({});
   readonly pending = signal<Record<string, boolean>>({});
@@ -206,7 +209,32 @@ export class RulesComponent implements OnInit {
     this.editorOpen.update((v) => !v);
     if (!this.editorOpen()) {
       this.createError.set(null);
+      this.editingRuleId.set(null);
+      this.draft.set(initialDraft());
     }
+  }
+
+  /** Iteration 53 (CVM-103): Draft-Regel zum Editieren laden. */
+  bearbeite(rule: RuleResponse): void {
+    if (rule.status !== 'DRAFT') {
+      this.snackBar.open(
+        'Nur DRAFT-Regeln sind editierbar (diese ist ' + rule.status + ').',
+        'OK', { duration: 4000 });
+      return;
+    }
+    this.editingRuleId.set(rule.id);
+    this.draft.set({
+      ruleKey: rule.ruleKey,
+      name: rule.name,
+      description: rule.description ?? '',
+      proposedSeverity: rule.proposedSeverity,
+      conditionJson: rule.conditionJson,
+      rationaleTemplate: rule.rationaleTemplate ?? '',
+      rationaleSourceFields: (rule.rationaleSourceFields ?? []).join(', '),
+      origin: rule.origin ?? 'MANUAL'
+    });
+    this.editorOpen.set(true);
+    this.createError.set(null);
   }
 
   updateDraft<K extends keyof RuleDraftForm>(key: K, value: RuleDraftForm[K]): void {
@@ -237,7 +265,7 @@ export class RulesComponent implements OnInit {
     this.creating.set(true);
     this.createError.set(null);
     try {
-      const rule = await this.rulesService.create({
+      const payload = {
         ruleKey: form.ruleKey.trim(),
         name: form.name.trim(),
         description: form.description.trim() || null,
@@ -247,20 +275,27 @@ export class RulesComponent implements OnInit {
         rationaleSourceFields: fields,
         origin: form.origin.trim() || null,
         createdBy: autor
-      });
+      };
+      const editingId = this.editingRuleId();
+      const rule = editingId
+        ? await this.rulesService.update(editingId, payload)
+        : await this.rulesService.create(payload);
       this.snackBar.open(
-        'Regel "' + rule.ruleKey + '" angelegt (Status DRAFT).',
+        editingId
+          ? 'Regel "' + rule.ruleKey + '" aktualisiert.'
+          : 'Regel "' + rule.ruleKey + '" angelegt (Status DRAFT).',
         'OK',
         { duration: 4000 }
       );
       this.draft.set(initialDraft());
+      this.editingRuleId.set(null);
       this.editorOpen.set(false);
       await this.laden();
     } catch (err) {
       this.createError.set(
         err instanceof Error && err.message
           ? err.message
-          : 'Anlegen fehlgeschlagen (Schema-Validierung?).'
+          : 'Speichern fehlgeschlagen (Schema-Validierung?).'
       );
     } finally {
       this.creating.set(false);

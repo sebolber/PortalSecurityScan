@@ -182,4 +182,68 @@ class RuleServiceTest {
         assertThatThrownBy(() -> service.loesche(null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName("updateDraft: aktualisiert Felder einer DRAFT-Regel")
+    void updateDraftHappy() {
+        UUID id = UUID.randomUUID();
+        Rule draft = Rule.builder()
+                .id(id).ruleKey("k").name("Alt").status(RuleStatus.DRAFT)
+                .proposedSeverity(AhsSeverity.LOW)
+                .conditionJson("{\"eq\":{\"path\":\"cve.kev\",\"value\":true}}")
+                .rationaleTemplate("alt").createdBy("autor@ahs.test")
+                .origin(RuleOrigin.MANUAL).build();
+        given(ruleRepository.findById(id)).willReturn(Optional.of(draft));
+        given(ruleRepository.save(any(Rule.class))).willAnswer(inv -> inv.getArgument(0));
+
+        RuleView view = service.updateDraft(id,
+                new RuleService.RuleDraftInput(
+                        "k", "Neu", "beschreibung",
+                        AhsSeverity.HIGH,
+                        "{\"eq\":{\"path\":\"cve.kev\",\"value\":false}}",
+                        "neu-template",
+                        java.util.List.of("cve.kev"),
+                        RuleOrigin.MANUAL),
+                "editor@ahs.test");
+
+        assertThat(view.name()).isEqualTo("Neu");
+        assertThat(view.proposedSeverity()).isEqualTo(AhsSeverity.HIGH);
+        assertThat(view.description()).isEqualTo("beschreibung");
+    }
+
+    @Test
+    @DisplayName("updateDraft: ACTIVE wird abgelehnt")
+    void updateDraftAbgelehntFuerActive() {
+        UUID id = UUID.randomUUID();
+        Rule aktiv = Rule.builder()
+                .id(id).ruleKey("k").name("Alt").status(RuleStatus.ACTIVE)
+                .proposedSeverity(AhsSeverity.LOW)
+                .conditionJson("{\"eq\":{\"path\":\"cve.kev\",\"value\":true}}")
+                .rationaleTemplate("r").createdBy("autor")
+                .origin(RuleOrigin.MANUAL).build();
+        given(ruleRepository.findById(id)).willReturn(Optional.of(aktiv));
+
+        assertThatThrownBy(() -> service.updateDraft(id,
+                new RuleService.RuleDraftInput(
+                        "k", "n", null, AhsSeverity.HIGH,
+                        "{\"eq\":{\"path\":\"cve.kev\",\"value\":true}}",
+                        "r", java.util.List.of(), RuleOrigin.MANUAL),
+                "editor"))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("updateDraft: unbekannte Id -> RuleNotFoundException")
+    void updateDraftUnbekannt() {
+        UUID id = UUID.randomUUID();
+        given(ruleRepository.findById(id)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.updateDraft(id,
+                new RuleService.RuleDraftInput(
+                        "k", "n", null, AhsSeverity.HIGH,
+                        "{\"eq\":{\"path\":\"cve.kev\",\"value\":true}}",
+                        "r", java.util.List.of(), RuleOrigin.MANUAL),
+                "editor"))
+                .isInstanceOf(RuleNotFoundException.class);
+    }
 }

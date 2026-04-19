@@ -67,6 +67,43 @@ public class RuleService {
         return ruleRepository.findById(id).map(RuleView::from);
     }
 
+    /**
+     * Iteration 53 (CVM-103): Felder eines DRAFT-Regel-Eintrags
+     * aktualisieren. Der Schluessel bleibt unveraenderlich.
+     */
+    @Transactional
+    public RuleView updateDraft(UUID ruleId, RuleDraftInput input, String editor) {
+        if (ruleId == null) {
+            throw new IllegalArgumentException("ruleId darf nicht null sein.");
+        }
+        if (editor == null || editor.isBlank()) {
+            throw new IllegalArgumentException("editor darf nicht leer sein.");
+        }
+        Rule rule = ruleRepository.findById(ruleId)
+                .orElseThrow(() -> new RuleNotFoundException(ruleId));
+        if (rule.getDeletedAt() != null) {
+            throw new RuleNotFoundException(ruleId);
+        }
+        if (rule.getStatus() != RuleStatus.DRAFT) {
+            throw new IllegalStateException(
+                    "Regel " + ruleId + " ist nicht im Status DRAFT (ist "
+                            + rule.getStatus() + ").");
+        }
+        parser.parse(input.conditionJson());
+        rule.setName(input.name());
+        rule.setDescription(input.description());
+        rule.setProposedSeverity(input.proposedSeverity());
+        rule.setConditionJson(input.conditionJson());
+        rule.setRationaleTemplate(input.rationaleTemplate());
+        rule.setRationaleSourceFields(input.rationaleSourceFields());
+        if (input.origin() != null) {
+            rule.setOrigin(input.origin());
+        }
+        log.info("Rule-Draft aktualisiert: key={}, by={}",
+                rule.getRuleKey(), editor);
+        return RuleView.from(ruleRepository.save(rule));
+    }
+
     @Transactional
     public RuleView proposeRule(RuleDraftInput input, String createdBy) {
         if (createdBy == null || createdBy.isBlank()) {

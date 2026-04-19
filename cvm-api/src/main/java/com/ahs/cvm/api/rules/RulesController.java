@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -61,6 +62,26 @@ public class RulesController {
         return ResponseEntity
                 .created(URI.create("/api/v1/rules/" + draft.id()))
                 .body(RuleResponse.from(draft));
+    }
+
+    @PutMapping("/{ruleId}")
+    @PreAuthorize("hasAnyAuthority('CVM_RULE_AUTHOR','CVM_ADMIN')")
+    @Operation(summary = "DRAFT-Regel aktualisieren (Schluessel bleibt unveraenderlich)")
+    public ResponseEntity<RuleResponse> aktualisieren(
+            @PathVariable UUID ruleId, @Valid @RequestBody RuleCreateRequest req) {
+        RuleView aktualisiert = ruleService.updateDraft(
+                ruleId,
+                new RuleDraftInput(
+                        req.ruleKey(),
+                        req.name(),
+                        req.description(),
+                        req.proposedSeverity(),
+                        req.conditionJson(),
+                        req.rationaleTemplate(),
+                        req.rationaleSourceFields(),
+                        req.origin()),
+                req.createdBy());
+        return ResponseEntity.ok(RuleResponse.from(aktualisiert));
     }
 
     @PostMapping("/{ruleId}/activate")

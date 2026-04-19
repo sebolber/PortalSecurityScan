@@ -38,3 +38,6 @@ Iteration 51 Profil-Edit + Soft-Delete.
 [10:28] Iteration 51 abgeschlossen: Profil-DRAFT-Edit + Soft-Delete
 (Flyway V0034, Controller, Service-APIs) (commit 07019918).
 Naechstes: Iteration 52 Bundle-Budget-Reduktion.
+[10:33] Iteration 52 abgeschlossen: Bundle-Budget-Reduktion
+(2.13 MB -> 1.10 MB, ECharts+LoginCallback lazy) (commit 0d8c3529).
+Naechstes: Iteration 53 Rules-Editor im Frontend.
