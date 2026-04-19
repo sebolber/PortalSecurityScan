@@ -39,6 +39,7 @@ describe('ProfilesComponent - Iteration 64 (Draft-Edit / Loeschen)', () => {
   beforeEach(() => {
     profiles = jasmine.createSpyObj<ProfilesService>('ProfilesService', [
       'aktivesProfil',
+      'aktuellerDraft',
       'draftAnlegen',
       'draftAktualisieren',
       'freigeben',
@@ -46,6 +47,7 @@ describe('ProfilesComponent - Iteration 64 (Draft-Edit / Loeschen)', () => {
       'loesche'
     ]);
     profiles.aktivesProfil.and.returnValue(Promise.resolve(null));
+    profiles.aktuellerDraft.and.returnValue(Promise.resolve(null));
     profiles.diffGegenAktiv.and.returnValue(Promise.resolve([]));
     toast = new FakeToast();
 

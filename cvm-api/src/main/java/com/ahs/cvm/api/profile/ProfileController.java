@@ -55,6 +55,21 @@ public class ProfileController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/environments/{environmentId}/profile/draft")
+    @Operation(
+            summary = "Aktuellsten DRAFT einer Umgebung abrufen",
+            description =
+                    "Iteration 74 (CVM-311): 200 mit DRAFT-Version oder 404, wenn"
+                            + " fuer die Umgebung aktuell kein DRAFT existiert.")
+    public ResponseEntity<ProfileResponse> aktuellerDraft(
+            @PathVariable UUID environmentId) {
+        return profileService
+                .latestDraftFor(environmentId)
+                .map(this::abbilden)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PutMapping("/environments/{environmentId}/profile")
     @PreAuthorize("hasAnyAuthority('CVM_PROFILE_AUTHOR','CVM_ADMIN')")
     @Operation(

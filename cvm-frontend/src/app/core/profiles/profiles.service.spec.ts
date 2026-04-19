@@ -111,4 +111,41 @@ describe('ProfilesService', () => {
     req.flush(null, { status: 204, statusText: 'No Content' });
     await promise;
   });
+
+  it('aktuellerDraft: 200 mit DRAFT -> liefert Response', async () => {
+    const promise = service.aktuellerDraft('env-1');
+    const req = http.expectOne(
+      'http://api.test/api/v1/environments/env-1/profile/draft'
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      id: 'd1',
+      environmentId: 'env-1',
+      versionNumber: 3,
+      state: 'DRAFT',
+      yamlSource: 'schemaVersion: 1',
+      proposedBy: 't.tester@ahs.test',
+      approvedBy: null,
+      approvedAt: null,
+      validFrom: '2026-04-19T00:00:00Z'
+    });
+    const res = await promise;
+    expect(res).not.toBeNull();
+    expect(res?.state).toBe('DRAFT');
+    expect(errorHandler.show).not.toHaveBeenCalled();
+  });
+
+  it('aktuellerDraft: 404 -> liefert null ohne Error-Toast', async () => {
+    const promise = service.aktuellerDraft('env-1');
+    const req = http.expectOne(
+      'http://api.test/api/v1/environments/env-1/profile/draft'
+    );
+    req.flush(
+      { error: 'profile_not_found' },
+      { status: 404, statusText: 'Not Found' }
+    );
+    const res = await promise;
+    expect(res).toBeNull();
+    expect(errorHandler.show).not.toHaveBeenCalled();
+  });
 });

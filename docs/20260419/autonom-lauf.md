@@ -166,3 +166,9 @@ Controller injiziert den Mirror-Lookup optional; inaktiv ->
 HTTP 503 mit osv_mirror_inactive, aktiv -> reload + neue
 indexSize. OsvJsonlMirrorLookup bekommt indexSize()-Accessor.
 Zwei neue MockMvc-Tests.
+[17:08] Iteration 74 abgeschlossen: persistente DRAFTs pro
+Umgebung. Neuer Service-Call latestDraftFor + Endpunkt
+GET /api/v1/environments/{id}/profile/draft. Frontend
+ProfilesComponent.laden() laedt DRAFT mit Diff nach. Vier
+neue Tests (2 Web + 2 Karma). Naechstes: offene-punkte.md
+erneut pruefen.

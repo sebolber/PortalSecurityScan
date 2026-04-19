@@ -113,11 +113,22 @@ export class ProfilesComponent implements OnInit {
         const profile = await this.profileService
           .aktivesProfil(env.id)
           .catch(() => null);
+        // Iteration 74 (CVM-311): persistenten DRAFT aus dem Backend
+        // nachladen, damit der Editor nach Sessionwechsel weitermacht.
+        const draft = await this.profileService
+          .aktuellerDraft(env.id)
+          .catch(() => null);
+        let diff: readonly ProfileDiffEntry[] | null = null;
+        if (draft) {
+          diff = await this.profileService
+            .diffGegenAktiv(draft.id)
+            .catch(() => null);
+        }
         rows.push({
           env,
           profile,
-          draft: null,
-          diff: null,
+          draft,
+          diff,
           editorOffen: false,
           editorYaml: profile?.yamlSource ?? DEFAULT_YAML,
           saving: false,

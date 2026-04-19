@@ -62,6 +62,20 @@ public class ContextProfileService {
                 .map(ProfileView::from);
     }
 
+    /**
+     * Iteration 74 (CVM-311): liefert die aktuellste DRAFT-Version
+     * einer Umgebung, damit die UI sie ueber Sessions hinweg
+     * wiederfindet. Pro Umgebung kann mehr als ein Draft existieren;
+     * wir liefern den mit der hoechsten Versionsnummer.
+     */
+    @Transactional(readOnly = true)
+    public Optional<ProfileView> latestDraftFor(UUID environmentId) {
+        return profileRepository
+                .findFirstByEnvironmentIdAndStateOrderByVersionNumberDesc(
+                        environmentId, ProfileState.DRAFT)
+                .map(ProfileView::from);
+    }
+
     @Transactional
     public ProfileView proposeNewVersion(
             UUID environmentId, String yamlSource, String proposedBy) {

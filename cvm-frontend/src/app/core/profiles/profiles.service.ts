@@ -45,6 +45,20 @@ export class ProfilesService {
   }
 
   /**
+   * Iteration 74 (CVM-311): liefert den aktuellsten DRAFT einer
+   * Umgebung, damit er ueber Sessions hinweg wiedergefunden wird.
+   * 404 (kein DRAFT) wird ohne Error-Toast als {@code null}
+   * abgebildet.
+   */
+  aktuellerDraft(environmentId: string): Promise<ProfileResponse | null> {
+    return firstValueFrom(
+      this.api.getOptional<ProfileResponse>(
+        `/api/v1/environments/${environmentId}/profile/draft`
+      )
+    );
+  }
+
+  /**
    * Legt eine neue Draft-Version fuer die Umgebung an. Der Backend-
    * Service validiert das YAML gegen {@code profile-schema-v1.json};
    * bei Fehlern liefert er HTTP 400.

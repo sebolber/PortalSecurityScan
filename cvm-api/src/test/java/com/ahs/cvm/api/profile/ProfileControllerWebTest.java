@@ -65,6 +65,27 @@ class ProfileControllerWebTest {
     }
 
     @Test
+    @DisplayName("GET /environments/{id}/profile/draft: 200 mit DRAFT-Version")
+    void aktuellerDraftLiefert200() throws Exception {
+        ProfileView draft = neueView(ProfileState.DRAFT);
+        given(profileService.latestDraftFor(ENV_ID)).willReturn(Optional.of(draft));
+
+        mockMvc.perform(get("/api/v1/environments/{id}/profile/draft", ENV_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.state").value("DRAFT"))
+                .andExpect(jsonPath("$.versionNumber").value(4));
+    }
+
+    @Test
+    @DisplayName("GET /environments/{id}/profile/draft: 404, wenn kein DRAFT existiert")
+    void aktuellerDraftLiefert404() throws Exception {
+        given(profileService.latestDraftFor(ENV_ID)).willReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/environments/{id}/profile/draft", ENV_ID))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("PUT /environments/{id}/profile: legt Draft an und liefert 201 Created")
     void draftAnlegen() throws Exception {
         ProfileView draft = neueView(ProfileState.DRAFT);

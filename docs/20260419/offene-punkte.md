@@ -193,12 +193,12 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   Folge-Save ruft `draftAktualisieren`) und "Draft loeschen"
   (`window.confirm` + `CvmToastService`). Karma-Specs fuer
   Service + Component ergaenzt.
-- **Persistente DRAFTs pro Umgebung ueber Sessions hinweg**
-  (neu in Iteration 64 erkannt). Aktuell kennt die UI nur DRAFTs,
-  die in derselben Session via `draftAnlegen` erzeugt wurden.
-  Benoetigt einen Service-/Controller-Endpunkt
-  "latestDraftFor(envId)" oder "listDraftsFor(envId)". Iteration 51
-  hat nur Update/Delete auf Profil-IDs, kein Listing.
+- ~~**Persistente DRAFTs pro Umgebung ueber Sessions hinweg**~~
+  - **Erledigt in Iteration 74** (CVM-311). Neuer Service-Call
+  `ContextProfileService.latestDraftFor(envId)` und Endpunkt
+  `GET /api/v1/environments/{id}/profile/draft`; die UI laedt
+  ihn in `ProfilesComponent.laden()` pro Umgebung mit und baut
+  den DRAFT-Panel inklusive Diff neu auf.
 - ~~OSV-Mirror fuer air-gapped-Installationen~~ - **Teil erledigt
   in Iteration 72** (CVM-309). `OsvJsonlMirror` + Spring-Bean
   `OsvJsonlMirrorLookup` (`@Primary`, `@ConditionalOnProperty`).
