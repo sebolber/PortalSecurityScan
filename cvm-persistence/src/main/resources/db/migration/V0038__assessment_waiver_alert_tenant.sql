@@ -1,8 +1,16 @@
 -- Iteration 62D (CVM-62): Bewertungs-Daten (assessment, waiver,
 -- alert_rule) bekommen `tenant_id`. Ableitung:
 --   assessment  -> aus finding.tenant_id
---   waiver      -> aus cve + environment: nutzt environment.tenant_id
+--   waiver      -> aus waiver.assessment.finding.tenant_id
 --   alert_rule  -> global, aktuell Default-Tenant (Admin-defined)
+--
+-- Hinweis zur Fix-Historie: Die erste Fassung dieser Migration leitete
+-- waiver.tenant_id faelschlicherweise aus einer nicht existenten
+-- `waiver.environment_id`-Spalte ab (nicht vorhanden seit V0020, wo
+-- waiver nur assessment_id traegt). Flyway brach die komplette
+-- Migration transaktional ab; es wurde also KEINE Spalte persistiert.
+-- Diese Fassung ersetzt die Waiver-Ableitung durch den tatsaechlichen
+-- Join ueber assessment.
 
 ALTER TABLE assessment ADD COLUMN tenant_id UUID;
 UPDATE assessment a
@@ -17,12 +25,12 @@ ALTER TABLE assessment
     ADD CONSTRAINT fk_assessment_tenant FOREIGN KEY (tenant_id) REFERENCES tenant (id);
 CREATE INDEX idx_assessment_tenant ON assessment (tenant_id);
 
--- Waiver: environment_id ist pflicht -> tenant ableiten
+-- Waiver: tenant_id aus dem zugeordneten Assessment (nach dessen Backfill)
 ALTER TABLE waiver ADD COLUMN tenant_id UUID;
 UPDATE waiver w
-   SET tenant_id = e.tenant_id
-  FROM environment e
- WHERE w.environment_id = e.id;
+   SET tenant_id = a.tenant_id
+  FROM assessment a
+ WHERE w.assessment_id = a.id;
 UPDATE waiver
    SET tenant_id = (SELECT id FROM tenant WHERE is_default = TRUE LIMIT 1)
  WHERE tenant_id IS NULL;
