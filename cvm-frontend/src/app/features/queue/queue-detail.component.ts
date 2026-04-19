@@ -3,11 +3,20 @@ import {
   Component,
   EventEmitter,
   Input,
-  Output
+  Output,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth.service';
+import {
+  ReachabilityStartDialogComponent,
+  ReachabilityStartDialogInput
+} from '../reachability/reachability-start-dialog.component';
+import { ReachabilityResult } from '../../core/reachability/reachability.service';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
 import { QueueEntry, SEVERITY_REIHENFOLGE } from './queue.types';
 import { Severity } from '../../shared/components/severity-badge.component';
@@ -166,6 +175,15 @@ import { braucheZweitfreigabe } from './vier-augen';
           >
             Reject
           </button>
+          <button
+            type="button"
+            class="rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
+            [disabled]="pending || reachabilityLaeuft"
+            (click)="onReachabilityStart()"
+            title="Startet eine Reachability-Analyse fuer das zugehoerige Finding."
+          >
+            {{ reachabilityLaeuft ? 'Reachability laeuft...' : 'Reachability starten' }}
+          </button>
           @if (showRejectKommentar) {
             <button
               type="button"
@@ -187,8 +205,15 @@ import { braucheZweitfreigabe } from './vier-augen';
   `
 })
 export class QueueDetailComponent {
+  private readonly dialog = inject(MatDialog);
+  private readonly snack = inject(MatSnackBar);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
   @Input() entry: QueueEntry | null = null;
   @Input() pending = false;
+
+  reachabilityLaeuft = false;
 
   @Output() readonly close = new EventEmitter<void>();
   @Output() readonly approve = new EventEmitter<{
@@ -258,5 +283,40 @@ export class QueueDetailComponent {
       return;
     }
     this.reject.emit(this.rejectKommentar.trim());
+  }
+
+  onReachabilityStart(): void {
+    const aktuell = this.entry;
+    if (!aktuell || this.reachabilityLaeuft) {
+      return;
+    }
+    const triggeredBy = this.auth.username() || 'anonymous';
+    const data: ReachabilityStartDialogInput = {
+      findingId: aktuell.findingId,
+      cveKey: aktuell.cveKey,
+      triggeredBy
+    };
+    this.reachabilityLaeuft = true;
+    const ref = this.dialog.open(ReachabilityStartDialogComponent, {
+      data,
+      disableClose: true,
+      autoFocus: 'dialog'
+    });
+    ref.afterClosed().subscribe((result: ReachabilityResult | null) => {
+      this.reachabilityLaeuft = false;
+      if (!result) {
+        return;
+      }
+      const kurz = (result.summary && result.summary.trim().length > 0)
+        ? result.summary.trim()
+        : (result.recommendation ?? 'Analyse abgeschlossen.');
+      const ref2 = this.snack.open(
+        'Reachability fertig: ' + kurz,
+        'Uebersicht',
+        { duration: 8000 });
+      ref2.onAction().subscribe(() => {
+        void this.router.navigate(['/reachability']);
+      });
+    });
   }
 }

@@ -18,6 +18,33 @@ export interface ReachabilitySummaryView {
   readonly createdAt: string;
 }
 
+/**
+ * Request fuer POST /api/v1/findings/&#123;id&#125;/reachability.
+ * Pflichtfelder aus ReachabilityController.ReachabilityApiRequest:
+ * {@code repoUrl}, {@code vulnerableSymbol}, {@code triggeredBy}.
+ */
+export interface ReachabilityStartRequest {
+  readonly repoUrl: string;
+  readonly branch?: string | null;
+  readonly commitSha?: string | null;
+  readonly vulnerableSymbol: string;
+  readonly language?: string | null;
+  readonly instruction?: string | null;
+  readonly triggeredBy: string;
+}
+
+export interface ReachabilityCallSite {
+  readonly file: string;
+  readonly line: number | null;
+  readonly snippet: string | null;
+}
+
+export interface ReachabilityResult {
+  readonly recommendation: string | null;
+  readonly summary: string | null;
+  readonly callSites: readonly ReachabilityCallSite[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReachabilityQueryService {
   private readonly api = inject(ApiClient);
@@ -26,6 +53,23 @@ export class ReachabilityQueryService {
     return firstValueFrom(
       this.api.get<ReachabilitySummaryView[]>(
         `/api/v1/reachability?limit=${limit}`
+      )
+    );
+  }
+
+  /**
+   * Startet die Reachability-Analyse fuer ein Finding. Blockiert, bis
+   * der Backend-Subprocess fertig ist (`cvm.ai.reachability.timeout-
+   * seconds`-Deckel) - Aufrufer sollten einen Ladezustand anzeigen.
+   */
+  startAnalysis(
+    findingId: string,
+    request: ReachabilityStartRequest
+  ): Promise<ReachabilityResult> {
+    return firstValueFrom(
+      this.api.post<ReachabilityResult, ReachabilityStartRequest>(
+        `/api/v1/findings/${encodeURIComponent(findingId)}/reachability`,
+        request
       )
     );
   }
