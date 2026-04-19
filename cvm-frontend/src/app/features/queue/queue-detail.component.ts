@@ -232,6 +232,21 @@ function speichereReachability(state: ReachabilityFormState): void {
             </div>
           }
 
+          @if (selbstfreigabeKonflikt) {
+            <!-- Iteration 86 (CVM-326): Vier-Augen-Pre-Check. -->
+            <div
+              class="banner banner-critical"
+              role="alert"
+              data-testid="queue-detail-selbstfreigabe-banner"
+            >
+              <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+              <span>
+                Du hast diesen Vorschlag bereits gestellt. Vier-Augen-Prinzip
+                verlangt, dass eine andere Person mit Approver-Rolle freigibt.
+              </span>
+            </div>
+          }
+
           @if (showRejectKommentar) {
             <label class="form-group">
               <span class="form-label form-label--required">Ablehnungs-Kommentar</span>
@@ -247,10 +262,15 @@ function speichereReachability(state: ReachabilityFormState): void {
           <button
             type="button"
             class="btn btn-primary"
-            [disabled]="pending"
+            data-testid="queue-detail-approve"
+            [disabled]="pending || selbstfreigabeKonflikt"
             (click)="onApprove()"
           >
-            {{ zweitfreigabe ? 'Zur Zweitfreigabe einreichen' : 'Freigeben' }}
+            @if (selbstfreigabeKonflikt) {
+              Freigabe durch andere Person erforderlich
+            } @else {
+              {{ zweitfreigabe ? 'Zur Zweitfreigabe einreichen' : 'Freigeben' }}
+            }
           </button>
           <button
             type="button"
@@ -510,6 +530,17 @@ export class QueueDetailComponent implements OnChanges {
 
   get zweitfreigabe(): boolean {
     return braucheZweitfreigabe(this.zielSeverity, this.entry?.severity ?? null);
+  }
+
+  /**
+   * Iteration 86 (CVM-326): Vier-Augen-Warnung schon vor dem
+   * Klick. `entry.decidedBy` ist der Vorschlags-Steller; wer den
+   * Vorschlag stellt, darf ihn nicht selbst freigeben.
+   */
+  get selbstfreigabeKonflikt(): boolean {
+    const ich = this.auth.username();
+    const autor = this.entry?.decidedBy;
+    return !!(ich && autor && ich === autor);
   }
 
   onApprove(): void {

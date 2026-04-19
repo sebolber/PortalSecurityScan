@@ -37,8 +37,10 @@ Iterationen 80+ implementieren die Befunde.
   "Widerrufen". Dialoge mit Date-Picker bzw. Pflicht-Begruendung.
   Vier-Augen-Warnung im Verlaengern-Dialog. Expiry-Warn-Banner
   bestand schon aus der urspruenglichen Iteration.
-- **U-04a Vier-Augen-Warnung im Queue-Detail** - Iteration 86.
-  Rote Box + Approve-Disabled, wenn Autor == Approver.
+- ~~U-04a Vier-Augen-Warnung im Queue-Detail~~ - **Erledigt
+  in Iteration 86** (CVM-326). Rote Box, wenn
+  `auth.username() === entry.decidedBy`; Approve-Button disabled
+  mit alternativem Label.
 - **U-04b Assessment-Audit-Trail im Queue-Detail** -
   Iteration 87. Neuer Backend-Endpoint
   `GET /findings/{id}/assessments/history`, Reiter "Historie".
