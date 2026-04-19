@@ -142,9 +142,9 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
 - ~~Profil-YAML-Editor (Monaco) im Frontend~~ - Editor eingebunden
   in Iteration 54. Side-by-Side Monaco-Diff erledigt in
   Iteration 57.
-- Tenant-Verwaltungs-UI: Read-only-Liste in Iteration 56 erledigt
-  (`/admin/tenants`). CRUD (Anlage/Aktivierung) bleibt als
-  Folge-Iteration (Multi-Tenant-Flows + Keycloak-Mapping).
+- Tenant-Verwaltungs-UI: Liste (Iteration 56) + Anlage (Iteration 59)
+  erledigt. Aktivierung/Deaktivierung nach Anlage, Default-Setzen
+  und Keycloak-Realm-Mapping bleiben Admin-SQL bzw. Realm-Setup.
 - ~~KPI-UI (ECharts, Burn-Down, SLA-Ampel)~~ - Severity-Saeulen und
   SLA-Ampel ergaenzt in Iteration 55; Burn-Down war bereits vorhanden.
 - JGit-Adapter fuer Reachability (aktuell `NoopGitCheckoutAdapter`),

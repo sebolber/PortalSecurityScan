@@ -1,13 +1,17 @@
 package com.ahs.cvm.application.tenant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.ahs.cvm.application.tenant.TenantLookupService.TenantKeyAlreadyExistsException;
 import com.ahs.cvm.persistence.tenant.Tenant;
 import com.ahs.cvm.persistence.tenant.TenantRepository;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,5 +50,47 @@ class TenantLookupServiceTest {
     void listAllLeer() {
         given(repo.findAll()).willReturn(List.of());
         assertThat(service.listAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("create: persistiert neuen Mandanten mit trimmed key/name")
+    void createHappyPath() {
+        given(repo.findByTenantKey("cvm-test")).willReturn(Optional.empty());
+        given(repo.save(any(Tenant.class))).willAnswer(inv -> {
+            Tenant t = inv.getArgument(0);
+            if (t.getId() == null) {
+                t.setId(UUID.randomUUID());
+            }
+            if (t.getCreatedAt() == null) {
+                t.setCreatedAt(Instant.now());
+            }
+            return t;
+        });
+
+        TenantView view = service.create("  cvm-test  ", " Testmandant ", true);
+
+        assertThat(view.tenantKey()).isEqualTo("cvm-test");
+        assertThat(view.name()).isEqualTo("Testmandant");
+        assertThat(view.active()).isTrue();
+        assertThat(view.defaultTenant()).isFalse();
+    }
+
+    @Test
+    @DisplayName("create: doppelter key -> TenantKeyAlreadyExistsException")
+    void createDoppelterKey() {
+        given(repo.findByTenantKey("cvm-test"))
+                .willReturn(Optional.of(Tenant.builder().tenantKey("cvm-test").build()));
+
+        assertThatThrownBy(() -> service.create("cvm-test", "x", true))
+                .isInstanceOf(TenantKeyAlreadyExistsException.class);
+    }
+
+    @Test
+    @DisplayName("create: leerer key/name -> IllegalArgumentException")
+    void createLeereFelder() {
+        assertThatThrownBy(() -> service.create("  ", "name", true))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.create("key", "  ", true))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

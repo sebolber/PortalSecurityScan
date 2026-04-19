@@ -59,4 +59,38 @@ public class TenantLookupService {
                 .map(TenantView::from)
                 .toList();
     }
+
+    /**
+     * Iteration 59 (CVM-109): Neuer Mandant. Die Aktivierung im
+     * Keycloak-Mapping ist nicht Teil dieses Use-Cases und folgt
+     * ueber Realm-Setup. Wirft
+     * {@link TenantKeyAlreadyExistsException}, wenn der Key bereits
+     * existiert.
+     */
+    @Transactional
+    public TenantView create(String tenantKey, String name, boolean active) {
+        if (tenantKey == null || tenantKey.isBlank()) {
+            throw new IllegalArgumentException("tenantKey darf nicht leer sein.");
+        }
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException("name darf nicht leer sein.");
+        }
+        String key = tenantKey.trim();
+        if (tenantRepository.findByTenantKey(key).isPresent()) {
+            throw new TenantKeyAlreadyExistsException(key);
+        }
+        Tenant saved = tenantRepository.save(Tenant.builder()
+                .tenantKey(key)
+                .name(name.trim())
+                .active(active)
+                .defaultTenant(false)
+                .build());
+        return TenantView.from(saved);
+    }
+
+    public static final class TenantKeyAlreadyExistsException extends RuntimeException {
+        public TenantKeyAlreadyExistsException(String key) {
+            super("Mandant mit key '" + key + "' existiert bereits.");
+        }
+    }
 }

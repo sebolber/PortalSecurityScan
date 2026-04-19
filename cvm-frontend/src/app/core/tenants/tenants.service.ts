@@ -24,4 +24,20 @@ export class TenantsService {
       this.api.get<TenantView[]>('/api/v1/admin/tenants')
     );
   }
+
+  /** Iteration 59 (CVM-109): Neuer Mandant. */
+  create(req: TenantCreateRequest): Promise<TenantView> {
+    return firstValueFrom(
+      this.api.post<TenantView, TenantCreateRequest>(
+        '/api/v1/admin/tenants',
+        req
+      )
+    );
+  }
+}
+
+export interface TenantCreateRequest {
+  readonly tenantKey: string;
+  readonly name: string;
+  readonly active?: boolean | null;
 }
