@@ -203,7 +203,9 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   in Iteration 72** (CVM-309). `OsvJsonlMirror` + Spring-Bean
   `OsvJsonlMirrorLookup` (`@Primary`, `@ConditionalOnProperty`).
   JSONL-Datei wird beim Boot einmal in den Speicher gelesen.
-  Follow-up: Versionsbereich-Matching, CLI-Refresh-Job.
+  Reload-Endpunkt `POST /api/v1/admin/osv-mirror/reload` in
+  Iteration 73 (CVM-310) ergaenzt. Follow-up:
+  Versionsbereich-Matching und UI-Button.
 - ~~PURL-Canonicalization~~ - erledigt in Iteration 58
   (`com.ahs.cvm.domain.purl.PurlCanonicalizer`, Integration in
   `ComponentCveMatchingOnScanIngestedListener`).

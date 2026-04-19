@@ -67,4 +67,9 @@ public class OsvJsonlMirrorLookup implements ComponentVulnerabilityLookup {
     public void reload() {
         mirror.reload();
     }
+
+    /** Anzahl Eintraege im aktuellen In-Memory-Index. */
+    public int indexSize() {
+        return mirror.size();
+    }
 }

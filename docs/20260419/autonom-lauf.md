@@ -160,3 +160,9 @@ Eintraege (mirror.enabled, mirror.file). Sieben neue Unit-
 Tests (leere Datei, Aliase, direkte CVE, Duplikate, reload,
 defekte Zeile, fehlende Datei). Naechstes: schauen ob die
 Liste leer ist.
+[17:01] Iteration 73 abgeschlossen: Admin-Endpunkt
+POST /api/v1/admin/osv-mirror/reload fuer air-gapped Setups.
+Controller injiziert den Mirror-Lookup optional; inaktiv ->
+HTTP 503 mit osv_mirror_inactive, aktiv -> reload + neue
+indexSize. OsvJsonlMirrorLookup bekommt indexSize()-Accessor.
+Zwei neue MockMvc-Tests.
