@@ -14,12 +14,15 @@
   `admin-parameters`). Dieser Eintrag ist damit in Teilen erledigt.
   Noch offen (ehemaliger Migrations-Prompt aus der Session
   2026-04-19):
-  - **Katalog-Befuellung**: sicherstellen, dass alle im Prompt
-    aufgelisteten Keys tatsaechlich durch den Store abgedeckt sind
-    (AI_LLM-Fallbacks, AI_REACHABILITY, RAG, ENRICHMENT mit OSV/NVD/
-    GHSA/KEV/EPSS, RATE_LIMIT, ANOMALY, PIPELINE_GATE, MAIL,
-    COPILOT, SCAN, SCHEDULER, SECURITY). Gegen die
-    `@ConfigurationProperties`- und `@Value`-Stellen abgleichen.
+  - **Katalog-Befuellung Block A.1** (AI_LLM-Fallbacks,
+    AI_REACHABILITY, RAG, ANOMALY, COPILOT) - erledigt in
+    Iteration 41 (Bootstrap `SystemParameterCatalogBootstrap` +
+    statischer Katalog `SystemParameterCatalog`). Defaults sind 1:1
+    mit den `@Value`-Fallbacks abgeglichen.
+  - **Katalog-Befuellung Block A.2**: ENRICHMENT (OSV/NVD/GHSA/KEV/
+    EPSS ohne base-url/api-key), RATE_LIMIT, PIPELINE_GATE, MAIL
+    (ohne `spring.mail.*`), SCAN, SCHEDULER-Crons, SECURITY-Flags -
+    offen, Iteration 42.
   - **Zugriffs-Wrapper** (`getEffective(...)`) in den bestehenden
     `*Config`-Beans: ReachabilityConfig, OsvProperties, Feed*Config,
     AutoAssessmentConfig, FixVerificationConfig, AnomalyConfig,
