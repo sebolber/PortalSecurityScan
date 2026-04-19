@@ -38,6 +38,17 @@ public interface LlmClient {
         return "unknown";
     }
 
+    /**
+     * Erweiterter Provider-Match (Iteration 40, CVM-84). Der
+     * OpenAI-kompatible Adapter deckt mehrere Provider-Werte ab
+     * ({@code openai}, {@code azure}, {@code adesso-ai-hub}) und
+     * ueberschreibt diese Methode entsprechend. Default-Implementation
+     * bleibt strikter String-Vergleich mit {@link #provider()}.
+     */
+    default boolean supportsProvider(String providerKey) {
+        return providerKey != null && providerKey.equals(provider());
+    }
+
     /** Ein einzelner Nachrichten-Eintrag im Gespraechsverlauf. */
     record Message(Role role, String content) {
         public enum Role { USER, ASSISTANT }

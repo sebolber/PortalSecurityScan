@@ -60,7 +60,7 @@ public class LlmClientSelector {
         if (tenant.isPresent()) {
             String providerKey = tenant.get().provider();
             Optional<LlmClient> byProvider = clients.stream()
-                    .filter(c -> providerKey.equals(c.provider()))
+                    .filter(c -> c.supportsProvider(providerKey))
                     .findFirst();
             if (byProvider.isPresent()) {
                 return byProvider.get();

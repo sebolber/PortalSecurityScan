@@ -1,6 +1,25 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 39 - offen
+## Stand 2026-04-19 nach Iteration 40 - offen
+
+- ~~**OpenAI-/Azure-/Adesso-LLM-Adapter**~~ erledigt in 40 als
+  einziger OpenAiCompatibleClient mit Bearer-/api-key-Schwenk.
+- **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).
+- **OSV-Mirror** fuer air-gapped-Installationen.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+- **Bundle-Budget-Reduktion**.
+- **Rules-Editor im Frontend**.
+- **Profil-YAML-Editor** (Monaco) im Frontend.
+- **Tenant-Verwaltungs-UI**.
+- **KPI-UI** (ECharts, Burn-Down, SLA-Ampel).
+- Diverse Docker-/Chromium-abhaengige Test-Items
+  (Testcontainers-IT, Karma in CI, Playwright-E2E, axe-core).
+
+> Iteration 40 am 2026-04-19 hat den OpenAiCompatibleClient +
+> LlmClient#supportsProvider ausgeliefert. Details:
+> `docs/20260419/iteration-40-fortschritt.md`.
+
+## Stand 2026-04-19 nach Iteration 39 - offen (vorher)
 
 - ~~**Criteria-basiertes Server-Paging fuer CVE-Listen**~~
   erledigt in 39 (JPQL-Query mit optionalen Filtern + Pageable).
