@@ -62,9 +62,10 @@
     </div>
   }
 
-  <div class="flex flex-1 overflow-hidden">
-    <cvm-queue-filter-sidebar></cvm-queue-filter-sidebar>
+  <!-- Iteration 47: Filter-Balken oberhalb der Liste, Tabelle nimmt volle Breite. -->
+  <cvm-queue-filter-bar></cvm-queue-filter-bar>
 
+  <div class="flex flex-1 overflow-hidden">
     <main class="flex-1 overflow-auto">
       <cvm-queue-table
         [entries]="entries()"

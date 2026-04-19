@@ -6,18 +6,19 @@ import { SEVERITY_REIHENFOLGE } from './queue.types';
 import { Severity } from '../../shared/components/severity-badge.component';
 
 /**
- * Filter-Sidebar fuer die Queue. Arbeitet direkt auf dem
- * {@link QueueStore}; Aenderungen triggern oberhalb der Seite einen
- * {@code reload()}.
+ * Horizontaler Filter-Balken oberhalb der Queue-Tabelle.
+ *
+ * <p>Iteration 47: ersetzt die bisherige linke Sidebar, damit die Tabelle
+ * die volle Breite der Seite nutzen kann. Filter-Verhalten ist identisch
+ * mit der frueheren {@code QueueFilterSidebarComponent}.
  */
 @Component({
-  selector: 'cvm-queue-filter-sidebar',
+  selector: 'cvm-queue-filter-bar',
   standalone: true,
   imports: [CommonModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: [
     `
-      /* UI-Fix MEDIUM-neu-1: Severity-Filter mit Farbcodierung. */
       .cvm-queue-sev-chip {
         display: inline-flex;
         align-items: center;
@@ -83,13 +84,14 @@ import { Severity } from '../../shared/components/severity-badge.component';
     `
   ],
   template: `
-    <aside class="flex w-72 shrink-0 flex-col gap-4 border-r bg-light p-4">
-      <h2 class="text-sm font-semibold uppercase text-zinc-500">Filter</h2>
-
-      <label class="block text-sm">
+    <section
+      class="flex flex-wrap items-end gap-4 border-b bg-light px-4 py-3"
+      aria-label="Filter"
+    >
+      <label class="flex flex-col text-sm min-w-[14rem]">
         <span class="mb-1 block text-zinc-700">Produktversion (UUID)</span>
         <input
-          class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+          class="rounded border border-zinc-300 px-2 py-1 text-sm"
           type="text"
           [ngModel]="store.filter().productVersionId ?? ''"
           (ngModelChange)="auf('productVersionId', $event)"
@@ -97,10 +99,10 @@ import { Severity } from '../../shared/components/severity-badge.component';
         />
       </label>
 
-      <label class="block text-sm">
+      <label class="flex flex-col text-sm min-w-[14rem]">
         <span class="mb-1 block text-zinc-700">Umgebung (UUID)</span>
         <input
-          class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+          class="rounded border border-zinc-300 px-2 py-1 text-sm"
           type="text"
           [ngModel]="store.filter().environmentId ?? ''"
           (ngModelChange)="auf('environmentId', $event)"
@@ -108,10 +110,10 @@ import { Severity } from '../../shared/components/severity-badge.component';
         />
       </label>
 
-      <label class="block text-sm">
+      <label class="flex flex-col text-sm">
         <span class="mb-1 block text-zinc-700">Status</span>
         <select
-          class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+          class="rounded border border-zinc-300 px-2 py-1 text-sm"
           [ngModel]="store.filter().status ?? ''"
           (ngModelChange)="status($event)"
         >
@@ -121,10 +123,10 @@ import { Severity } from '../../shared/components/severity-badge.component';
         </select>
       </label>
 
-      <label class="block text-sm">
+      <label class="flex flex-col text-sm">
         <span class="mb-1 block text-zinc-700">Vorschlagsquelle</span>
         <select
-          class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+          class="rounded border border-zinc-300 px-2 py-1 text-sm"
           [ngModel]="store.filter().source ?? ''"
           (ngModelChange)="source($event)"
         >
@@ -136,14 +138,8 @@ import { Severity } from '../../shared/components/severity-badge.component';
         </select>
       </label>
 
-      <div class="text-sm">
+      <div class="flex flex-col text-sm">
         <span class="mb-1 block text-zinc-700">Severity</span>
-        <!--
-          UI-Fix MEDIUM-neu-1 (UI-Review 2): data-sev mappt auf die
-          Severity-Token aus colors.scss. Inaktive Filter zeigen einen
-          farbigen Top-Border, aktive Filter einen Full-Fill in der
-          Severity-Farbe.
-        -->
         <div class="flex flex-wrap gap-1 cvm-queue-sev-filter">
           @for (s of severities; track s) {
             <button
@@ -161,15 +157,15 @@ import { Severity } from '../../shared/components/severity-badge.component';
 
       <button
         type="button"
-        class="mt-2 rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50"
+        class="rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50"
         (click)="reset()"
       >
         Filter zuruecksetzen
       </button>
-    </aside>
+    </section>
   `
 })
-export class QueueFilterSidebarComponent {
+export class QueueFilterBarComponent {
   readonly store = inject(QueueStore);
   readonly severities = SEVERITY_REIHENFOLGE;
 

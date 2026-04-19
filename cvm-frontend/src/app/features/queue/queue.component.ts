@@ -13,7 +13,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
 import { QueueStore } from './queue-store';
 import { QueueShortcutsDirective } from './queue-shortcuts.directive';
-import { QueueFilterSidebarComponent } from './queue-filter-sidebar.component';
+import { QueueFilterBarComponent } from './queue-filter-bar.component';
 import { QueueTableComponent } from './queue-table.component';
 import { QueueDetailComponent } from './queue-detail.component';
 import { QueueHelpOverlayComponent } from './queue-help-overlay.component';
@@ -30,7 +30,7 @@ import { QueueEntry, RejectCommand, ApproveCommand } from './queue.types';
   imports: [
     CommonModule,
     QueueShortcutsDirective,
-    QueueFilterSidebarComponent,
+    QueueFilterBarComponent,
     QueueTableComponent,
     QueueDetailComponent,
     QueueHelpOverlayComponent

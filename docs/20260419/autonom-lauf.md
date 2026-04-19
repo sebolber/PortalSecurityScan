@@ -19,3 +19,6 @@ Iteration 45 Secret-Behandlung AES-GCM.
 [09:40] Iteration 45 abgeschlossen: AES-GCM-Secret-Verschluesselung
 fuer sensible System-Parameter (commit 0d0871dc). Naechstes:
 Iteration 46 ArchUnit-Regel + E2E-Test Reachability-Flag.
+[09:46] Iteration 46 abgeschlossen: ArchUnit-Regel (Parameter-Modul-
+Zugriff) + E2E-Test fuer Reachability-Override (commit aaf003c2).
+Naechstes: Iteration 47 Queue-Filter oberhalb der Liste.
