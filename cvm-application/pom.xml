@@ -27,6 +27,20 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
+        <!--
+            Iteration 62E (CVM-62): AspectJ-Weaving fuer den
+            TenantSessionAspect (SET LOCAL cvm.current_tenant pro
+            Transaktion). Spring AOP reicht; AspectJ-Compile-Time-Weaving
+            ist nicht noetig, weil wir nur Bean-Methoden abfangen.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.cyclonedx</groupId>
             <artifactId>cyclonedx-core-java</artifactId>
