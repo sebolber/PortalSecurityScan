@@ -3,12 +3,14 @@ package com.ahs.cvm.application.product;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.ahs.cvm.application.product.ProductCatalogService.ProductCreateInput;
 import com.ahs.cvm.application.product.ProductCatalogService.ProductUpdateInput;
 import com.ahs.cvm.application.product.ProductCatalogService.ProductVersionCreateInput;
+import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.persistence.product.Product;
 import com.ahs.cvm.persistence.product.ProductRepository;
 import com.ahs.cvm.persistence.product.ProductVersion;
@@ -16,11 +18,14 @@ import com.ahs.cvm.persistence.product.ProductVersionRepository;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class ProductCatalogServiceTest {
+
+    private static final UUID TENANT = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
 
     private ProductRepository productRepo;
     private ProductVersionRepository versionRepo;
@@ -31,6 +36,7 @@ class ProductCatalogServiceTest {
         productRepo = mock(ProductRepository.class);
         versionRepo = mock(ProductVersionRepository.class);
         service = new ProductCatalogService(productRepo, versionRepo);
+        TenantContext.set(TENANT);
         given(productRepo.save(any(Product.class))).willAnswer(inv -> {
             Product p = inv.getArgument(0);
             if (p.getId() == null) {
@@ -53,10 +59,16 @@ class ProductCatalogServiceTest {
         });
     }
 
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     @DisplayName("anlege: legt Produkt mit key und name an (Happy-Path)")
     void anlegeHappyPath() {
-        given(productRepo.findByKey("portalcore-test")).willReturn(Optional.empty());
+        given(productRepo.findByTenantIdAndKey(TENANT, "portalcore-test"))
+                .willReturn(Optional.empty());
 
         ProductView result = service.anlege(new ProductCreateInput(
                 "portalcore-test", "PortalCore-Test", "Kernmodul"));
@@ -69,7 +81,8 @@ class ProductCatalogServiceTest {
     @Test
     @DisplayName("anlege: trimmt Whitespace im Key")
     void anlegeTrimmtKey() {
-        given(productRepo.findByKey("portalcore-test")).willReturn(Optional.empty());
+        given(productRepo.findByTenantIdAndKey(TENANT, "portalcore-test"))
+                .willReturn(Optional.empty());
 
         ProductView result = service.anlege(new ProductCreateInput(
                 "  portalcore-test ", "PortalCore", null));
@@ -78,12 +91,13 @@ class ProductCatalogServiceTest {
     }
 
     @Test
-    @DisplayName("anlege: wirft ProductKeyConflictException bei Duplikat")
+    @DisplayName("anlege: wirft ProductKeyConflictException bei Duplikat innerhalb des Mandanten")
     void anlegeKeyKonflikt() {
         Product bestehend = Product.builder()
                 .id(UUID.randomUUID())
+                .tenantId(TENANT)
                 .key("portalcore-test").name("existing").build();
-        given(productRepo.findByKey("portalcore-test"))
+        given(productRepo.findByTenantIdAndKey(TENANT, "portalcore-test"))
                 .willReturn(Optional.of(bestehend));
 
         assertThatThrownBy(() -> service.anlege(new ProductCreateInput(
@@ -109,11 +123,21 @@ class ProductCatalogServiceTest {
     }
 
     @Test
+    @DisplayName("anlege: ohne Tenant-Kontext wirft IllegalStateException")
+    void anlegeOhneTenant() {
+        TenantContext.clear();
+        assertThatThrownBy(() -> service.anlege(new ProductCreateInput(
+                "portalcore-test", "x", null)))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
     @DisplayName("anlegeVersion: Happy-Path legt Version an")
     void anlegeVersionHappyPath() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("PortalCore").build();
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("PortalCore").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
         given(versionRepo.findByProductIdAndVersionAndDeletedAtIsNull(productId, "1.15.0-test"))
                 .willReturn(Optional.empty());
@@ -144,9 +168,11 @@ class ProductCatalogServiceTest {
     void anlegeVersionKonflikt() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("PortalCore").build();
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("PortalCore").build();
         ProductVersion bestehend = ProductVersion.builder()
-                .id(UUID.randomUUID()).product(p).version("1.14.2-test").build();
+                .id(UUID.randomUUID()).tenantId(TENANT)
+                .product(p).version("1.14.2-test").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
         given(versionRepo.findByProductIdAndVersionAndDeletedAtIsNull(productId, "1.14.2-test"))
                 .willReturn(Optional.of(bestehend));
@@ -161,7 +187,8 @@ class ProductCatalogServiceTest {
     void aktualisiereHappyPath() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("Old Name")
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("Old Name")
                 .description("Old").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
 
@@ -178,7 +205,8 @@ class ProductCatalogServiceTest {
     void aktualisiereNullsIgnorieren() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("Name")
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("Name")
                 .description("Desc").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
 
@@ -193,7 +221,8 @@ class ProductCatalogServiceTest {
     void aktualisiereNameLeer() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("Name").build();
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("Name").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
 
         assertThatThrownBy(() -> service.aktualisiere(productId,
@@ -217,7 +246,8 @@ class ProductCatalogServiceTest {
     void aktualisiereBeschreibungLeer() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("Name")
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("Name")
                 .description("Old").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
 
@@ -227,11 +257,26 @@ class ProductCatalogServiceTest {
     }
 
     @Test
+    @DisplayName("aktualisiere: Produkt aus anderem Mandanten -> ProductNotFoundException")
+    void aktualisiereFremderMandant() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).tenantId(UUID.randomUUID())
+                .key("portalcore-test").name("Name").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> service.aktualisiere(productId,
+                new ProductUpdateInput("x", null)))
+                .isInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("loesche: setzt deletedAt auf Jetzt")
     void loescheHappyPath() {
         UUID productId = UUID.randomUUID();
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("Name").build();
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("Name").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
 
         service.loesche(productId);
@@ -245,7 +290,8 @@ class ProductCatalogServiceTest {
         UUID productId = UUID.randomUUID();
         Instant gesetzt = Instant.parse("2026-01-01T00:00:00Z");
         Product p = Product.builder()
-                .id(productId).key("portalcore-test").name("Name")
+                .id(productId).tenantId(TENANT)
+                .key("portalcore-test").name("Name")
                 .deletedAt(gesetzt).build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
 
@@ -265,13 +311,26 @@ class ProductCatalogServiceTest {
     }
 
     @Test
+    @DisplayName("loesche: Produkt aus anderem Mandanten -> ProductNotFoundException")
+    void loescheFremderMandant() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).tenantId(UUID.randomUUID())
+                .key("portalcore-test").name("Name").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> service.loesche(productId))
+                .isInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
     @DisplayName("loescheVersion: setzt deletedAt und bewahrt Zeitpunkt danach")
     void loescheVersionHappyPath() {
         UUID productId = UUID.randomUUID();
         UUID versionId = UUID.randomUUID();
-        Product p = Product.builder().id(productId).key("p").name("P").build();
+        Product p = Product.builder().id(productId).tenantId(TENANT).key("p").name("P").build();
         ProductVersion v = ProductVersion.builder()
-                .id(versionId).product(p).version("1.0.0").build();
+                .id(versionId).tenantId(TENANT).product(p).version("1.0.0").build();
         given(versionRepo.findById(versionId)).willReturn(Optional.of(v));
 
         service.loescheVersion(productId, versionId);
@@ -284,10 +343,10 @@ class ProductCatalogServiceTest {
     void loescheVersionIdempotent() {
         UUID productId = UUID.randomUUID();
         UUID versionId = UUID.randomUUID();
-        Product p = Product.builder().id(productId).key("p").name("P").build();
+        Product p = Product.builder().id(productId).tenantId(TENANT).key("p").name("P").build();
         Instant vorher = Instant.parse("2026-01-01T00:00:00Z");
         ProductVersion v = ProductVersion.builder()
-                .id(versionId).product(p).version("1.0.0").deletedAt(vorher).build();
+                .id(versionId).tenantId(TENANT).product(p).version("1.0.0").deletedAt(vorher).build();
         given(versionRepo.findById(versionId)).willReturn(Optional.of(v));
 
         service.loescheVersion(productId, versionId);
@@ -312,9 +371,9 @@ class ProductCatalogServiceTest {
         UUID productId = UUID.randomUUID();
         UUID andererId = UUID.randomUUID();
         UUID versionId = UUID.randomUUID();
-        Product p = Product.builder().id(andererId).key("p").name("P").build();
+        Product p = Product.builder().id(andererId).tenantId(TENANT).key("p").name("P").build();
         ProductVersion v = ProductVersion.builder()
-                .id(versionId).product(p).version("1.0.0").build();
+                .id(versionId).tenantId(TENANT).product(p).version("1.0.0").build();
         given(versionRepo.findById(versionId)).willReturn(Optional.of(v));
 
         assertThatThrownBy(() -> service.loescheVersion(productId, versionId))

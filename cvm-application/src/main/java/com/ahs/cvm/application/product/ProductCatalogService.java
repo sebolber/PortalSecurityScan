@@ -1,5 +1,6 @@
 package com.ahs.cvm.application.product;
 
+import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.persistence.product.Product;
 import com.ahs.cvm.persistence.product.ProductRepository;
 import com.ahs.cvm.persistence.product.ProductVersion;
@@ -33,7 +34,10 @@ public class ProductCatalogService {
 
     @Transactional(readOnly = true)
     public Optional<Product> findeProduktUeberKey(String key) {
-        return productRepository.findByKey(key);
+        // Iteration 62A (CVM-62): Key nur innerhalb des aktuellen
+        // Mandanten eindeutig. Ohne Tenant-Kontext kein Match.
+        return TenantContext.current()
+                .flatMap(tenantId -> productRepository.findByTenantIdAndKey(tenantId, key));
     }
 
     @Transactional(readOnly = true)
@@ -66,10 +70,19 @@ public class ProductCatalogService {
             throw new IllegalArgumentException(
                     "Produkt-Key ungueltig (erwartet ^[a-z0-9-]{2,64}$): " + key);
         }
-        if (productRepository.findByKey(key).isPresent()) {
+        // Iteration 62A (CVM-62): Produkt gehoert zum aktuellen Mandanten.
+        // Ein optional im Input mitgegebener tenantId wird nur akzeptiert,
+        // wenn er zum Kontext passt (Schutz gegen Cross-Tenant-Writes).
+        UUID tenantId = TenantContext.requireCurrent();
+        if (input.tenantId() != null && !tenantId.equals(input.tenantId())) {
+            throw new IllegalArgumentException(
+                    "tenantId in der Eingabe entspricht nicht dem Tenant-Kontext.");
+        }
+        if (productRepository.findByTenantIdAndKey(tenantId, key).isPresent()) {
             throw new ProductKeyConflictException(key);
         }
         Product p = productRepository.save(Product.builder()
+                .tenantId(tenantId)
                 .name(name)
                 .key(key)
                 .description(input.description() == null ? null : input.description().trim())
@@ -98,6 +111,7 @@ public class ProductCatalogService {
             throw new ProductVersionConflictException(productId, version);
         }
         ProductVersion saved = productVersionRepository.save(ProductVersion.builder()
+                .tenantId(produkt.getTenantId())
                 .product(produkt)
                 .version(version)
                 .gitCommit(input.gitCommit() == null || input.gitCommit().isBlank()
@@ -138,6 +152,7 @@ public class ProductCatalogService {
         }
         Product produkt = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
+        pruefeTenantZugehoerigkeit(produkt);
         if (produkt.getDeletedAt() == null) {
             produkt.setDeletedAt(Instant.now());
             productRepository.save(produkt);
@@ -159,6 +174,7 @@ public class ProductCatalogService {
         }
         Product produkt = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
+        pruefeTenantZugehoerigkeit(produkt);
         if (input.name() != null) {
             String name = input.name().trim();
             if (name.isEmpty()) {
@@ -192,13 +208,36 @@ public class ProductCatalogService {
                 || !productId.equals(version.getProduct().getId())) {
             throw new ProductVersionNotFoundException(productId, versionId);
         }
+        TenantContext.current().ifPresent(tenantId -> {
+            if (!tenantId.equals(version.getTenantId())) {
+                throw new ProductVersionNotFoundException(productId, versionId);
+            }
+        });
         if (version.getDeletedAt() == null) {
             version.setDeletedAt(Instant.now());
             productVersionRepository.save(version);
         }
     }
 
-    public record ProductCreateInput(String key, String name, String description) {}
+    /**
+     * Iteration 62A (CVM-62): Wirft {@link ProductNotFoundException}, wenn
+     * das Produkt zu einem anderen Mandanten gehoert als der aktuelle
+     * TenantContext - statt eine "Forbidden"-Exception zu werfen, damit
+     * auch die Existenz fremder Produkte nicht leakt.
+     */
+    private void pruefeTenantZugehoerigkeit(Product produkt) {
+        TenantContext.current().ifPresent(tenantId -> {
+            if (!tenantId.equals(produkt.getTenantId())) {
+                throw new ProductNotFoundException(produkt.getId());
+            }
+        });
+    }
+
+    public record ProductCreateInput(String key, String name, String description, UUID tenantId) {
+        public ProductCreateInput(String key, String name, String description) {
+            this(key, name, description, null);
+        }
+    }
 
     public record ProductUpdateInput(String name, String description) {}
 

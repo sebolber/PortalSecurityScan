@@ -28,10 +28,17 @@ public class Product {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    /**
+     * Iteration 62A (CVM-62): Mandanten-Zuordnung. Pflicht seit V0035.
+     * Der Key ist nur innerhalb eines Mandanten eindeutig.
+     */
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "key", nullable = false, unique = true)
+    @Column(name = "key", nullable = false)
     private String key;
 
     @Column(name = "description")

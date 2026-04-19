@@ -31,6 +31,10 @@ public class ProductVersion {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    /** Iteration 62A (CVM-62): Erbt Mandanten-Scope vom Produkt. */
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
