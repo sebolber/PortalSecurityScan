@@ -98,8 +98,13 @@
       nutzt den aufgeloesten Token. Katalog-Flags beider Secrets
       auf live-reloadable. KEV und EPSS haben keinen api-key und
       brauchen keine Callsite-Migration.
-    - Offen bleibt: GitHub-Token-Adapter fuer Fix-Verifikation
-      (Iteration 68).
+    - **Teil erledigt in Iteration 68** (CVM-305):
+      GitHubApiProvider loest `cvm.ai.fix-verification.github.token`
+      pro Call auf; RestClient wird ohne Default-Authorization-
+      Header gebaut, der Token wird pro Call als Bearer-Header
+      gesetzt. Damit ist die Callsite-Migration der Adapter
+      **komplett**. Alle vier Secrets (Claude, NVD, GHSA,
+      GitHub) sind im Katalog live-reloadable.
   - **ArchUnit-Regel** erledigt in Iteration 46 (zwei Regeln:
     Repository und Secret-Cipher duerfen nur aus
     `com.ahs.cvm.application.parameter..` referenziert werden).

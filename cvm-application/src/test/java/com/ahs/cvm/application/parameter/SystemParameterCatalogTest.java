@@ -77,18 +77,18 @@ class SystemParameterCatalogTest {
                     .isEqualTo(SystemParameterType.PASSWORD);
             assertThat(entry.defaultValue()).as("defaultValue fuer %s", key).isNull();
         }
-        assertThat(findEntry("cvm.llm.claude.api-key").restartRequired())
-                .as("cvm.llm.claude.api-key live-reloadable nach Iteration 66")
-                .isFalse();
-        assertThat(findEntry("cvm.feed.nvd.api-key").restartRequired())
-                .as("cvm.feed.nvd.api-key live-reloadable nach Iteration 67")
-                .isFalse();
-        assertThat(findEntry("cvm.feed.ghsa.api-key").restartRequired())
-                .as("cvm.feed.ghsa.api-key live-reloadable nach Iteration 67")
-                .isFalse();
-        assertThat(findEntry("cvm.ai.fix-verification.github.token").restartRequired())
-                .as("cvm.ai.fix-verification.github.token noch restartRequired bis Iteration 68")
-                .isTrue();
+        // Iteration 68 (CVM-305): alle vier Secrets sind jetzt
+        // live-reloadable; die Adapter lesen den Wert pro Call ueber
+        // den SystemParameterResolver. Die AES-GCM-Verschluesselung
+        // bleibt erhalten.
+        for (String key : secretKeys) {
+            assertThat(findEntry(key).restartRequired())
+                    .as("Secret %s ist nach Iteration 68 live-reloadable", key)
+                    .isFalse();
+            assertThat(findEntry(key).hotReload())
+                    .as("Secret %s ist nach Iteration 68 hotReload=true", key)
+                    .isTrue();
+        }
     }
 
     @Test
@@ -344,6 +344,7 @@ class SystemParameterCatalogTest {
                 "cvm.llm.claude.api-key",
                 "cvm.feed.nvd.api-key",
                 "cvm.feed.ghsa.api-key",
+                "cvm.ai.fix-verification.github.token",
                 "cvm.ai.reachability.enabled",
                 "cvm.ai.reachability.timeout-seconds",
                 "cvm.ai.auto-assessment.enabled",

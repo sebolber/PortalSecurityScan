@@ -573,9 +573,9 @@ public final class SystemParameterCatalog {
                 "cvm.ai.fix-verification.github.token",
                 "Fix-Verifikation GitHub-Token",
                 "Personal Access Token fuer die GitHub-REST-API (Fix-Verifikation).",
-                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                "Iteration 68: Wird AES-GCM-verschluesselt gespeichert und pro Call ausgelesen. Kein Neustart noetig.",
                 CATEGORY_SCAN, "fix-verification",
-                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, true, true, false));
     }
 
     private static void ensureUnique(List<SystemParameterCatalogEntry> list) {

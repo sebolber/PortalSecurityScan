@@ -118,3 +118,11 @@ daher keine Callsite-Migration. Katalog-Flags der beiden Feed-
 Secrets auf live-reloadable. Zwei neue WireMock-Override-
 Tests. Naechstes: Iteration 68 GitHubApiProvider (Fix-Verifikation)
 auf Resolver.
+[16:13] Iteration 68 abgeschlossen: GitHubApiProvider loest
+cvm.ai.fix-verification.github.token pro Call auf; RestClient
+ohne Default-Authorization-Header, Bearer-Token wird pro Call
+gesetzt. Damit ist die Callsite-Migration der Adapter
+komplett. Alle vier Secrets (Claude, NVD, GHSA, GitHub) sind
+im Katalog live-reloadable. SystemParameterCatalogTest
+vereinheitlicht die Secret-Erwartungen. Naechstes: Iteration 69
+Doku parameter-secret-deployment.md.

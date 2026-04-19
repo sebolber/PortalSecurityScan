@@ -1,5 +1,6 @@
 package com.ahs.cvm.integration.git;
 
+import com.ahs.cvm.application.parameter.SystemParameterResolver;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -24,6 +25,12 @@ import org.springframework.web.client.RestClient;
  *   <li>{@code GET /repos/{owner}/{repo}/releases/tags/{tag}}</li>
  *   <li>{@code GET /repos/{owner}/{repo}/compare/{from}...{to}}</li>
  * </ul>
+ *
+ * <p>Iteration 68 (CVM-305): Der GitHub-Token wird pro Call aus
+ * dem {@link SystemParameterResolver} aufgeloest
+ * ({@code cvm.ai.fix-verification.github.token}). Aenderungen im
+ * Admin-UI greifen ohne Neustart. Der {@code @Value}-Wert dient
+ * weiterhin als Fallback.
  */
 @Component("githubApiProvider")
 @ConditionalOnProperty(prefix = "cvm.ai.fix-verification.github",
@@ -31,26 +38,43 @@ import org.springframework.web.client.RestClient;
 public class GitHubApiProvider implements GitProviderPort {
 
     private static final Logger log = LoggerFactory.getLogger(GitHubApiProvider.class);
+    private static final String PARAM_TOKEN = "cvm.ai.fix-verification.github.token";
 
     private final RestClient restClient;
+    private final String fallbackToken;
+    private final Optional<SystemParameterResolver> parameterResolver;
 
     @Autowired
     public GitHubApiProvider(
             @Value("${cvm.ai.fix-verification.github.base-url:https://api.github.com}") String baseUrl,
-            @Value("${cvm.ai.fix-verification.github.token:${GITHUB_TOKEN:}}") String token) {
-        RestClient.Builder builder = RestClient.builder()
+            @Value("${cvm.ai.fix-verification.github.token:${GITHUB_TOKEN:}}") String token,
+            Optional<SystemParameterResolver> parameterResolver) {
+        this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.ACCEPT, "application/vnd.github+json")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        if (token != null && !token.isBlank()) {
-            builder.defaultHeader("Authorization", "Bearer " + token);
-        }
-        this.restClient = builder.build();
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+        this.fallbackToken = token == null ? "" : token;
+        this.parameterResolver = parameterResolver == null
+                ? Optional.empty()
+                : parameterResolver;
     }
 
-    /** Test-Konstruktor (WireMock). */
+    /** Test-Konstruktor (WireMock) ohne Parameter-Resolver. */
     public GitHubApiProvider(RestClient restClient) {
+        this(restClient, "", Optional.empty());
+    }
+
+    /** Test-Konstruktor (WireMock) mit optionalem Parameter-Resolver. */
+    public GitHubApiProvider(
+            RestClient restClient,
+            String fallbackToken,
+            Optional<SystemParameterResolver> parameterResolver) {
         this.restClient = restClient;
+        this.fallbackToken = fallbackToken == null ? "" : fallbackToken;
+        this.parameterResolver = parameterResolver == null
+                ? Optional.empty()
+                : parameterResolver;
     }
 
     @Override
@@ -59,9 +83,11 @@ public class GitHubApiProvider implements GitProviderPort {
         if (slug == null) {
             return Optional.empty();
         }
+        String token = resolveToken();
         try {
             JsonNode body = restClient.get()
                     .uri("/repos/" + slug + "/releases/tags/" + tag)
+                    .headers(h -> authorize(h, token))
                     .retrieve()
                     .body(JsonNode.class);
             if (body == null) {
@@ -86,9 +112,11 @@ public class GitHubApiProvider implements GitProviderPort {
         if (slug == null) {
             return List.of();
         }
+        String token = resolveToken();
         try {
             JsonNode body = restClient.get()
                     .uri("/repos/" + slug + "/compare/" + fromTag + "..." + toTag)
+                    .headers(h -> authorize(h, token))
                     .retrieve()
                     .body(JsonNode.class);
             if (body == null || !body.has("commits")) {
@@ -138,10 +166,12 @@ public class GitHubApiProvider implements GitProviderPort {
                 || body == null || body.isBlank()) {
             return false;
         }
+        String token = resolveToken();
         try {
             restClient.post()
                     .uri("/repos/" + slug + "/issues/" + mergeRequestId.trim()
                             + "/comments")
+                    .headers(h -> authorize(h, token))
                     .body(java.util.Map.of("body", body))
                     .retrieve()
                     .toBodilessEntity();
@@ -150,6 +180,19 @@ public class GitHubApiProvider implements GitProviderPort {
             log.debug("GitHub-MR-Kommentar {}#{} fehlgeschlagen: {}",
                     slug, mergeRequestId, ex.getMessage());
             return false;
+        }
+    }
+
+    private String resolveToken() {
+        return parameterResolver
+                .flatMap(r -> r.resolve(PARAM_TOKEN))
+                .filter(v -> !v.isBlank())
+                .orElse(fallbackToken);
+    }
+
+    private void authorize(HttpHeaders headers, String token) {
+        if (token != null && !token.isBlank()) {
+            headers.set("Authorization", "Bearer " + token);
         }
     }
 

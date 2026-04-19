@@ -2,19 +2,24 @@ package com.ahs.cvm.integration.git;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ahs.cvm.application.parameter.SystemParameterResolver;
 import com.ahs.cvm.integration.git.GitProviderPort.CommitSummary;
 import com.ahs.cvm.integration.git.GitProviderPort.ReleaseNotes;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -123,5 +128,49 @@ class GitHubApiProviderTest {
         assertThat(GitHubApiProvider.slugOf("https://github.com/foo/bar.git")).isEqualTo("foo/bar");
         assertThat(GitHubApiProvider.slugOf("git@github.com:foo/bar.git")).isEqualTo("foo/bar");
         assertThat(GitHubApiProvider.slugOf("https://example.com/foo/bar")).isNull();
+    }
+
+    @Test
+    @DisplayName(
+            "GitHub (Iteration 68): Token aus SystemParameterResolver "
+                    + "wird pro Call gelesen und greift ohne Neustart")
+    void tokenOverrideGreiftOhneRestart() {
+        wiremock.stubFor(get(urlEqualTo("/repos/foo/bar/releases/tags/v1.2.3"))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("""
+                                {
+                                  "body":"fix",
+                                  "html_url":"https://github.com/foo/bar/releases/tag/v1.2.3"
+                                }""")));
+
+        Map<String, String> store = new HashMap<>();
+        store.put("cvm.ai.fix-verification.github.token", "store-token-1");
+        SystemParameterResolver resolver = Mockito.mock(SystemParameterResolver.class);
+        Mockito.when(resolver.resolve("cvm.ai.fix-verification.github.token"))
+                .thenAnswer(inv -> Optional.ofNullable(
+                        store.get("cvm.ai.fix-verification.github.token")));
+
+        RestClient rest = RestClient.builder()
+                .baseUrl(wiremock.baseUrl())
+                .requestFactory(new SimpleClientHttpRequestFactory())
+                .defaultHeader(HttpHeaders.ACCEPT, "application/vnd.github+json")
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+        GitHubApiProvider resolverAware = new GitHubApiProvider(
+                rest, "fallback-token", Optional.of(resolver));
+
+        resolverAware.releaseNotes("https://github.com/foo/bar", "v1.2.3");
+        store.put("cvm.ai.fix-verification.github.token", "store-token-2");
+        resolverAware.releaseNotes("https://github.com/foo/bar", "v1.2.3");
+
+        List<com.github.tomakehurst.wiremock.verification.LoggedRequest> requests =
+                wiremock.findAll(
+                        getRequestedFor(urlEqualTo("/repos/foo/bar/releases/tags/v1.2.3")));
+        assertThat(requests).hasSize(2);
+        assertThat(requests.get(0).getHeader("Authorization"))
+                .isEqualTo("Bearer store-token-1");
+        assertThat(requests.get(1).getHeader("Authorization"))
+                .isEqualTo("Bearer store-token-2");
     }
 }
