@@ -33,26 +33,28 @@ spring:
     username: ${CVM_SMTP_USER:}
     password: ${CVM_SMTP_PASSWORD:}
 
+# ---------------------------------------------------------------------------
+# CVM-Konfiguration
+#
+# Iteration 61 (CVM-62): Fachliche Parameter werden ueber den System-
+# Parameter-Dialog (`/admin/parameters`) verwaltet und sind NICHT mehr in
+# dieser Datei dupliziert - sonst weiss niemand, welcher Wert greift.
+# Die hier verbliebenen Schluessel sind bewusst NICHT migriert, weil sie
+# entweder zum Boot-Zeitpunkt feststehen muessen (Security-Filter,
+# Endpoint-URLs) oder vom Deployment-Template stammen.
+# ---------------------------------------------------------------------------
 cvm:
-  alerts:
-    mode: ${CVM_ALERTS_MODE:dry-run}
-    from: ${CVM_ALERTS_FROM:cvm-alerts@ahs.local}
-    eskalation:
-      t1-minutes: ${CVM_ALERTS_T1:120}
-      t2-minutes: ${CVM_ALERTS_T2:360}
   security:
     cors:
+      # CORS wird waehrend des SecurityFilterChain-Builds gelesen; ein
+      # Runtime-Override wuerde den Filter neu aufbauen muessen.
       allowed-origins: ${CVM_CORS_ALLOWED_ORIGINS:http://localhost:4200}
-  # Iteration 33 (CVM-77): OSV-Matching fuer Scan-Ingest. Opt-In, damit
-  # Offline-Installationen keinen Outbound-Traffic erzeugen. Aktiviert
-  # werden ueber Environment-Variable CVM_OSV_ENABLED=true, z.B. im
-  # Dev-Setup per `CVM_OSV_ENABLED=true ./mvnw -pl cvm-app spring-boot:run`.
   enrichment:
     osv:
-      enabled: ${CVM_OSV_ENABLED:false}
+      # Die Base-URL bleibt bewusst ausserhalb des Parameter-Stores
+      # (steht in CLAUDE.md unter "nicht migrieren"). Feature-Flag und
+      # Batch-Parameter werden ueber den Parameter-Dialog geschaltet.
       base-url: ${CVM_OSV_BASE_URL:https://api.osv.dev}
-      batch-size: ${CVM_OSV_BATCH_SIZE:500}
-      timeout-ms: ${CVM_OSV_TIMEOUT_MS:15000}
 
 server:
   port: ${CVM_SERVER_PORT:8081}
