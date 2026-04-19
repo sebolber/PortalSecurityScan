@@ -56,3 +56,6 @@ Naechstes: Iteration 57 Monaco-Diff.
 [11:01] Iteration 57 abgeschlossen: Monaco Side-by-Side Diff-Editor
 fuer Profiles (commit 44927352). Naechstes: Iteration 58
 PURL-Canonicalization.
+[11:08] Iteration 58 abgeschlossen: PURL-Canonicalization im
+Domain-Modul + Integration in ComponentCveMatchingOnScanIngestedListener
+(commit c7d8f29e). Restzeit gering; Stopp-Checkpoint erreicht.
