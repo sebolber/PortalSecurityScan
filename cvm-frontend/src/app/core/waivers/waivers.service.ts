@@ -25,4 +25,32 @@ export class WaiversService {
     const suffix = status ? `?status=${encodeURIComponent(status)}` : '';
     return firstValueFrom(this.api.get<WaiverView[]>(`/api/v1/waivers${suffix}`));
   }
+
+  /** Iteration 85 (CVM-325). POST /api/v1/waivers/{id}/extend */
+  extend(
+    id: string,
+    validUntil: string,
+    extendedBy: string
+  ): Promise<WaiverView> {
+    return firstValueFrom(
+      this.api.post<WaiverView, { validUntil: string; extendedBy: string }>(
+        `/api/v1/waivers/${id}/extend`,
+        { validUntil, extendedBy }
+      )
+    );
+  }
+
+  /** Iteration 85 (CVM-325). POST /api/v1/waivers/{id}/revoke */
+  revoke(
+    id: string,
+    revokedBy: string,
+    reason: string
+  ): Promise<WaiverView> {
+    return firstValueFrom(
+      this.api.post<WaiverView, { revokedBy: string; reason: string }>(
+        `/api/v1/waivers/${id}/revoke`,
+        { revokedBy, reason }
+      )
+    );
+  }
 }

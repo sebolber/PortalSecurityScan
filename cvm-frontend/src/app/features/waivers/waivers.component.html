@@ -75,6 +75,7 @@
             <th>Erteilt von</th>
             <th>Gueltig bis</th>
             <th>Erteilt</th>
+            <th>Aktion</th>
           </tr>
         </thead>
         <tbody>
@@ -102,10 +103,141 @@
                 </span>
               </td>
               <td>{{ w.createdAt | date: 'yyyy-MM-dd' }}</td>
+              <td>
+                @if (w.status === 'ACTIVE') {
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      [attr.data-testid]="'waiver-extend-' + w.id"
+                      (click)="oeffneExtendDialog(w)"
+                    >
+                      <cvm-icon name="calendar" [size]="14"></cvm-icon>
+                      Verlaengern
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [attr.data-testid]="'waiver-revoke-' + w.id"
+                      (click)="oeffneRevokeDialog(w)"
+                    >
+                      <cvm-icon name="trash-2" [size]="14"></cvm-icon>
+                      Widerrufen
+                    </button>
+                  </div>
+                } @else {
+                  <span class="text-text-muted text-xs">-</span>
+                }
+              </td>
             </tr>
           }
         </tbody>
       </table>
     </section>
   }
+
+  <!-- Iteration 85 (CVM-325): Verlaengern-Dialog -->
+  <cvm-dialog
+    [open]="extendDialogOffen()"
+    title="Waiver verlaengern"
+    size="md"
+    (close)="abbrechen()"
+  >
+    @if (aktiverWaiver(); as w) {
+      <div class="flex flex-col gap-3">
+        <p class="text-sm text-text-muted">
+          Aktives Waiver fuer Assessment
+          <code class="text-code">{{ w.assessmentId }}</code>.
+          Gueltig bis: {{ w.validUntil | date: 'yyyy-MM-dd' }}.
+        </p>
+        @if (extendVierAugenKonflikt()) {
+          <ahs-banner kind="critical" title="Vier-Augen-Prinzip verletzt">
+            Der Verlaengerer darf nicht der Erteiler sein. Bitte
+            eine zweite Person mit Approver-Rolle bitten.
+          </ahs-banner>
+        }
+        <label class="form-group">
+          <span class="form-label">Neues Gueltig-bis-Datum</span>
+          <input
+            type="date"
+            class="input-field"
+            data-testid="waiver-extend-date"
+            [ngModel]="extendValidUntil()"
+            (ngModelChange)="extendValidUntil.set($event)"
+          />
+        </label>
+      </div>
+    }
+    <div footer>
+      <button type="button" class="btn btn-secondary" (click)="abbrechen()"
+              [disabled]="pending()">
+        Abbrechen
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary"
+        data-testid="waiver-extend-confirm"
+        [disabled]="pending() || extendVierAugenKonflikt()"
+        (click)="extendBestaetigen()"
+      >
+        @if (pending()) {
+          <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
+          Speichere...
+        } @else {
+          Verlaengern
+        }
+      </button>
+    </div>
+  </cvm-dialog>
+
+  <!-- Iteration 85 (CVM-325): Widerrufen-Dialog -->
+  <cvm-dialog
+    [open]="revokeDialogOffen()"
+    title="Waiver widerrufen"
+    size="md"
+    (close)="abbrechen()"
+  >
+    @if (aktiverWaiver(); as w) {
+      <div class="flex flex-col gap-3">
+        <p class="text-sm text-text-muted">
+          Dieser Waiver wird unwiderruflich auf REVOKED gesetzt.
+          Alle abhaengigen Ausnahmen werden aufgehoben.
+        </p>
+        <p class="text-xs text-text-muted">
+          Assessment: <code class="text-code">{{ w.assessmentId }}</code>
+        </p>
+        <label class="form-group">
+          <span class="form-label">Begruendung</span>
+          <textarea
+            rows="4"
+            class="input-field"
+            data-testid="waiver-revoke-reason"
+            [ngModel]="revokeReason()"
+            (ngModelChange)="revokeReason.set($event)"
+            placeholder="Warum wird dieser Waiver widerrufen?"
+          ></textarea>
+        </label>
+      </div>
+    }
+    <div footer>
+      <button type="button" class="btn btn-secondary" (click)="abbrechen()"
+              [disabled]="pending()">
+        Abbrechen
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger"
+        data-testid="waiver-revoke-confirm"
+        [disabled]="pending() || !revokeReason().trim()"
+        (click)="revokeBestaetigen()"
+      >
+        @if (pending()) {
+          <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
+          Widerrufe...
+        } @else {
+          Widerrufen
+        }
+      </button>
+    </div>
+  </cvm-dialog>
 </div>

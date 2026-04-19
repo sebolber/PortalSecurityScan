@@ -32,8 +32,11 @@ Iterationen 80+ implementieren die Befunde.
   jetzt ein Button mit Popover; Admin sieht alle Mandanten mit
   "Als Default"-Button. Hinweis: Mandantenwechsel erfordert
   weiterhin Re-Login via Keycloak (Infrastruktur-Ebene).
-- **U-03 Waiver-Extend/Revoke-Aktionen + Expiry-Banner** -
-  Iteration 85. Backend existiert; UI fehlt.
+- ~~U-03 Waiver-Extend/Revoke-Aktionen~~ - **Erledigt in
+  Iteration 85** (CVM-325). Pro ACTIVE-Zeile "Verlaengern" und
+  "Widerrufen". Dialoge mit Date-Picker bzw. Pflicht-Begruendung.
+  Vier-Augen-Warnung im Verlaengern-Dialog. Expiry-Warn-Banner
+  bestand schon aus der urspruenglichen Iteration.
 - **U-04a Vier-Augen-Warnung im Queue-Detail** - Iteration 86.
   Rote Box + Approve-Disabled, wenn Autor == Approver.
 - **U-04b Assessment-Audit-Trail im Queue-Detail** -
