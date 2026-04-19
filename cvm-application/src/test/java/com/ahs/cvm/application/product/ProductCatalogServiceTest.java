@@ -115,7 +115,7 @@ class ProductCatalogServiceTest {
         Product p = Product.builder()
                 .id(productId).key("portalcore-test").name("PortalCore").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
-        given(versionRepo.findByProductIdAndVersion(productId, "1.15.0-test"))
+        given(versionRepo.findByProductIdAndVersionAndDeletedAtIsNull(productId, "1.15.0-test"))
                 .willReturn(Optional.empty());
 
         ProductVersionView result = service.anlegeVersion(productId,
@@ -148,7 +148,7 @@ class ProductCatalogServiceTest {
         ProductVersion bestehend = ProductVersion.builder()
                 .id(UUID.randomUUID()).product(p).version("1.14.2-test").build();
         given(productRepo.findById(productId)).willReturn(Optional.of(p));
-        given(versionRepo.findByProductIdAndVersion(productId, "1.14.2-test"))
+        given(versionRepo.findByProductIdAndVersionAndDeletedAtIsNull(productId, "1.14.2-test"))
                 .willReturn(Optional.of(bestehend));
 
         assertThatThrownBy(() -> service.anlegeVersion(productId,
@@ -262,5 +262,71 @@ class ProductCatalogServiceTest {
 
         assertThatThrownBy(() -> service.loesche(productId))
                 .isInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("loescheVersion: setzt deletedAt und bewahrt Zeitpunkt danach")
+    void loescheVersionHappyPath() {
+        UUID productId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        Product p = Product.builder().id(productId).key("p").name("P").build();
+        ProductVersion v = ProductVersion.builder()
+                .id(versionId).product(p).version("1.0.0").build();
+        given(versionRepo.findById(versionId)).willReturn(Optional.of(v));
+
+        service.loescheVersion(productId, versionId);
+
+        assertThat(v.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("loescheVersion: bereits geloeschte Version bleibt unveraendert (Idempotenz)")
+    void loescheVersionIdempotent() {
+        UUID productId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        Product p = Product.builder().id(productId).key("p").name("P").build();
+        Instant vorher = Instant.parse("2026-01-01T00:00:00Z");
+        ProductVersion v = ProductVersion.builder()
+                .id(versionId).product(p).version("1.0.0").deletedAt(vorher).build();
+        given(versionRepo.findById(versionId)).willReturn(Optional.of(v));
+
+        service.loescheVersion(productId, versionId);
+
+        assertThat(v.getDeletedAt()).isEqualTo(vorher);
+    }
+
+    @Test
+    @DisplayName("loescheVersion: unbekannte versionId -> ProductVersionNotFoundException")
+    void loescheVersionUnbekannt() {
+        UUID productId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        given(versionRepo.findById(versionId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.loescheVersion(productId, versionId))
+                .isInstanceOf(ProductVersionNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("loescheVersion: Version gehoert zu anderem Produkt -> ProductVersionNotFoundException")
+    void loescheVersionFalschesProdukt() {
+        UUID productId = UUID.randomUUID();
+        UUID andererId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        Product p = Product.builder().id(andererId).key("p").name("P").build();
+        ProductVersion v = ProductVersion.builder()
+                .id(versionId).product(p).version("1.0.0").build();
+        given(versionRepo.findById(versionId)).willReturn(Optional.of(v));
+
+        assertThatThrownBy(() -> service.loescheVersion(productId, versionId))
+                .isInstanceOf(ProductVersionNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("loescheVersion: null-Parameter -> IllegalArgumentException")
+    void loescheVersionNull() {
+        assertThatThrownBy(() -> service.loescheVersion(null, UUID.randomUUID()))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.loescheVersion(UUID.randomUUID(), null))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

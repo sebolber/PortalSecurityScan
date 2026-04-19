@@ -125,4 +125,18 @@ public class ProductsController {
                         + "/versions/" + created.id()))
                 .body(created);
     }
+
+    @DeleteMapping("/{productId}/versions/{versionId}")
+    @PreAuthorize("hasAuthority('CVM_ADMIN')")
+    @Operation(summary = "Produkt-Version soft-loeschen (CVM_ADMIN). Scans/Findings bleiben erhalten.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Version geloescht"),
+        @ApiResponse(responseCode = "404", description = "Produkt oder Version nicht gefunden")
+    })
+    public ResponseEntity<Void> loeschenVersion(
+            @PathVariable UUID productId,
+            @PathVariable UUID versionId) {
+        catalogService.loescheVersion(productId, versionId);
+        return ResponseEntity.noContent().build();
+    }
 }

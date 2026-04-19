@@ -76,7 +76,7 @@ export class AdminProductsComponent implements OnInit {
   readonly versionPending = signal<boolean>(false);
 
   readonly produktSpalten = ['uuid', 'key', 'name', 'description', 'aktion'];
-  readonly versionSpalten = ['uuid', 'version', 'gitCommit', 'releasedAt'];
+  readonly versionSpalten = ['uuid', 'version', 'gitCommit', 'releasedAt', 'aktion'];
 
   async ngOnInit(): Promise<void> {
     await this.ladeProdukte();
@@ -186,6 +186,27 @@ export class AdminProductsComponent implements OnInit {
 
   versionenFuer(productId: string): readonly ProductVersionView[] {
     return this.versionen()[productId] ?? [];
+  }
+
+  /**
+   * Soft-Delete einer Produkt-Version (Iteration 49, CVM-99).
+   */
+  async loescheVersion(productId: string, v: ProductVersionView): Promise<void> {
+    const bestaetigt = window.confirm(
+      `Version "${v.version}" wirklich soft-loeschen? Scans und Findings bleiben erhalten.`
+    );
+    if (!bestaetigt) {
+      return;
+    }
+    try {
+      await this.products.deleteVersion(productId, v.id);
+      this.snack.open(`Version "${v.version}" geloescht.`, 'OK', { duration: 3000 });
+      await this.waehleProdukt(productId);
+    } catch (err) {
+      this.snack.open(
+        this.fehlermeldung(err, 'Loeschen der Version fehlgeschlagen.'),
+        'OK', { duration: 5000 });
+    }
   }
 
   /**

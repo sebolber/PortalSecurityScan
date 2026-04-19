@@ -3,6 +3,7 @@ package com.ahs.cvm.api.product;
 import com.ahs.cvm.application.product.ProductKeyConflictException;
 import com.ahs.cvm.application.product.ProductNotFoundException;
 import com.ahs.cvm.application.product.ProductVersionConflictException;
+import com.ahs.cvm.application.product.ProductVersionNotFoundException;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,6 +38,15 @@ public class ProductsExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(Map.of(
                         "error", "product_version_conflict",
+                        "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(ProductVersionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> versionNichtGefunden(
+            ProductVersionNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "error", "product_version_not_found",
                         "message", e.getMessage()));
     }
 

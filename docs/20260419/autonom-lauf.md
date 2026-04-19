@@ -25,3 +25,6 @@ Naechstes: Iteration 47 Queue-Filter oberhalb der Liste.
 [09:50] Iteration 47 abgeschlossen: Queue-Filter als horizontaler
 Balken oberhalb der Tabelle (commit c9e86a9b). Naechstes: Iteration 48
 Umgebungen Soft-Delete.
+[09:58] Iteration 48 abgeschlossen: Umgebungen Soft-Delete
+(Flyway V0031, Service, Controller, Frontend-Button) (commit c5f6e4ae).
+Naechstes: Iteration 49 Produkt-Versionen Soft-Delete.

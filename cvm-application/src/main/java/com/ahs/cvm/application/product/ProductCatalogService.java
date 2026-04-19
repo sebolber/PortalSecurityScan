@@ -93,7 +93,8 @@ public class ProductCatalogService {
         String version = trim(input.version(), "version");
         Product produkt = productRepository.findById(productId)
                 .orElseThrow(() -> new ProductNotFoundException(productId));
-        if (productVersionRepository.findByProductIdAndVersion(productId, version).isPresent()) {
+        if (productVersionRepository
+                .findByProductIdAndVersionAndDeletedAtIsNull(productId, version).isPresent()) {
             throw new ProductVersionConflictException(productId, version);
         }
         ProductVersion saved = productVersionRepository.save(ProductVersion.builder()
@@ -170,6 +171,31 @@ public class ProductCatalogService {
             produkt.setDescription(description.isEmpty() ? null : description);
         }
         return ProductView.from(productRepository.save(produkt));
+    }
+
+    /**
+     * Soft-Delete einer Produkt-Version (Iteration 49, CVM-99). Die
+     * Version bleibt in der Datenbank stehen; Scans/Findings referenzieren
+     * sie weiter. Sie verschwindet nur aus Admin-/Auswahl-Listen.
+     */
+    @Transactional
+    public void loescheVersion(UUID productId, UUID versionId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId darf nicht null sein.");
+        }
+        if (versionId == null) {
+            throw new IllegalArgumentException("versionId darf nicht null sein.");
+        }
+        ProductVersion version = productVersionRepository.findById(versionId)
+                .orElseThrow(() -> new ProductVersionNotFoundException(productId, versionId));
+        if (version.getProduct() == null
+                || !productId.equals(version.getProduct().getId())) {
+            throw new ProductVersionNotFoundException(productId, versionId);
+        }
+        if (version.getDeletedAt() == null) {
+            version.setDeletedAt(Instant.now());
+            productVersionRepository.save(version);
+        }
     }
 
     public record ProductCreateInput(String key, String name, String description) {}

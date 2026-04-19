@@ -38,7 +38,8 @@ public class ProductQueryService {
 
     @Transactional(readOnly = true)
     public List<ProductVersionView> listVersions(UUID productId) {
-        return versionRepository.findByProductId(productId).stream()
+        // Iteration 49 (CVM-99): Soft-Delete herausfiltern.
+        return versionRepository.findByProductIdAndDeletedAtIsNull(productId).stream()
                 .sorted(Comparator
                         .comparing(
                                 (ProductVersion v) -> v.getReleasedAt() == null

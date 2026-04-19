@@ -80,4 +80,13 @@ export class ProductsService {
       )
     );
   }
+
+  /** Iteration 49 (CVM-99): Soft-Delete einer Produkt-Version. */
+  deleteVersion(productId: string, versionId: string): Promise<void> {
+    return firstValueFrom(
+      this.api.delete<void>(
+        `/api/v1/products/${productId}/versions/${versionId}`
+      )
+    );
+  }
 }
