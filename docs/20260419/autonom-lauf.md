@@ -181,3 +181,10 @@ Flyway V0040 + Entity + DTO + Service + REST-DTO + Controller
 + Frontend-Service + AdminProducts-Edit-Prompt. Bereitet den
 echten ReachabilityAutoTriggerPort-Adapter in einer Folge-
 Iteration vor.
+[17:28] Iteration 77 abgeschlossen: ReachabilityAutoTriggerAdapter
+(@Primary) verdraengt den Noop. Zieht repoUrl aus Product,
+commitSha aus ProductVersion.gitCommit, Symbol/Language aus
+PurlSymbolDeriver und ruft ReachabilityAgent.analyze async.
+Damit ist die Auto-Trigger-Kette komplett verdrahtet. Wegen
+Sandbox-Limits kein neuer Integrationstest (Subprocess-
+abhaengig).

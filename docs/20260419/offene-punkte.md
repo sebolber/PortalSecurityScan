@@ -232,14 +232,16 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   `ReachabilityAutoTriggerPort`-Adapter, der
   `ReachabilityAgent.analyze(...)` mit dem JGit-Workdir aufruft.
 - ~~Auto-Trigger der Reachability, wenn AI-Vorschlag-Confidence
-  unter Schwelle~~ - **Teil erledigt in Iteration 70**
-  (CVM-307). Neuer Event `LowConfidenceAiSuggestionEvent`, Port
-  `ReachabilityAutoTriggerPort` + Noop-Default-Adapter, Service
+  unter Schwelle~~ - **Erledigt in Iteration 70 + 77** (CVM-307,
+  CVM-314). Neuer Event `LowConfidenceAiSuggestionEvent`, Port
+  `ReachabilityAutoTriggerPort` + Service
   `ReachabilityAutoTriggerService` mit Schwellwert- und
-  Rate-Limit-Logik (konfigurierbar ueber
-  `cvm.ai.reachability.auto-trigger-threshold` und
-  `cvm.ai.reachability.auto-trigger-cooldown-minutes`). Echter
-  Trigger-Adapter kommt zusammen mit dem JGit-Adapter.
+  Rate-Limit-Logik. Echter Adapter
+  `ReachabilityAutoTriggerAdapter` (`@Primary`) zieht `repoUrl`
+  aus `Product` (Iteration 76), `commitSha` aus
+  `ProductVersion.gitCommit` und Symbol/Language aus
+  `PurlSymbolDeriver` und ruft `ReachabilityAgent.analyze`
+  asynchron auf.
 - Playwright-E2E + axe-core in CI, Karma in CI, Testcontainers-IT auf
   Docker-Desktop-macOS. *(Iteration 65 hat die Karma-Suite lokal
   wieder vollstaendig gruen bekommen - 91 Tests SUCCESS, keine "has
