@@ -31,7 +31,16 @@ public class Environment {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
-    @Column(name = "key", nullable = false, unique = true)
+    /**
+     * Iteration 62B (CVM-62): Mandanten-Zuordnung als FK auf tenant.id.
+     * Die bestehende Freitext-Spalte {@code tenant} bleibt fuer die
+     * semantische Bezeichnung (Abteilungsname etc.); die Isolation
+     * haengt allein an dieser UUID.
+     */
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
+    @Column(name = "key", nullable = false)
     private String key;
 
     @Column(name = "name", nullable = false)

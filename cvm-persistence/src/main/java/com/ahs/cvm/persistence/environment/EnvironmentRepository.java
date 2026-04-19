@@ -7,10 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EnvironmentRepository extends JpaRepository<Environment, UUID> {
 
-    Optional<Environment> findByKey(String key);
+    /**
+     * Iteration 62B (CVM-62): Key ist nur innerhalb eines Mandanten
+     * eindeutig.
+     */
+    Optional<Environment> findByTenantIdAndKey(UUID tenantId, String key);
 
     /**
-     * Iteration 48 (CVM-98): nur aktive (nicht soft-geloeschte) Umgebungen.
+     * Iteration 48 + 62B: nur aktive (nicht soft-geloeschte) Umgebungen
+     * eines Mandanten.
+     */
+    List<Environment> findByTenantIdAndDeletedAtIsNullOrderByKeyAsc(UUID tenantId);
+
+    /**
+     * Cross-Tenant-Fallback - NUR fuer Admin-Use-Cases, die bewusst
+     * ueber alle Mandanten lesen wollen.
      */
     List<Environment> findByDeletedAtIsNullOrderByKeyAsc();
 }

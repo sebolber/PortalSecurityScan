@@ -1,5 +1,6 @@
 package com.ahs.cvm.application.environment;
 
+import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.persistence.environment.Environment;
 import com.ahs.cvm.persistence.environment.EnvironmentDeployment;
 import com.ahs.cvm.persistence.environment.EnvironmentDeploymentRepository;
@@ -30,7 +31,8 @@ public class EnvironmentService {
 
     @Transactional(readOnly = true)
     public Optional<Environment> findeUmgebungUeberKey(String key) {
-        return environmentRepository.findByKey(key);
+        return TenantContext.current()
+                .flatMap(tenantId -> environmentRepository.findByTenantIdAndKey(tenantId, key));
     }
 
     @Transactional(readOnly = true)

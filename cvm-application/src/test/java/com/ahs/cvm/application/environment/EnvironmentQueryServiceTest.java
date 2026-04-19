@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 
 import com.ahs.cvm.application.environment.EnvironmentQueryService.CreateEnvironmentCommand;
 import com.ahs.cvm.application.environment.EnvironmentQueryService.EnvironmentKeyAlreadyExistsException;
+import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.domain.enums.EnvironmentStage;
 import com.ahs.cvm.persistence.environment.Environment;
 import com.ahs.cvm.persistence.environment.EnvironmentRepository;
@@ -15,11 +16,14 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class EnvironmentQueryServiceTest {
+
+    private static final UUID TENANT = UUID.fromString("00000000-0000-0000-0000-0000000000a2");
 
     private EnvironmentRepository repo;
     private EnvironmentQueryService service;
@@ -35,12 +39,18 @@ class EnvironmentQueryServiceTest {
             return e;
         });
         service = new EnvironmentQueryService(repo);
+        TenantContext.set(TENANT);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
     }
 
     @Test
     @DisplayName("create: gueltige Eingabe persistiert und liefert View")
     void createOk() {
-        given(repo.findByKey("CI")).willReturn(Optional.empty());
+        given(repo.findByTenantIdAndKey(TENANT, "CI")).willReturn(Optional.empty());
 
         EnvironmentView view = service.create(new CreateEnvironmentCommand(
                 "CI", "Continuous Integration", EnvironmentStage.DEV, "default"));
@@ -52,10 +62,10 @@ class EnvironmentQueryServiceTest {
     }
 
     @Test
-    @DisplayName("create: doppelter key fuehrt zur Ablehnung")
+    @DisplayName("create: doppelter key innerhalb des Mandanten -> Konflikt")
     void duplicate() {
-        given(repo.findByKey("CI"))
-                .willReturn(Optional.of(Environment.builder().key("CI").build()));
+        given(repo.findByTenantIdAndKey(TENANT, "CI"))
+                .willReturn(Optional.of(Environment.builder().tenantId(TENANT).key("CI").build()));
 
         assertThatThrownBy(() -> service.create(new CreateEnvironmentCommand(
                         "CI", "CI", EnvironmentStage.DEV, null)))
@@ -83,18 +93,29 @@ class EnvironmentQueryServiceTest {
     @Test
     @DisplayName("create: leerer tenant wird zu null")
     void leererTenant() {
-        given(repo.findByKey("CI")).willReturn(Optional.empty());
+        given(repo.findByTenantIdAndKey(TENANT, "CI")).willReturn(Optional.empty());
         EnvironmentView view = service.create(new CreateEnvironmentCommand(
                 "CI", "CI", EnvironmentStage.DEV, "  "));
         assertThat(view.tenant()).isNull();
     }
 
     @Test
-    @DisplayName("listAll liest nur aktive Umgebungen (deletedAt IS NULL)")
+    @DisplayName("create: ohne Tenant-Kontext wirft IllegalStateException")
+    void createOhneTenant() {
+        TenantContext.clear();
+        assertThatThrownBy(() -> service.create(new CreateEnvironmentCommand(
+                        "CI", "CI", EnvironmentStage.DEV, null)))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("listAll liest nur aktive Umgebungen des aktuellen Mandanten")
     void list_nur_aktive() {
         Environment aktiv = Environment.builder().id(UUID.randomUUID())
+                .tenantId(TENANT)
                 .key("REF").name("REF").stage(EnvironmentStage.REF).build();
-        given(repo.findByDeletedAtIsNullOrderByKeyAsc()).willReturn(List.of(aktiv));
+        given(repo.findByTenantIdAndDeletedAtIsNullOrderByKeyAsc(TENANT))
+                .willReturn(List.of(aktiv));
 
         List<EnvironmentView> views = service.listAll();
 
@@ -103,10 +124,18 @@ class EnvironmentQueryServiceTest {
     }
 
     @Test
+    @DisplayName("listAll liefert leere Liste ohne Tenant-Kontext")
+    void listOhneTenant() {
+        TenantContext.clear();
+        assertThat(service.listAll()).isEmpty();
+    }
+
+    @Test
     @DisplayName("loesche: setzt deletedAt auf jetzt und speichert")
     void loesche_setzt_deletedAt() {
         UUID id = UUID.randomUUID();
         Environment vorhanden = Environment.builder().id(id)
+                .tenantId(TENANT)
                 .key("REF").name("REF").stage(EnvironmentStage.REF).build();
         given(repo.findById(id)).willReturn(Optional.of(vorhanden));
 
@@ -131,6 +160,7 @@ class EnvironmentQueryServiceTest {
         UUID id = UUID.randomUUID();
         java.time.Instant vorher = java.time.Instant.parse("2026-01-01T00:00:00Z");
         Environment vorhanden = Environment.builder().id(id)
+                .tenantId(TENANT)
                 .key("REF").name("REF").stage(EnvironmentStage.REF)
                 .deletedAt(vorher).build();
         given(repo.findById(id)).willReturn(Optional.of(vorhanden));
@@ -145,5 +175,18 @@ class EnvironmentQueryServiceTest {
     void loesche_null_id() {
         assertThatThrownBy(() -> service.loesche(null))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("loesche: Umgebung aus anderem Mandanten -> EntityNotFoundException")
+    void loesche_fremder_mandant() {
+        UUID id = UUID.randomUUID();
+        Environment fremd = Environment.builder().id(id)
+                .tenantId(UUID.randomUUID())
+                .key("REF").name("REF").stage(EnvironmentStage.REF).build();
+        given(repo.findById(id)).willReturn(Optional.of(fremd));
+
+        assertThatThrownBy(() -> service.loesche(id))
+                .isInstanceOf(EntityNotFoundException.class);
     }
 }

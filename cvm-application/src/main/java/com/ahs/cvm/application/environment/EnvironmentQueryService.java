@@ -1,5 +1,6 @@
 package com.ahs.cvm.application.environment;
 
+import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.domain.enums.EnvironmentStage;
 import com.ahs.cvm.persistence.environment.Environment;
 import com.ahs.cvm.persistence.environment.EnvironmentRepository;
@@ -12,9 +13,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Read- und Anlage-Service fuer die {@code environment}-Tabelle
- * (Iteration 25, CVM-56 + Iteration 28e, CVM-69). Deckt die Read-
- * und Create-Use-Cases der Einstellungen- und Profile-UI ab, ohne
- * dass {@code cvm-api} direkt auf die Persistence-Entity zugreift.
+ * (Iteration 25, CVM-56 + Iteration 28e, CVM-69).
+ *
+ * <p>Iteration 62B (CVM-62): Tenant-Scope. Lesen liefert nur Umgebungen
+ * des aktuellen {@link TenantContext}; Anlage setzt die Mandanten-ID
+ * automatisch, `loesche` weist fremde Eintraege ab.
  */
 @Service
 public class EnvironmentQueryService {
@@ -27,17 +30,15 @@ public class EnvironmentQueryService {
 
     @Transactional(readOnly = true)
     public List<EnvironmentView> listAll() {
-        return repository.findByDeletedAtIsNullOrderByKeyAsc().stream()
-                .map(EnvironmentQueryService::toView)
-                .toList();
+        return TenantContext.current()
+                .map(tenantId -> repository
+                        .findByTenantIdAndDeletedAtIsNullOrderByKeyAsc(tenantId)
+                        .stream()
+                        .map(EnvironmentQueryService::toView)
+                        .toList())
+                .orElse(List.of());
     }
 
-    /**
-     * Soft-Delete (Iteration 48, CVM-98). Die Umgebung bleibt in der
-     * Datenbank stehen (Scans/Findings/Assessments referenzieren sie
-     * weiter), der Eintrag verschwindet nur aus den Admin- und
-     * Auswahl-Listen.
-     */
     @Transactional
     public void loesche(UUID environmentId) {
         if (environmentId == null) {
@@ -46,17 +47,13 @@ public class EnvironmentQueryService {
         Environment umgebung = repository.findById(environmentId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         "Umgebung nicht gefunden: " + environmentId));
+        pruefeTenantZugehoerigkeit(umgebung);
         if (umgebung.getDeletedAt() == null) {
             umgebung.setDeletedAt(Instant.now());
             repository.save(umgebung);
         }
     }
 
-    /**
-     * Legt eine neue Umgebung an. {@code key} muss eindeutig sein
-     * (DB-Constraint). Wirft {@link EnvironmentKeyAlreadyExistsException},
-     * wenn ein Eintrag mit dem Key bereits existiert.
-     */
     @Transactional
     public EnvironmentView create(CreateEnvironmentCommand command) {
         String key = requireText(command.key(), "key");
@@ -65,11 +62,13 @@ public class EnvironmentQueryService {
         if (stage == null) {
             throw new IllegalArgumentException("stage fehlt.");
         }
-        if (repository.findByKey(key).isPresent()) {
+        UUID tenantId = TenantContext.requireCurrent();
+        if (repository.findByTenantIdAndKey(tenantId, key).isPresent()) {
             throw new EnvironmentKeyAlreadyExistsException(key);
         }
         Environment saved = repository.save(
                 Environment.builder()
+                        .tenantId(tenantId)
                         .key(key)
                         .name(name)
                         .stage(stage)
@@ -92,6 +91,15 @@ public class EnvironmentQueryService {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private void pruefeTenantZugehoerigkeit(Environment umgebung) {
+        TenantContext.current().ifPresent(tenantId -> {
+            if (!tenantId.equals(umgebung.getTenantId())) {
+                throw new EntityNotFoundException(
+                        "Umgebung nicht gefunden: " + umgebung.getId());
+            }
+        });
     }
 
     static EnvironmentView toView(Environment e) {
