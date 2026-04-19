@@ -13,13 +13,13 @@ import jakarta.persistence.Converter;
  * {@code ERROR: column "embedding" is of type vector but expression is
  * of type bytea}.
  *
- * <p>Der Konverter schreibt stattdessen das Textformat
- * ({@code "[1.0,2.0,...]"}) in die Spalte. Zusaetzlich bindet die
- * Entity das Feld ueber {@code @JdbcTypeCode(SqlTypes.OTHER)}, sodass
- * der PostgreSQL-JDBC-Treiber den Wert als "unknown" sendet; pgvector
- * laesst den Text dann automatisch auf {@code vector} parsen. Ohne das
- * {@code OTHER} bindet Hibernate standardmaessig als {@code VARCHAR},
- * und pgvector verweigert den impliziten Cast auf gebundene Parameter.
+ * <p>Der Konverter schreibt das Textformat
+ * ({@code "[1.0,2.0,...]"}) in die Spalte. Hibernate bindet den Wert
+ * dabei als {@code VARCHAR}; pgvector hat aber keinen impliziten Cast
+ * {@code varchar -> vector}. Die Entity haengt deshalb ein
+ * {@code @ColumnTransformer(write = "?::vector")} an das Feld, sodass
+ * der Parameter im INSERT/UPDATE explizit gecastet wird. Beim Lesen
+ * liefert pgvector den Wert als Text - der Converter parst ihn zurueck.
  */
 @Converter(autoApply = false)
 public class PGvectorConverter implements AttributeConverter<PGvector, String> {
