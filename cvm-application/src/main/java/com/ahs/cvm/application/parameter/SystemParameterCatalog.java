@@ -357,6 +357,24 @@ public final class SystemParameterCatalog {
                 null,
                 CATEGORY_ENRICHMENT, "osv",
                 SystemParameterType.INTEGER, "30", true, null, null, "Sekunden", false, true, true));
+        // Iteration 72 (CVM-309): File-basierter OSV-Mirror fuer
+        // air-gapped Setups. Werden beim Boot gelesen, daher restartRequired.
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.mirror.enabled",
+                "OSV-Mirror aktiv",
+                "Wenn true, liest ein lokales JSONL-File als OSV-Quelle; "
+                        + "verdraengt den Netz-basierten Adapter.",
+                "Schaltung beim Boot; Aenderung erfordert Neustart.",
+                CATEGORY_ENRICHMENT, "osv-mirror",
+                SystemParameterType.BOOLEAN, "false", true, null, null, null, false, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.mirror.file",
+                "OSV-Mirror JSONL-Pfad",
+                "Absoluter Pfad der JSONL-Datei mit OSV-Advisories "
+                        + "(eine Advisory pro Zeile).",
+                "Datei wird beim Boot gelesen; Aenderung erfordert Neustart.",
+                CATEGORY_ENRICHMENT, "osv-mirror",
+                SystemParameterType.STRING, null, false, null, null, null, false, false, true, true));
 
         addFeed(list, "nvd", "NVD", "true", "50", "30");
         addFeed(list, "ghsa", "GHSA", "false", "30", "60");

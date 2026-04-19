@@ -152,3 +152,11 @@ Optionales HTTPS-Token aus dem Parameter-Store. SSH bleibt
 offen. Drei neue Katalog-Eintraege, JGit-Maven-Dependency.
 Fuenf neue Tests mit lokalem Bare-Repo ueber file://.
 Naechstes: Iteration 72 OSV-Mirror fuer air-gapped.
+[16:54] Iteration 72 abgeschlossen: OsvJsonlMirror (pure Java)
++ OsvJsonlMirrorLookup (@Primary, @ConditionalOnProperty)
+implementiert. JSONL-Datei wird beim Boot einmal gelesen,
+Lookup liefert aus dem In-Memory-Index. Zwei neue Katalog-
+Eintraege (mirror.enabled, mirror.file). Sieben neue Unit-
+Tests (leere Datei, Aliase, direkte CVE, Duplikate, reload,
+defekte Zeile, fehlende Datei). Naechstes: schauen ob die
+Liste leer ist.

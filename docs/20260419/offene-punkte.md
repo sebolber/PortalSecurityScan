@@ -199,7 +199,11 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   Benoetigt einen Service-/Controller-Endpunkt
   "latestDraftFor(envId)" oder "listDraftsFor(envId)". Iteration 51
   hat nur Update/Delete auf Profil-IDs, kein Listing.
-- OSV-Mirror fuer air-gapped-Installationen.
+- ~~OSV-Mirror fuer air-gapped-Installationen~~ - **Teil erledigt
+  in Iteration 72** (CVM-309). `OsvJsonlMirror` + Spring-Bean
+  `OsvJsonlMirrorLookup` (`@Primary`, `@ConditionalOnProperty`).
+  JSONL-Datei wird beim Boot einmal in den Speicher gelesen.
+  Follow-up: Versionsbereich-Matching, CLI-Refresh-Job.
 - ~~PURL-Canonicalization~~ - erledigt in Iteration 58
   (`com.ahs.cvm.domain.purl.PurlCanonicalizer`, Integration in
   `ComponentCveMatchingOnScanIngestedListener`).
