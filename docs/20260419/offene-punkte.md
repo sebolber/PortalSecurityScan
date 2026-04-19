@@ -207,9 +207,12 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   Iteration 73 (CVM-310) ergaenzt. Reload-Button im Admin-UI
   (an `/admin/cve-import`) in Iteration 75 (CVM-312) ergaenzt.
   Exakter Versions-Filter (`affected.versions`) in Iteration 78
-  (CVM-315) ergaenzt. Verbleibender Follow-up: `ranges`-/
-  `events`-Semantik (semver introduced/fixed), braucht
-  ecosystem-spezifische Version-Sortierung.
+  (CVM-315) ergaenzt. Numerischer semver-Range (X.Y.Z) fuer
+  `ranges[0].events.introduced/fixed` in Iteration 79
+  (CVM-316) ergaenzt. Verbleibende Follow-ups:
+  ecosystem-spezifische Version-Sortierung (Maven/PEP440/
+  npm-prerelease), mehrere Ranges pro Advisory,
+  `last_affected`-Semantik.
 - ~~PURL-Canonicalization~~ - erledigt in Iteration 58
   (`com.ahs.cvm.domain.purl.PurlCanonicalizer`, Integration in
   `ComponentCveMatchingOnScanIngestedListener`).

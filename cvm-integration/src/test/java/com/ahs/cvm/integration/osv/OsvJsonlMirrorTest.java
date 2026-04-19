@@ -188,4 +188,66 @@ class OsvJsonlMirrorTest {
                 .get("pkg:npm/xyz"))
                 .containsExactly("CVE-2025-103");
     }
+
+    @Test
+    @DisplayName("Iteration 79: ranges mit introduced/fixed - Version dazwischen matcht, darueber nicht")
+    void rangesIntroducedFixed() throws Exception {
+        Path file = writeJsonl(
+                "{\"id\":\"GHSA-1\",\"aliases\":[\"CVE-2025-200\"],"
+                        + "\"affected\":[{\"package\":{\"purl\":\"pkg:maven/org.foo/bar\"},"
+                        + "\"ranges\":[{\"type\":\"ECOSYSTEM\",\"events\":["
+                        + "{\"introduced\":\"1.0.0\"},{\"fixed\":\"2.0.0\"}]}]}]}\n");
+        OsvJsonlMirror mirror = new OsvJsonlMirror(file);
+        mirror.reload();
+
+        assertThat(mirror.findCveIdsForPurls(
+                List.of("pkg:maven/org.foo/bar@1.0.0"))
+                .get("pkg:maven/org.foo/bar@1.0.0"))
+                .containsExactly("CVE-2025-200");
+        assertThat(mirror.findCveIdsForPurls(
+                List.of("pkg:maven/org.foo/bar@1.9.9"))
+                .get("pkg:maven/org.foo/bar@1.9.9"))
+                .containsExactly("CVE-2025-200");
+        assertThat(mirror.findCveIdsForPurls(
+                List.of("pkg:maven/org.foo/bar@2.0.0")))
+                .isEmpty();
+        assertThat(mirror.findCveIdsForPurls(
+                List.of("pkg:maven/org.foo/bar@0.9.0")))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Iteration 79: nicht-parseable Semver im range -> match all (konservativ)")
+    void nichtParseableRangeFallback() throws Exception {
+        Path file = writeJsonl(
+                "{\"id\":\"GHSA-1\",\"aliases\":[\"CVE-2025-201\"],"
+                        + "\"affected\":[{\"package\":{\"purl\":\"pkg:maven/org.foo/bar\"},"
+                        + "\"ranges\":[{\"type\":\"ECOSYSTEM\",\"events\":["
+                        + "{\"introduced\":\"1.0.0-rc1\"},{\"fixed\":\"2.0.0\"}]}]}]}\n");
+        OsvJsonlMirror mirror = new OsvJsonlMirror(file);
+        mirror.reload();
+
+        // Range wird wegen des Suffix ignoriert -> alle Versionen treffen.
+        assertThat(mirror.findCveIdsForPurls(
+                List.of("pkg:maven/org.foo/bar@3.0.0"))
+                .get("pkg:maven/org.foo/bar@3.0.0"))
+                .containsExactly("CVE-2025-201");
+    }
+
+    @Test
+    @DisplayName("Iteration 79: Range ohne fixed-Event -> match all (unsupported)")
+    void rangeOhneFixed() throws Exception {
+        Path file = writeJsonl(
+                "{\"id\":\"GHSA-1\",\"aliases\":[\"CVE-2025-202\"],"
+                        + "\"affected\":[{\"package\":{\"purl\":\"pkg:maven/org.foo/bar\"},"
+                        + "\"ranges\":[{\"type\":\"ECOSYSTEM\",\"events\":["
+                        + "{\"introduced\":\"1.0.0\"}]}]}]}\n");
+        OsvJsonlMirror mirror = new OsvJsonlMirror(file);
+        mirror.reload();
+
+        assertThat(mirror.findCveIdsForPurls(
+                List.of("pkg:maven/org.foo/bar@5.0.0"))
+                .get("pkg:maven/org.foo/bar@5.0.0"))
+                .containsExactly("CVE-2025-202");
+    }
 }

@@ -193,3 +193,8 @@ affected.versions wird jetzt beim Index-Bau gespeichert;
 findCveIdsForPurls matcht exakt gegen die Liste. Query ohne
 Version oder leere Liste -> konservatives Match (keine
 Regression). Vier neue OsvJsonlMirrorTest-Cases.
+[17:40] Iteration 79 abgeschlossen: OSV-Mirror semver-Ranges
+(MVP). Neuer Record SemverRange fuer drei-teilige numerische
+Versionen; ranges[0].events.introduced/fixed werden geparst,
+sonst konservatives "match all". Drei neue Tests
+(Standard-Range, unparseable-Fallback, range ohne fixed).

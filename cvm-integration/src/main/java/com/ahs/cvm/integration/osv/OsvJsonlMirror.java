@@ -132,8 +132,10 @@ public final class OsvJsonlMirror {
                 continue;
             }
             Set<String> versions = versionenVonAffected(entry);
+            SemverRange range = rangeVonAffected(entry);
             PurlParts parts = PurlParts.parse(purl);
-            AdvisoryEntry ae = new AdvisoryEntry(List.copyOf(cveIds), versions);
+            AdvisoryEntry ae = new AdvisoryEntry(
+                    List.copyOf(cveIds), versions, range);
             acc.computeIfAbsent(parts.base(), k -> new ArrayList<>()).add(ae);
         }
     }
@@ -172,6 +174,43 @@ public final class OsvJsonlMirror {
     }
 
     /**
+     * Iteration 79 (CVM-316): liest ein optionales
+     * {@code ranges[0].events}-Paar mit {@code introduced} und
+     * {@code fixed} - nur, wenn beide Versionen numerisch 3-
+     * teilig sind (semver-Style). Komplizierte Bereiche werden
+     * ignoriert (fallen auf "alle Versionen" zurueck).
+     */
+    private static SemverRange rangeVonAffected(JsonNode affectedEntry) {
+        JsonNode ranges = affectedEntry.path("ranges");
+        if (!ranges.isArray() || ranges.isEmpty()) {
+            return SemverRange.ALL;
+        }
+        JsonNode events = ranges.get(0).path("events");
+        if (!events.isArray() || events.isEmpty()) {
+            return SemverRange.ALL;
+        }
+        String introduced = null;
+        String fixed = null;
+        for (JsonNode ev : events) {
+            if (ev.has("introduced")) {
+                introduced = ev.get("introduced").asText("");
+            }
+            if (ev.has("fixed")) {
+                fixed = ev.get("fixed").asText("");
+            }
+        }
+        if (introduced == null || fixed == null) {
+            return SemverRange.ALL;
+        }
+        int[] introducedParts = SemverRange.parse(introduced);
+        int[] fixedParts = SemverRange.parse(fixed);
+        if (introducedParts == null || fixedParts == null) {
+            return SemverRange.ALL;
+        }
+        return new SemverRange(introducedParts, fixedParts);
+    }
+
+    /**
      * Paket-PURL (ohne Version) plus der getrennte Versions-Anteil.
      * Iteration 78 (CVM-315).
      */
@@ -201,12 +240,21 @@ public final class OsvJsonlMirror {
 
     /**
      * Eine einzelne Advisory-PURL-Zuordnung im Index.
-     * {@code versions} leer => matcht alle Versions; gesetzt => nur
-     * Queries, deren PURL-Version in der Menge liegt.
+     * {@code versions} leer + {@code range.all()} => matcht alle
+     * Versionen; {@code versions} nicht-leer => exakte Liste;
+     * {@code range} nicht-ALL => semver-3-Tupel introduced &lt;=
+     * Query &lt; fixed.
      */
-    record AdvisoryEntry(List<String> cveIds, Set<String> versions) {
+    record AdvisoryEntry(
+            List<String> cveIds, Set<String> versions, SemverRange range) {
+
+        AdvisoryEntry(List<String> cveIds, Set<String> versions) {
+            this(cveIds, versions, SemverRange.ALL);
+        }
+
         boolean matches(String queryVersion) {
-            if (versions == null || versions.isEmpty()) {
+            if ((versions == null || versions.isEmpty())
+                    && (range == null || range.all())) {
                 return true;
             }
             if (queryVersion == null || queryVersion.isBlank()) {
@@ -214,7 +262,64 @@ public final class OsvJsonlMirror {
                 // Scans ohne Version-Info keine Findings verlieren.
                 return true;
             }
-            return versions.contains(queryVersion);
+            if (versions != null && versions.contains(queryVersion)) {
+                return true;
+            }
+            return range != null && !range.all() && range.contains(queryVersion);
+        }
+    }
+
+    /**
+     * Iteration 79 (CVM-316): sehr schlanker semver-3-Tupel-
+     * Bereichsvergleich, nur fuer numerische {@code X.Y.Z}-
+     * Versionen. Keine Praefix-/Qualifier-Unterstuetzung
+     * (z.B. {@code 1.0.0-rc1} -> "nicht-parseable" -> Range.ALL).
+     */
+    record SemverRange(int[] introduced, int[] fixed) {
+        static final SemverRange ALL = new SemverRange(null, null);
+
+        boolean all() {
+            return introduced == null || fixed == null;
+        }
+
+        boolean contains(String version) {
+            int[] v = parse(version);
+            if (v == null) {
+                return false;
+            }
+            return compare(v, introduced) >= 0 && compare(v, fixed) < 0;
+        }
+
+        static int[] parse(String version) {
+            if (version == null || version.isBlank()) {
+                return null;
+            }
+            String[] parts = version.split("\\.");
+            if (parts.length != 3) {
+                return null;
+            }
+            int[] out = new int[3];
+            try {
+                for (int i = 0; i < 3; i++) {
+                    out[i] = Integer.parseInt(parts[i].trim());
+                    if (out[i] < 0) {
+                        return null;
+                    }
+                }
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+            return out;
+        }
+
+        private static int compare(int[] a, int[] b) {
+            for (int i = 0; i < 3; i++) {
+                int c = Integer.compare(a[i], b[i]);
+                if (c != 0) {
+                    return c;
+                }
+            }
+            return 0;
         }
     }
 }
