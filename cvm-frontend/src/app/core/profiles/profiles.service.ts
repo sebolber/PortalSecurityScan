@@ -92,4 +92,25 @@ export class ProfilesService {
       )
     );
   }
+
+  /** Iteration 51 (CVM-101): DRAFT-YAML aktualisieren. */
+  draftAktualisieren(
+    profileVersionId: string,
+    yamlSource: string,
+    proposedBy: string
+  ): Promise<ProfileResponse> {
+    return firstValueFrom(
+      this.api.put<ProfileResponse, { yamlSource: string; proposedBy: string }>(
+        `/api/v1/profiles/${profileVersionId}`,
+        { yamlSource, proposedBy }
+      )
+    );
+  }
+
+  /** Iteration 51 (CVM-101): Soft-Delete. ACTIVE-Versionen sind geschuetzt. */
+  loesche(profileVersionId: string): Promise<void> {
+    return firstValueFrom(
+      this.api.delete<void>(`/api/v1/profiles/${profileVersionId}`)
+    );
+  }
 }

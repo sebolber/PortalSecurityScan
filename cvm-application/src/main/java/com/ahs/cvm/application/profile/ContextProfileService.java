@@ -165,6 +165,66 @@ public class ContextProfileService {
                 .map(p -> p.getEnvironment().getId());
     }
 
+    /**
+     * Iteration 51 (CVM-101): YAML-Edit eines DRAFT-Profils.
+     * ACTIVE/SUPERSEDED bleiben unantastbar - dort ist der richtige
+     * Weg eine neue Draft-Version ueber {@link #proposeNewVersion}.
+     */
+    @Transactional
+    public ProfileView updateDraft(UUID profileVersionId, String newYaml, String editor) {
+        if (profileVersionId == null) {
+            throw new IllegalArgumentException("profileVersionId darf nicht null sein.");
+        }
+        if (editor == null || editor.isBlank()) {
+            throw new IllegalArgumentException("editor darf nicht leer sein.");
+        }
+        ContextProfile profile = profileRepository
+                .findById(profileVersionId)
+                .orElseThrow(() -> new ProfileNotFoundException(profileVersionId));
+        if (profile.getDeletedAt() != null) {
+            throw new ProfileNotFoundException(profileVersionId);
+        }
+        if (profile.getState() != ProfileState.DRAFT) {
+            throw new IllegalStateException(
+                    "Profil " + profileVersionId
+                            + " ist nicht im Status DRAFT (ist " + profile.getState() + ").");
+        }
+        ParsedProfile parsed = yamlParser.parse(newYaml);
+        profile.setYamlSource(parsed.yamlSource());
+        profile.setProposedBy(editor);
+        ContextProfile saved = profileRepository.save(profile);
+        log.info("Profil-Draft aktualisiert: id={}, by={}", profileVersionId, editor);
+        return ProfileView.from(saved);
+    }
+
+    /**
+     * Iteration 51 (CVM-101): Soft-Delete einer Profil-Version.
+     * ACTIVE ist bewusst nicht loeschbar (ein aktives Profil wuerde sonst
+     * ploetzlich wegfallen); DRAFT und SUPERSEDED duerfen entfernt werden.
+     */
+    @Transactional
+    public void loesche(UUID profileVersionId) {
+        if (profileVersionId == null) {
+            throw new IllegalArgumentException("profileVersionId darf nicht null sein.");
+        }
+        ContextProfile profile = profileRepository
+                .findById(profileVersionId)
+                .orElseThrow(() -> new ProfileNotFoundException(profileVersionId));
+        if (profile.getDeletedAt() != null) {
+            return;
+        }
+        if (profile.getState() == ProfileState.ACTIVE) {
+            throw new IllegalStateException(
+                    "Profil " + profileVersionId
+                            + " ist aktiv und kann nicht soft-geloescht werden. "
+                            + "Lege eine neue Draft-Version an und aktiviere sie stattdessen.");
+        }
+        profile.setDeletedAt(Instant.now());
+        profileRepository.save(profile);
+        log.info("Profil soft-geloescht: id={}, state={}",
+                profileVersionId, profile.getState());
+    }
+
     @Transactional(readOnly = true)
     public List<ProfileFieldDiff> diff(UUID oldVersionId, UUID newVersionId) {
         ContextProfile alt = profileRepository

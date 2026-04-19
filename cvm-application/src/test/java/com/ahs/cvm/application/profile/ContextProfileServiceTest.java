@@ -234,6 +234,94 @@ class ContextProfileServiceTest {
     }
 
     @Test
+    @DisplayName("updateDraft: aendert yamlSource eines DRAFT-Profils")
+    void updateDraftHappy() {
+        UUID draftId = UUID.randomUUID();
+        ContextProfile draft = ContextProfile.builder()
+                .id(draftId)
+                .environment(Environment.builder().id(UUID.randomUUID())
+                        .key("REF").name("REF").stage(EnvironmentStage.REF).build())
+                .versionNumber(2)
+                .state(ProfileState.DRAFT)
+                .yamlSource(YAML_V1)
+                .needsReview(false)
+                .proposedBy("t.tester@ahs.test")
+                .build();
+        given(profileRepository.findById(draftId)).willReturn(Optional.of(draft));
+        given(profileRepository.save(any(ContextProfile.class)))
+                .willAnswer(inv -> inv.getArgument(0));
+
+        ProfileView updated = service.updateDraft(
+                draftId, YAML_V2, "t.tester@ahs.test");
+
+        assertThat(updated.yamlSource()).contains("windows_hosts");
+        assertThat(draft.getYamlSource()).isEqualTo(YAML_V2.trim() + "\n");
+    }
+
+    @Test
+    @DisplayName("updateDraft: ACTIVE-Profil wirft IllegalStateException")
+    void updateDraftLehntActiveAb() {
+        UUID id = UUID.randomUUID();
+        ContextProfile aktiv = ContextProfile.builder()
+                .id(id)
+                .environment(Environment.builder().id(UUID.randomUUID())
+                        .key("REF").name("REF").stage(EnvironmentStage.REF).build())
+                .state(ProfileState.ACTIVE)
+                .yamlSource(YAML_V1)
+                .needsReview(false)
+                .build();
+        given(profileRepository.findById(id)).willReturn(Optional.of(aktiv));
+
+        assertThatThrownBy(() -> service.updateDraft(id, YAML_V2, "t.tester@ahs.test"))
+                .isInstanceOf(IllegalStateException.class);
+        verify(profileRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("loesche: setzt deletedAt fuer DRAFT und SUPERSEDED")
+    void loescheDraftOk() {
+        UUID id = UUID.randomUUID();
+        ContextProfile draft = ContextProfile.builder()
+                .id(id).state(ProfileState.DRAFT).needsReview(false).build();
+        given(profileRepository.findById(id)).willReturn(Optional.of(draft));
+        given(profileRepository.save(any(ContextProfile.class)))
+                .willAnswer(inv -> inv.getArgument(0));
+
+        service.loesche(id);
+
+        assertThat(draft.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("loesche: ACTIVE-Profil wird abgelehnt")
+    void loescheLehntActiveAb() {
+        UUID id = UUID.randomUUID();
+        ContextProfile aktiv = ContextProfile.builder()
+                .id(id).state(ProfileState.ACTIVE).needsReview(false).build();
+        given(profileRepository.findById(id)).willReturn(Optional.of(aktiv));
+
+        assertThatThrownBy(() -> service.loesche(id))
+                .isInstanceOf(IllegalStateException.class);
+        verify(profileRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("loesche: idempotent (bereits geloeschtes Profil bleibt unveraendert)")
+    void loescheIdempotent() {
+        UUID id = UUID.randomUUID();
+        java.time.Instant vorher = java.time.Instant.parse("2026-01-01T00:00:00Z");
+        ContextProfile p = ContextProfile.builder()
+                .id(id).state(ProfileState.DRAFT).needsReview(false)
+                .deletedAt(vorher).build();
+        given(profileRepository.findById(id)).willReturn(Optional.of(p));
+
+        service.loesche(id);
+
+        assertThat(p.getDeletedAt()).isEqualTo(vorher);
+        verify(profileRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Profil: diff(alt, neu) liefert Liste mit allen geaenderten Pfaden")
     void diffLiefertAenderungen() {
         UUID altId = UUID.randomUUID();

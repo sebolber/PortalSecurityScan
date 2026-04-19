@@ -31,3 +31,7 @@ Naechstes: Iteration 49 Produkt-Versionen Soft-Delete.
 [10:09] Iteration 49 abgeschlossen: Produkt-Versionen Soft-Delete
 (Flyway V0032) (commit 76f60705). Naechstes: Iteration 50 Regeln
 Soft-Delete.
+[10:19] Iteration 50 abgeschlossen: Regeln Soft-Delete mit
+Abgrenzung RETIRED (Flyway V0033) (commit 8c1b374a). Block B
+(User-Feedback Soft-Delete) damit komplett. Naechstes: Block C
+Iteration 51 Profil-Edit + Soft-Delete.

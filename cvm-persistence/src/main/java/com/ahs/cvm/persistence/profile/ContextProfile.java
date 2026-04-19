@@ -67,6 +67,14 @@ public class ContextProfile {
     @Column(name = "needs_review", nullable = false)
     private Boolean needsReview;
 
+    /**
+     * Soft-Delete (Iteration 51, CVM-101). DRAFT- oder SUPERSEDED-
+     * Versionen koennen von Admins ausgeblendet werden; ACTIVE ist
+     * bewusst nicht soft-loeschbar.
+     */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

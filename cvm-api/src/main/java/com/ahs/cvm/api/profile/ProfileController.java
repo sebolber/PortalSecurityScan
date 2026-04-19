@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -65,6 +66,25 @@ public class ProfileController {
                 environmentId, request.yamlSource(), request.proposedBy());
         URI location = URI.create("/api/v1/profiles/" + draft.id());
         return ResponseEntity.created(location).body(abbilden(draft));
+    }
+
+    @PutMapping("/profiles/{profileVersionId}")
+    @PreAuthorize("hasAnyAuthority('CVM_PROFILE_AUTHOR','CVM_ADMIN')")
+    @Operation(summary = "DRAFT-Profil-YAML aktualisieren (nicht fuer ACTIVE/SUPERSEDED).")
+    public ResponseEntity<ProfileResponse> draftAktualisieren(
+            @PathVariable UUID profileVersionId,
+            @Valid @RequestBody ProfilePutRequest request) {
+        ProfileView aktualisiert = profileService.updateDraft(
+                profileVersionId, request.yamlSource(), request.proposedBy());
+        return ResponseEntity.ok(abbilden(aktualisiert));
+    }
+
+    @DeleteMapping("/profiles/{profileVersionId}")
+    @PreAuthorize("hasAuthority('CVM_ADMIN')")
+    @Operation(summary = "Profil-Version soft-loeschen (CVM_ADMIN). Aktive Profile sind geschuetzt.")
+    public ResponseEntity<Void> profilVersionLoeschen(@PathVariable UUID profileVersionId) {
+        profileService.loesche(profileVersionId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/profiles/{profileVersionId}/approve")
