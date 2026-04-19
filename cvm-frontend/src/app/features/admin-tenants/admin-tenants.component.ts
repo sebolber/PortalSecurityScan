@@ -57,7 +57,7 @@ export class AdminTenantsComponent implements OnInit {
   private readonly service = inject(TenantsService);
   private readonly snackBar = inject(MatSnackBar);
 
-  readonly columns = ['tenantKey', 'name', 'active', 'default', 'createdAt'] as const;
+  readonly columns = ['tenantKey', 'name', 'active', 'default', 'createdAt', 'aktion'] as const;
   readonly rows = signal<readonly TenantView[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -132,5 +132,25 @@ export class AdminTenantsComponent implements OnInit {
 
   trackId(_: number, t: TenantView): string {
     return t.id;
+  }
+
+  /** Iteration 60 (CVM-110): Mandanten-Aktivitaet umschalten. */
+  async toggleActive(t: TenantView): Promise<void> {
+    if (t.defaultTenant && t.active) {
+      this.snackBar.open(
+        'Default-Mandant kann nicht deaktiviert werden.',
+        'OK', { duration: 4000 });
+      return;
+    }
+    try {
+      const updated = await this.service.setActive(t.id, !t.active);
+      this.snackBar.open(
+        'Mandant "' + updated.tenantKey + '" '
+          + (updated.active ? 'aktiviert' : 'deaktiviert') + '.',
+        'OK', { duration: 3000 });
+      await this.laden();
+    } catch {
+      this.snackBar.open('Toggle fehlgeschlagen.', 'OK', { duration: 4000 });
+    }
   }
 }

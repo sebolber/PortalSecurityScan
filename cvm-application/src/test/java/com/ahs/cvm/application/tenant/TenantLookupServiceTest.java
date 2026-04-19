@@ -93,4 +93,41 @@ class TenantLookupServiceTest {
         assertThatThrownBy(() -> service.create("key", "  ", true))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    @DisplayName("setActive: Toggle eines regulaeren Mandanten ok")
+    void setActiveRegulaer() {
+        UUID id = UUID.randomUUID();
+        Tenant t = Tenant.builder().id(id).tenantKey("x").name("X")
+                .active(true).defaultTenant(false).createdAt(Instant.now()).build();
+        given(repo.findById(id)).willReturn(Optional.of(t));
+        given(repo.save(any(Tenant.class))).willAnswer(inv -> inv.getArgument(0));
+
+        TenantView view = service.setActive(id, false);
+
+        assertThat(view.active()).isFalse();
+        assertThat(t.isActive()).isFalse();
+    }
+
+    @Test
+    @DisplayName("setActive: Default-Mandant kann nicht deaktiviert werden")
+    void setActiveDefaultNichtDeaktivierbar() {
+        UUID id = UUID.randomUUID();
+        Tenant t = Tenant.builder().id(id).tenantKey("main").name("Main")
+                .active(true).defaultTenant(true).createdAt(Instant.now()).build();
+        given(repo.findById(id)).willReturn(Optional.of(t));
+
+        assertThatThrownBy(() -> service.setActive(id, false))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    @DisplayName("setActive: unbekannte Id -> EntityNotFoundException")
+    void setActiveUnbekannt() {
+        UUID id = UUID.randomUUID();
+        given(repo.findById(id)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.setActive(id, true))
+                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class);
+    }
 }

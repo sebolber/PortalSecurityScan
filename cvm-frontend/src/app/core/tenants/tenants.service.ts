@@ -34,6 +34,16 @@ export class TenantsService {
       )
     );
   }
+
+  /** Iteration 60 (CVM-110): Mandant aktivieren/deaktivieren. */
+  setActive(tenantId: string, active: boolean): Promise<TenantView> {
+    return firstValueFrom(
+      this.api.patch<TenantView, { active: boolean }>(
+        '/api/v1/admin/tenants/' + tenantId + '/active',
+        { active }
+      )
+    );
+  }
 }
 
 export interface TenantCreateRequest {

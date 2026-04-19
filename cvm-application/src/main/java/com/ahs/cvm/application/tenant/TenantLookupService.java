@@ -88,6 +88,30 @@ public class TenantLookupService {
         return TenantView.from(saved);
     }
 
+    /**
+     * Iteration 60 (CVM-110): Active-Flag umschalten. Der Default-
+     * Mandant darf nicht deaktiviert werden (sonst fehlt der
+     * Fallback fuer JWTs ohne tenant_key).
+     */
+    @Transactional
+    public TenantView setActive(UUID tenantId, boolean active) {
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId darf nicht null sein.");
+        }
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
+                        "Mandant nicht gefunden: " + tenantId));
+        if (!active && tenant.isDefaultTenant()) {
+            throw new IllegalStateException(
+                    "Default-Mandant kann nicht deaktiviert werden.");
+        }
+        if (tenant.isActive() != active) {
+            tenant.setActive(active);
+            tenantRepository.save(tenant);
+        }
+        return TenantView.from(tenant);
+    }
+
     public static final class TenantKeyAlreadyExistsException extends RuntimeException {
         public TenantKeyAlreadyExistsException(String key) {
             super("Mandant mit key '" + key + "' existiert bereits.");
