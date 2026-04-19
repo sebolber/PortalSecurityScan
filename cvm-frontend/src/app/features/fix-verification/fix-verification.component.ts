@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   FixVerificationQueryHttpService,
   FixVerificationSummaryView,
@@ -40,6 +40,8 @@ const GRADES: readonly (VerificationGrade | 'ALL')[] = [
 })
 export class FixVerificationComponent implements OnInit {
   private readonly api = inject(FixVerificationQueryHttpService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly grades = GRADES;
 
@@ -49,6 +51,11 @@ export class FixVerificationComponent implements OnInit {
   readonly rows = signal<readonly FixVerificationSummaryView[]>([]);
 
   ngOnInit(): void {
+    // Iteration 83 (CVM-323): Grade aus queryParams uebernehmen.
+    const qp = this.route.snapshot.queryParamMap.get('grade');
+    if (qp && (GRADES as readonly string[]).includes(qp)) {
+      this.grade.set(qp as VerificationGrade | 'ALL');
+    }
     void this.laden();
   }
 
@@ -69,6 +76,12 @@ export class FixVerificationComponent implements OnInit {
 
   gradeWechseln(value: VerificationGrade | 'ALL'): void {
     this.grade.set(value);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { grade: value === 'ALL' ? null : value },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
     void this.laden();
   }
 

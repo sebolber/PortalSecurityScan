@@ -1,6 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
@@ -55,6 +56,8 @@ const SEVERITIES: readonly Severity[] = [
 export class TenantKpiComponent implements OnInit {
   private readonly kpi = inject(KpiService);
   private readonly chartTheme = inject(ChartThemeService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly fenster = FENSTER;
   readonly severities = SEVERITIES;
@@ -124,6 +127,11 @@ export class TenantKpiComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // Iteration 83 (CVM-323): Zeitfenster aus queryParams.
+    const qp = this.route.snapshot.queryParamMap.get('window');
+    if (qp && FENSTER.some((f) => f.key === qp)) {
+      this.window.set(qp);
+    }
     void this.laden();
   }
 
@@ -142,6 +150,12 @@ export class TenantKpiComponent implements OnInit {
 
   fensterWechseln(value: string): void {
     this.window.set(value);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { window: value === '90d' ? null : value },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
     void this.laden();
   }
 

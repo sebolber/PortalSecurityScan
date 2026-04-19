@@ -22,8 +22,11 @@ Iterationen 80+ implementieren die Befunde.
   (ALLE/PROPOSED/NEEDS_REVIEW/APPROVED/REJECTED/EXPIRED) ersetzen
   das Select. Filter spiegelt sich in queryParams;
   Deep-Links und Page-Reloads erhalten den Zustand.
-- **U-02b CVE/KPI/FixVerif-Filter-URL + KPI-Presets** -
-  Iteration 83.
+- ~~U-02b CVE/KPI/FixVerif-Filter-URL~~ - **Erledigt in
+  Iteration 83** (CVM-323). `/cves` q/severity/kev/page,
+  `/fix-verification` grade, `/tenant-kpi` window. Sechs neue
+  Karma-Cases. KPI-Presets (Heute/Quartal/custom) bleibt
+  Folge-Iteration.
 - **U-02c Tenant-Badge im Shell + Default-Switch** -
   Iteration 84.
 - **U-03 Waiver-Extend/Revoke-Aktionen + Expiry-Banner** -

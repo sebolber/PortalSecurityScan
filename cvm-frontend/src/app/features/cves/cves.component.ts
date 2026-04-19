@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   CvePageResponse,
   CveSeverity,
@@ -36,6 +36,8 @@ const SEVERITIES: readonly CveSeverity[] = [
 })
 export class CvesComponent implements OnInit {
   private readonly cves = inject(CvesService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly severities = SEVERITIES;
 
@@ -50,7 +52,34 @@ export class CvesComponent implements OnInit {
   readonly pageSize = 25;
 
   ngOnInit(): void {
+    // Iteration 83 (CVM-323): Filter-URL-Persistenz.
+    const params = this.route.snapshot.queryParamMap;
+    this.searchText = params.get('q') ?? '';
+    const sev = params.get('severity');
+    this.severityFilter = (SEVERITIES as readonly string[]).includes(sev ?? '')
+      ? (sev as CveSeverity)
+      : null;
+    this.onlyKev = params.get('kev') === 'true';
+    const pageNum = Number(params.get('page') ?? '0');
+    this.pageIndex = Number.isFinite(pageNum) && pageNum >= 0 ? pageNum : 0;
     void this.laden();
+  }
+
+  /**
+   * Iteration 83 (CVM-323): Filter-State in die URL spiegeln.
+   */
+  private syncUrl(): void {
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchText.trim() === '' ? null : this.searchText.trim(),
+        severity: this.severityFilter,
+        kev: this.onlyKev ? 'true' : null,
+        page: this.pageIndex > 0 ? this.pageIndex : null
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   async laden(): Promise<void> {
@@ -75,6 +104,7 @@ export class CvesComponent implements OnInit {
 
   sucheAusloesen(): void {
     this.pageIndex = 0;
+    this.syncUrl();
     void this.laden();
   }
 
@@ -90,12 +120,14 @@ export class CvesComponent implements OnInit {
     if (!p) return;
     if ((this.pageIndex + 1) * this.pageSize >= p.totalElements) return;
     this.pageIndex++;
+    this.syncUrl();
     void this.laden();
   }
 
   prevPage(): void {
     if (this.pageIndex === 0) return;
     this.pageIndex--;
+    this.syncUrl();
     void this.laden();
   }
 
