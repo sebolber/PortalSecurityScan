@@ -1,16 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/auth/auth.service';
 import { CVM_ROLES } from '../../core/auth/cvm-roles';
 import {
@@ -25,6 +15,8 @@ import {
   ModelProfileView
 } from '../../core/modelprofile/model-profile.service';
 import { ThemeService } from '../../core/theme/theme.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 
 const PRODUCT_STORAGE_KEY = 'cvm.default-product';
 const PRODUCTS = [
@@ -38,15 +30,7 @@ const PRODUCTS = [
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatSlideToggleModule,
-    MatButtonToggleModule
+    CvmIconComponent
   ],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
@@ -57,7 +41,7 @@ export class SettingsComponent implements OnInit {
   private readonly locale = inject(LocaleService);
   private readonly envService = inject(EnvironmentsService);
   private readonly profileService = inject(ModelProfileService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly username = this.auth.username;
   readonly themeMode = this.theme.mode;
@@ -164,7 +148,7 @@ export class SettingsComponent implements OnInit {
         };
       }
       this.switchForms.set(initial);
-    } catch (err) {
+    } catch {
       this.adminError.set(
         'Admin-Daten konnten nicht geladen werden.  ' +
           'Details siehe Netzwerk-Konsole.'
@@ -185,20 +169,12 @@ export class SettingsComponent implements OnInit {
     const forms = { ...this.switchForms() };
     const form = forms[envId];
     if (!form || !form.newProfileId || !form.fourEyesConfirmer.trim()) {
-      this.snackBar.open(
-        'Neues Profil und Vier-Augen-Freigeber sind Pflicht.',
-        'OK',
-        { duration: 3000 }
-      );
+      this.toast.warning('Neues Profil und Vier-Augen-Freigeber sind Pflicht.');
       return;
     }
     const changedBy = this.username() || 'unknown';
     if (form.fourEyesConfirmer.trim() === changedBy) {
-      this.snackBar.open(
-        'Vier-Augen-Prinzip: Freigeber darf nicht gleich dem Anmelder sein.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.warning('Vier-Augen-Prinzip: Freigeber darf nicht gleich dem Anmelder sein.');
       return;
     }
     form.pending = true;
@@ -210,11 +186,10 @@ export class SettingsComponent implements OnInit {
         fourEyesConfirmer: form.fourEyesConfirmer.trim(),
         reason: form.reason.trim() || null
       });
-      this.snackBar.open('Profil-Wechsel erfolgreich.', 'OK',
-        { duration: 3000 });
+      this.toast.success('Profil-Wechsel erfolgreich.', 3000);
       await this.ladeAdminDaten();
     } catch {
-      // ApiClient zeigt Snackbar bereits.
+      // ApiClient zeigt bereits Fehlermeldung.
     } finally {
       const nf = { ...this.switchForms() };
       if (nf[envId]) {
@@ -245,32 +220,27 @@ export class SettingsComponent implements OnInit {
   async legeProfilAn(): Promise<void> {
     const f = this.createForm();
     if (!f.profileKey.trim() || !f.modelId.trim()) {
-      this.snackBar.open('profileKey und modelId sind Pflicht.', 'OK',
-        { duration: 3000 });
+      this.toast.warning('profileKey und modelId sind Pflicht.');
       return;
     }
     if (!/^[A-Z0-9_]{2,64}$/.test(f.profileKey.trim())) {
-      this.snackBar.open(
-        'profileKey muss aus Grossbuchstaben, Ziffern und Unterstrichen bestehen (2-64 Zeichen).',
-        'OK', { duration: 4000 });
+      this.toast.warning(
+        'profileKey muss aus Grossbuchstaben, Ziffern und Unterstrichen bestehen (2-64 Zeichen).'
+      );
       return;
     }
     if (f.costBudgetEurMonthly < 0) {
-      this.snackBar.open('Budget muss >= 0 sein.', 'OK', { duration: 3000 });
+      this.toast.warning('Budget muss >= 0 sein.');
       return;
     }
     const approvedBy = this.username() || 'unknown';
     if (f.approvedForGkvData) {
       if (!f.fourEyesConfirmer.trim()) {
-        this.snackBar.open(
-          'Bei GKV-Freigabe ist ein Vier-Augen-Freigeber Pflicht.',
-          'OK', { duration: 4000 });
+        this.toast.warning('Bei GKV-Freigabe ist ein Vier-Augen-Freigeber Pflicht.');
         return;
       }
       if (f.fourEyesConfirmer.trim() === approvedBy) {
-        this.snackBar.open(
-          'Vier-Augen-Prinzip: Freigeber darf nicht gleich dem Anlegenden sein.',
-          'OK', { duration: 4000 });
+        this.toast.warning('Vier-Augen-Prinzip: Freigeber darf nicht gleich dem Anlegenden sein.');
         return;
       }
     }
@@ -289,9 +259,7 @@ export class SettingsComponent implements OnInit {
         reason: f.reason.trim() || null
       };
       const created = await this.profileService.createProfile(req);
-      this.snackBar.open(
-        `Modell-Profil "${created.profileKey}" angelegt.`, 'OK',
-        { duration: 3000 });
+      this.toast.success(`Modell-Profil "${created.profileKey}" angelegt.`, 3000);
       this.createForm.set({
         profileKey: '',
         provider: 'CLAUDE_CLOUD',
@@ -306,8 +274,7 @@ export class SettingsComponent implements OnInit {
       });
       await this.ladeAdminDaten();
     } catch (err) {
-      this.snackBar.open(this.formatProfileCreateError(err), 'OK',
-        { duration: 5000 });
+      this.toast.error(this.formatProfileCreateError(err));
       this.createForm.set({ ...this.createForm(), pending: false });
     }
   }

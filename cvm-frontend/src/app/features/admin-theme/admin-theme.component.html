@@ -1,12 +1,14 @@
-<section class="cvm-admin-theme">
-  <header class="cvm-admin-theme__header">
-    <h1 class="text-title-lg">Theme &amp; Branding</h1>
-    <p class="text-body">
-      Konfiguriert Farben, Schriftart und Logo fuer alle Nutzer dieses
-      Mandanten. Aenderungen gelten sofort. Jede frueher gespeicherte
-      Version bleibt in der Historie und kann unten per Klick wieder
-      hergestellt werden.
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Theme &amp; Branding</h1>
+      <p class="page-subtitle max-w-3xl">
+        Konfiguriert Farben, Schriftart und Logo fuer alle Nutzer dieses
+        Mandanten. Aenderungen gelten sofort. Jede frueher gespeicherte
+        Version bleibt in der Historie und kann unten per Klick wieder
+        hergestellt werden.
+      </p>
+    </div>
   </header>
 
   @if (error()) {
@@ -23,213 +25,225 @@
     </ahs-banner>
   }
 
-  <div class="cvm-admin-theme__grid">
-    <mat-card class="cvm-admin-theme__form">
-      <mat-card-header>
-        <mat-card-title>Konfiguration</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
-        <form (submit)="$event.preventDefault(); save()">
-          <mat-form-field appearance="outline">
-            <mat-label>App-Titel</mat-label>
-            <input
-              matInput
-              [ngModel]="draft().appTitle"
-              name="appTitle"
-              (ngModelChange)="update('appTitle', $event)"
-            />
-          </mat-form-field>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title">Konfiguration</h2>
+      </header>
+      <div class="card-body">
+        <form (submit)="$event.preventDefault(); save()" class="flex flex-col gap-4">
+          <label class="form-group">
+            <span class="form-label">App-Titel</span>
+            <input class="input-field" type="text"
+                   [ngModel]="draft().appTitle"
+                   name="appTitle"
+                   (ngModelChange)="update('appTitle', $event)" />
+          </label>
 
-          <div class="cvm-color-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Primaerfarbe (Hex)</mat-label>
-              <input
-                matInput
-                [ngModel]="draft().primaryColor"
-                name="primaryColor"
-                (ngModelChange)="update('primaryColor', $event)"
-                pattern="^#([0-9a-fA-F]{3}){1,2}$"
-              />
-            </mat-form-field>
-            <span
-              class="cvm-color-swatch"
-              [style.background]="draft().primaryColor"
-              aria-hidden="true"
-            ></span>
+          <div class="flex items-end gap-3">
+            <label class="form-group flex-1">
+              <span class="form-label">Primaerfarbe (Hex)</span>
+              <input class="input-field" type="text"
+                     [ngModel]="draft().primaryColor"
+                     name="primaryColor"
+                     (ngModelChange)="update('primaryColor', $event)"
+                     pattern="^#([0-9a-fA-F]{3}){1,2}$" />
+            </label>
+            <span class="inline-block w-10 h-10 rounded-md border border-border"
+                  [style.background]="draft().primaryColor"
+                  aria-hidden="true"></span>
           </div>
 
-          <div class="cvm-color-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Kontrastfarbe</mat-label>
-              <input
-                matInput
-                [ngModel]="draft().primaryContrastColor"
-                name="contrast"
-                (ngModelChange)="update('primaryContrastColor', $event)"
-                pattern="^#([0-9a-fA-F]{3}){1,2}$"
-              />
-            </mat-form-field>
-            <span
-              class="cvm-color-swatch"
-              [style.background]="draft().primaryContrastColor"
-              aria-hidden="true"
-            ></span>
+          <div class="flex items-end gap-3">
+            <label class="form-group flex-1">
+              <span class="form-label">Kontrastfarbe</span>
+              <input class="input-field" type="text"
+                     [ngModel]="draft().primaryContrastColor"
+                     name="contrast"
+                     (ngModelChange)="update('primaryContrastColor', $event)"
+                     pattern="^#([0-9a-fA-F]{3}){1,2}$" />
+            </label>
+            <span class="inline-block w-10 h-10 rounded-md border border-border"
+                  [style.background]="draft().primaryContrastColor"
+                  aria-hidden="true"></span>
           </div>
 
-          <p class="text-caption" [class.cvm-contrast-fail]="!aaOk()">
+          <p class="text-xs" [class.text-severity-critical]="!aaOk()">
             WCAG-Kontrast: {{ contrastLabel() }}
           </p>
 
-          <!--
-            UI-Fix LOW-2 (UI-Exploration 20260418): Akzentfarbe bekommt
-            denselben Farb-Preview wie Primaer-/Kontrastfarbe.
-          -->
-          <div class="cvm-color-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Akzentfarbe</mat-label>
-              <input
-                matInput
-                [ngModel]="draft().accentColor || ''"
-                name="accent"
-                (ngModelChange)="update('accentColor', $event || null)"
-                pattern="^#([0-9a-fA-F]{3}){1,2}$"
-              />
-            </mat-form-field>
-            <span
-              class="cvm-color-swatch"
-              [style.background]="draft().accentColor || 'transparent'"
-              [class.cvm-color-swatch--empty]="!draft().accentColor"
-              aria-hidden="true"
-            ></span>
+          <div class="flex items-end gap-3">
+            <label class="form-group flex-1">
+              <span class="form-label">Akzentfarbe</span>
+              <input class="input-field" type="text"
+                     [ngModel]="draft().accentColor || ''"
+                     name="accent"
+                     (ngModelChange)="update('accentColor', $event || null)"
+                     pattern="^#([0-9a-fA-F]{3}){1,2}$" />
+            </label>
+            <span class="inline-block w-10 h-10 rounded-md border border-border"
+                  [style.background]="draft().accentColor || 'transparent'"
+                  aria-hidden="true"></span>
           </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Schriftart</mat-label>
-            <input
-              matInput
-              [ngModel]="draft().fontFamilyName"
-              name="fontFamily"
-              (ngModelChange)="update('fontFamilyName', $event)"
-            />
-          </mat-form-field>
+          <label class="form-group">
+            <span class="form-label">Schriftart</span>
+            <input class="input-field" type="text"
+                   [ngModel]="draft().fontFamilyName"
+                   name="fontFamily"
+                   (ngModelChange)="update('fontFamilyName', $event)" />
+          </label>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Logo-URL (SVG/PNG)</mat-label>
-            <input
-              matInput
-              [ngModel]="draft().logoUrl || ''"
-              name="logoUrl"
-              (ngModelChange)="update('logoUrl', $event || null)"
-            />
-          </mat-form-field>
+          <label class="form-group">
+            <span class="form-label">Logo-URL (SVG/PNG)</span>
+            <input class="input-field" type="text"
+                   [ngModel]="draft().logoUrl || ''"
+                   name="logoUrl"
+                   (ngModelChange)="update('logoUrl', $event || null)" />
+          </label>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Logo-Alt-Text</mat-label>
-            <input
-              matInput
-              [ngModel]="draft().logoAltText || ''"
-              name="logoAlt"
-              (ngModelChange)="update('logoAltText', $event || null)"
-            />
-          </mat-form-field>
+          <label class="form-group">
+            <span class="form-label">Logo-Alt-Text</span>
+            <input class="input-field" type="text"
+                   [ngModel]="draft().logoAltText || ''"
+                   name="logoAlt"
+                   (ngModelChange)="update('logoAltText', $event || null)" />
+          </label>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Favicon-URL</mat-label>
-            <input
-              matInput
-              [ngModel]="draft().faviconUrl || ''"
-              name="faviconUrl"
-              (ngModelChange)="update('faviconUrl', $event || null)"
-            />
-          </mat-form-field>
+          <label class="form-group">
+            <span class="form-label">Favicon-URL</span>
+            <input class="input-field" type="text"
+                   [ngModel]="draft().faviconUrl || ''"
+                   name="faviconUrl"
+                   (ngModelChange)="update('faviconUrl', $event || null)" />
+          </label>
 
-          <div class="cvm-admin-theme__actions">
-            <button
-              type="button"
-              mat-stroked-button
-              (click)="preview()"
-            >
+          <div class="flex flex-wrap gap-2 mt-2">
+            <button type="button" class="btn btn-secondary"
+                    (click)="preview()">
+              <cvm-icon name="eye" [size]="16"></cvm-icon>
               Live-Vorschau anwenden
             </button>
-            <button
-              type="button"
-              mat-stroked-button
-              (click)="reset()"
-            >
+            <button type="button" class="btn btn-secondary"
+                    (click)="reset()">
+              <cvm-icon name="refresh" [size]="16"></cvm-icon>
               Auf Default zuruecksetzen
             </button>
-            <button
-              type="submit"
-              mat-flat-button
-              color="primary"
-              [disabled]="saving() || !aaOk()"
-            >
+            <button type="submit" class="btn btn-primary"
+                    [disabled]="saving() || !aaOk()">
               @if (saving()) {
+                <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
                 Speichere...
               } @else {
+                <cvm-icon name="save" [size]="16"></cvm-icon>
                 Speichern
               }
             </button>
           </div>
         </form>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
 
-    <mat-card class="cvm-admin-theme__assets">
-      <mat-card-header>
-        <mat-card-title>Assets hochladen</mat-card-title>
-        <mat-card-subtitle>
-          Serverseitig gespeichert, URLs erscheinen im Formular.
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        @for (slot of assetSlots; track slot.kind) {
-          <div class="cvm-admin-theme__asset">
-            <div class="cvm-admin-theme__asset-head">
-              <strong>{{ slot.label }}</strong>
-              <span class="text-caption">{{ slot.hint }}</span>
+    <section class="card">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">Live-Vorschau</h2>
+          <span class="text-caption">Version {{ draft().version }} - Beispielseite</span>
+        </div>
+      </header>
+      <div class="card-body">
+        <div class="rounded-lg border border-border overflow-hidden bg-surface"
+             [style.fontFamily]="draft().fontFamilyName">
+          <div class="flex items-center justify-between px-4 py-3 font-semibold"
+               [style.background]="draft().primaryColor"
+               [style.color]="draft().primaryContrastColor">
+            <span>{{ draft().appTitle || 'CVE-Relevance-Manager' }}</span>
+            @if (draft().logoUrl) {
+              <img class="h-8 max-w-[120px] object-contain"
+                   [src]="draft().logoUrl"
+                   [alt]="draft().logoAltText || ''" />
+            } @else {
+              <span class="font-bold tracking-wide">LOGO</span>
+            }
+          </div>
+          <div class="flex flex-col gap-3 p-6">
+            <h3 class="text-title-sm">Beispielkarte</h3>
+            <p class="text-body">
+              Beispiel-Text: CVE-2017-18640 wurde bewertet.
+            </p>
+            <div class="flex gap-2">
+              <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
+              <ahs-severity-badge severity="HIGH"></ahs-severity-badge>
+              <ahs-severity-badge severity="MEDIUM"></ahs-severity-badge>
             </div>
-            <div class="cvm-admin-theme__asset-row">
-              <label
-                [attr.for]="'asset-' + slot.kind"
-                class="cvm-admin-theme__file-trigger"
-                mat-stroked-button
-              >
-                <mat-icon>upload_file</mat-icon>
+            <button type="button"
+                    class="self-start px-5 py-2 rounded-md font-medium border-0 cursor-pointer"
+                    [style.background]="draft().primaryColor"
+                    [style.color]="draft().primaryContrastColor">
+              Bewerten
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card lg:col-span-2">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">Assets hochladen</h2>
+          <span class="text-caption">Serverseitig gespeichert, URLs erscheinen im Formular.</span>
+        </div>
+      </header>
+      <div class="card-body">
+        @for (slot of assetSlots; track slot.kind; let last = $last) {
+          <div class="flex flex-col gap-2 py-3"
+               [class.border-b]="!last"
+               [class.border-border]="!last">
+            <div class="flex flex-col gap-1">
+              <strong>{{ slot.label }}</strong>
+              <span class="text-caption max-w-[64ch]">{{ slot.hint }}</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <label [attr.for]="'asset-' + slot.kind"
+                     class="btn btn-secondary cursor-pointer select-none">
+                <cvm-icon name="upload" [size]="16"></cvm-icon>
                 Datei auswaehlen
               </label>
-              <input
-                [id]="'asset-' + slot.kind"
-                type="file"
-                class="cvm-admin-theme__file-input"
-                [accept]="slot.accept"
-                (change)="assetHochladen(slot, $event)"
-                [disabled]="uploading()[slot.kind]"
-              />
+              <input [id]="'asset-' + slot.kind"
+                     type="file"
+                     class="hidden"
+                     [accept]="slot.accept"
+                     (change)="assetHochladen(slot, $event)"
+                     [disabled]="uploading()[slot.kind]" />
               @if (uploading()[slot.kind]) {
-                <span class="text-caption">Lade hoch...</span>
+                <span class="text-caption inline-flex items-center gap-1">
+                  <cvm-icon name="loader" [size]="14" class="animate-spin"></cvm-icon>
+                  Lade hoch...
+                </span>
               }
               @if (draft()[slot.fieldKey]) {
-                <code class="cvm-admin-theme__asset-url">
+                <code class="text-code px-2 py-1 rounded-sm bg-surface-muted max-w-[60ch] overflow-hidden text-ellipsis">
                   {{ draft()[slot.fieldKey] }}
                 </code>
               }
             </div>
           </div>
         }
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
 
-    <mat-card class="cvm-admin-theme__history">
-      <mat-card-header>
-        <mat-card-title>Historie &amp; Rollback</mat-card-title>
-        <mat-card-subtitle>
-          Jeder Speichervorgang erzeugt einen Snapshot der zuvor aktiven
-          Version. Der Rollback uebernimmt die Werte in eine neue Version,
-          damit auch das Zuruecksetzen selbst auditierbar bleibt.
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
+    <section class="card lg:col-span-2">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">Historie &amp; Rollback</h2>
+          <span class="text-caption">
+            Jeder Speichervorgang erzeugt einen Snapshot der zuvor aktiven
+            Version. Der Rollback uebernimmt die Werte in eine neue Version,
+            damit auch das Zuruecksetzen selbst auditierbar bleibt.
+          </span>
+        </div>
+      </header>
+      <div class="card-body">
         @if (historyError()) {
           <ahs-banner kind="warn" title="Historie nicht verfuegbar">
             {{ historyError() }}
@@ -242,35 +256,33 @@
           </p>
         }
         @if (history().length > 0) {
-          <ul class="cvm-admin-theme__history-list">
+          <ul class="list-none m-0 p-0 flex flex-col gap-2">
             @for (h of history(); track h.version) {
-              <li class="cvm-admin-theme__history-row">
-                <div class="cvm-admin-theme__history-meta">
-                  <span class="cvm-admin-theme__history-version">
+              <li class="flex justify-between items-center gap-3 p-3 rounded-lg border border-border bg-surface">
+                <div class="flex items-center gap-3 min-w-0">
+                  <span class="font-bold text-sm text-primary min-w-[40px]">
                     v{{ h.version }}
                   </span>
-                  <span class="cvm-admin-theme__history-swatch"
+                  <span class="inline-block w-7 h-7 rounded-sm border border-border flex-none"
                         [style.background]="h.primaryColor"
                         [attr.aria-label]="'Primaerfarbe ' + h.primaryColor">
                   </span>
-                  <div class="cvm-admin-theme__history-text">
-                    <span>{{ h.appTitle || '(kein App-Titel)' }}</span>
-                    <span class="text-caption">
+                  <div class="flex flex-col gap-0.5 min-w-0">
+                    <span class="truncate">{{ h.appTitle || '(kein App-Titel)' }}</span>
+                    <span class="text-caption truncate">
                       {{ h.primaryColor }} / {{ h.fontFamilyName }}
                     </span>
-                    <span class="text-caption">
+                    <span class="text-caption truncate">
                       gespeichert am {{ h.updatedAt | date: 'yyyy-MM-dd HH:mm' }}
                       durch {{ h.updatedBy }}
                     </span>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  mat-stroked-button
-                  (click)="rollback(h)"
-                  [disabled]="rollingBackVersion() !== null"
-                >
-                  <mat-icon>history</mat-icon>
+                <button type="button"
+                        class="btn btn-secondary"
+                        (click)="rollback(h)"
+                        [disabled]="rollingBackVersion() !== null">
+                  <cvm-icon name="refresh" [size]="16"></cvm-icon>
                   @if (rollingBackVersion() === h.version) {
                     Zuruecksetzen...
                   } @else {
@@ -281,55 +293,7 @@
             }
           </ul>
         }
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="cvm-admin-theme__preview">
-      <mat-card-header>
-        <mat-card-title>Live-Vorschau</mat-card-title>
-        <mat-card-subtitle>
-          Version {{ draft().version }} - Beispielseite
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <div class="cvm-preview-shell" [style.fontFamily]="draft().fontFamilyName">
-          <div
-            class="cvm-preview-header"
-            [style.background]="draft().primaryColor"
-            [style.color]="draft().primaryContrastColor"
-          >
-            <span>{{ draft().appTitle || 'CVE-Relevance-Manager' }}</span>
-            @if (draft().logoUrl) {
-              <img
-                class="cvm-preview-logo"
-                [src]="draft().logoUrl"
-                [alt]="draft().logoAltText || ''"
-              />
-            } @else {
-              <span class="cvm-preview-logo-fallback">LOGO</span>
-            }
-          </div>
-          <div class="cvm-preview-body">
-            <h3 class="text-title-sm">Beispielkarte</h3>
-            <p class="text-body">
-              Beispiel-Text: CVE-2017-18640 wurde bewertet.
-            </p>
-            <div class="cvm-preview-badges">
-              <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
-              <ahs-severity-badge severity="HIGH"></ahs-severity-badge>
-              <ahs-severity-badge severity="MEDIUM"></ahs-severity-badge>
-            </div>
-            <button
-              class="cvm-preview-button"
-              [style.background]="draft().primaryColor"
-              [style.color]="draft().primaryContrastColor"
-              type="button"
-            >
-              Bewerten
-            </button>
-          </div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
   </div>
-</section>
+</div>

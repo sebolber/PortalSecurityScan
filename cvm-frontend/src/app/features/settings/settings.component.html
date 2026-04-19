@@ -1,238 +1,248 @@
-<div class="cvm-settings-page">
-  <h1 class="cvm-settings-title text-title-lg">Einstellungen</h1>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Einstellungen</h1>
+      <p class="page-subtitle">Benutzer-Preferences und Admin-Bereich fuer Modell-Profile.</p>
+    </div>
+  </header>
 
-  <mat-card class="cvm-settings-card">
-    <mat-card-header>
-      <mat-card-title>Benutzer-Preferences</mat-card-title>
-      <mat-card-subtitle>Gelten nur fuer diesen Browser</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content class="cvm-settings-content">
-      <!--
-        UI-Fix LOW-3 (UI-Exploration 20260418): Farbschema ist jetzt ein
-        Segment-Control mit sichtbarem aktiven Zustand, statt eines
-        Sliders, dessen Off-Position "Light-Mode" war, aber optisch
-        "ausgeschaltet" wirkte.
-      -->
-      <div class="cvm-settings-row">
-        <label class="cvm-settings-label">Farbschema</label>
-        <mat-button-toggle-group
-          name="farbschema"
-          [value]="themeMode()"
-          (change)="setTheme($event.value === 'dark')"
-        >
-          <mat-button-toggle value="light">
-            <mat-icon>light_mode</mat-icon>
+  <section class="card">
+    <header class="card-header">
+      <div class="flex flex-col gap-1">
+        <h2 class="card-title">Benutzer-Preferences</h2>
+        <span class="text-caption">Gelten nur fuer diesen Browser</span>
+      </div>
+    </header>
+    <div class="card-body flex flex-col gap-4">
+      <div class="flex flex-col gap-2">
+        <span class="form-label">Farbschema</span>
+        <div class="inline-flex rounded-lg border border-border bg-surface overflow-hidden h-10">
+          <button type="button"
+                  class="px-3 text-sm border-r border-border inline-flex items-center gap-2"
+                  [class.bg-primary-muted]="themeMode() === 'light'"
+                  [class.text-primary]="themeMode() === 'light'"
+                  (click)="setTheme(false)">
+            <cvm-icon name="light-mode" [size]="16"></cvm-icon>
             Hell
-          </mat-button-toggle>
-          <mat-button-toggle value="dark">
-            <mat-icon>dark_mode</mat-icon>
+          </button>
+          <button type="button"
+                  class="px-3 text-sm inline-flex items-center gap-2"
+                  [class.bg-primary-muted]="themeMode() === 'dark'"
+                  [class.text-primary]="themeMode() === 'dark'"
+                  (click)="setTheme(true)">
+            <cvm-icon name="dark-mode" [size]="16"></cvm-icon>
             Dunkel
-          </mat-button-toggle>
-        </mat-button-toggle-group>
+          </button>
+        </div>
       </div>
 
-      <div class="cvm-settings-row">
-        <mat-form-field appearance="outline" class="cvm-settings-field">
-          <mat-label>Sprache</mat-label>
-          <mat-select
-            [value]="aktuellesLocale()"
-            (selectionChange)="setLocale($event.value)"
-          >
-            @for (l of locales; track l.value) {
-              <mat-option [value]="l.value">{{ l.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
+      <label class="form-group max-w-md">
+        <span class="form-label">Sprache</span>
+        <select class="select-field"
+                [ngModel]="aktuellesLocale()"
+                (ngModelChange)="setLocale($event)">
+          @for (l of locales; track l.value) {
+            <option [value]="l.value">{{ l.label }}</option>
+          }
+        </select>
+      </label>
 
-      <div class="cvm-settings-row">
-        <mat-form-field appearance="outline" class="cvm-settings-field">
-          <mat-label>Standard-Produkt</mat-label>
-          <mat-select
-            [(ngModel)]="defaultProduct"
-            (selectionChange)="setDefaultProduct($event.value)"
-          >
-            @for (p of products; track p.key) {
-              <mat-option [value]="p.key">{{ p.label }}</mat-option>
-            }
-          </mat-select>
-        </mat-form-field>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      <label class="form-group max-w-md">
+        <span class="form-label">Standard-Produkt</span>
+        <select class="select-field"
+                [(ngModel)]="defaultProduct"
+                (ngModelChange)="setDefaultProduct($event)">
+          @for (p of products; track p.key) {
+            <option [value]="p.key">{{ p.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+  </section>
 
   @if (isAdmin()) {
-    <mat-card class="cvm-settings-card">
-      <mat-card-header>
-        <mat-card-title>Neues Modell-Profil</mat-card-title>
-        <mat-card-subtitle>
-          Profil anlegen und in der Profil-Auswahl unten zuordnen.
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content class="cvm-settings-content">
-        <button mat-stroked-button type="button" (click)="toggleCreateForm()">
-          <mat-icon>{{ createForm().expanded ? 'expand_less' : 'add' }}</mat-icon>
-          {{ createForm().expanded ? 'Formular schliessen' : 'Profil anlegen' }}
-        </button>
+    <section class="card">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">Neues Modell-Profil</h2>
+          <span class="text-caption">Profil anlegen und in der Profil-Auswahl unten zuordnen.</span>
+        </div>
+      </header>
+      <div class="card-body flex flex-col gap-4">
+        <div>
+          <button type="button" class="btn btn-secondary" (click)="toggleCreateForm()">
+            <cvm-icon [name]="createForm().expanded ? 'expand-less' : 'add'" [size]="16"></cvm-icon>
+            {{ createForm().expanded ? 'Formular schliessen' : 'Profil anlegen' }}
+          </button>
+        </div>
 
         @if (createForm().expanded) {
-          <div class="cvm-env-form">
-            <mat-form-field appearance="outline" class="cvm-settings-field">
-              <mat-label>profileKey (GROSSBUCHSTABEN_DIGITS)</mat-label>
-              <input matInput
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label class="form-group">
+              <span class="form-label form-label--required">profileKey (GROSSBUCHSTABEN_DIGITS)</span>
+              <input class="input-field" type="text"
                      [ngModel]="createForm().profileKey"
                      (ngModelChange)="updateCreateForm({ profileKey: $event })"
-                     placeholder="CLAUDE_SANDBOX">
-            </mat-form-field>
+                     placeholder="CLAUDE_SANDBOX" />
+            </label>
 
-            <mat-form-field appearance="outline" class="cvm-settings-field">
-              <mat-label>Provider</mat-label>
-              <mat-select
-                [ngModel]="createForm().provider"
-                (ngModelChange)="updateCreateForm({ provider: $event })">
-                <mat-option value="CLAUDE_CLOUD">CLAUDE_CLOUD</mat-option>
-                <mat-option value="OLLAMA_ONPREM">OLLAMA_ONPREM</mat-option>
-              </mat-select>
-            </mat-form-field>
+            <label class="form-group">
+              <span class="form-label">Provider</span>
+              <select class="select-field"
+                      [ngModel]="createForm().provider"
+                      (ngModelChange)="updateCreateForm({ provider: $event })">
+                <option value="CLAUDE_CLOUD">CLAUDE_CLOUD</option>
+                <option value="OLLAMA_ONPREM">OLLAMA_ONPREM</option>
+              </select>
+            </label>
 
-            <mat-form-field appearance="outline" class="cvm-settings-field">
-              <mat-label>modelId</mat-label>
-              <input matInput
+            <label class="form-group">
+              <span class="form-label form-label--required">modelId</span>
+              <input class="input-field" type="text"
                      [ngModel]="createForm().modelId"
                      (ngModelChange)="updateCreateForm({ modelId: $event })"
-                     placeholder="claude-sonnet-4-6">
-            </mat-form-field>
+                     placeholder="claude-sonnet-4-6" />
+            </label>
 
-            <mat-form-field appearance="outline" class="cvm-settings-field">
-              <mat-label>modelVersion (optional)</mat-label>
-              <input matInput
+            <label class="form-group">
+              <span class="form-label">modelVersion (optional)</span>
+              <input class="input-field" type="text"
                      [ngModel]="createForm().modelVersion"
-                     (ngModelChange)="updateCreateForm({ modelVersion: $event })">
-            </mat-form-field>
+                     (ngModelChange)="updateCreateForm({ modelVersion: $event })" />
+            </label>
 
-            <mat-form-field appearance="outline" class="cvm-settings-field">
-              <mat-label>Budget EUR/Monat</mat-label>
-              <input matInput type="number" min="0" step="10"
+            <label class="form-group">
+              <span class="form-label">Budget EUR/Monat</span>
+              <input class="input-field" type="number" min="0" step="10"
                      [ngModel]="createForm().costBudgetEurMonthly"
-                     (ngModelChange)="updateCreateForm({ costBudgetEurMonthly: +$event })">
-            </mat-form-field>
+                     (ngModelChange)="updateCreateForm({ costBudgetEurMonthly: +$event })" />
+            </label>
 
-            <div class="cvm-settings-row">
-              <mat-checkbox
-                [checked]="createForm().approvedForGkvData"
-                (change)="updateCreateForm({ approvedForGkvData: $event.checked })">
-                GKV-Daten freigegeben (erfordert Vier-Augen)
-              </mat-checkbox>
-            </div>
+            <label class="inline-flex items-center gap-2 md:col-span-2">
+              <input type="checkbox" class="form-checkbox"
+                     [checked]="createForm().approvedForGkvData"
+                     (change)="updateCreateForm({ approvedForGkvData: $any($event.target).checked })" />
+              <span class="text-sm">GKV-Daten freigegeben (erfordert Vier-Augen)</span>
+            </label>
 
             @if (createForm().approvedForGkvData) {
-              <mat-form-field appearance="outline" class="cvm-settings-field">
-                <mat-label>Vier-Augen-Freigeber (Mail)</mat-label>
-                <input matInput
+              <label class="form-group">
+                <span class="form-label form-label--required">Vier-Augen-Freigeber (Mail)</span>
+                <input class="input-field" type="email"
                        [ngModel]="createForm().fourEyesConfirmer"
                        (ngModelChange)="updateCreateForm({ fourEyesConfirmer: $event })"
-                       placeholder="j.meyer@ahs.test">
-              </mat-form-field>
+                       placeholder="j.meyer@ahs.test" />
+              </label>
             }
 
-            <mat-form-field appearance="outline" class="cvm-settings-field cvm-settings-field-wide">
-              <mat-label>Begruendung (optional)</mat-label>
-              <input matInput
+            <label class="form-group md:col-span-2">
+              <span class="form-label">Begruendung (optional)</span>
+              <input class="input-field" type="text"
                      [ngModel]="createForm().reason"
-                     (ngModelChange)="updateCreateForm({ reason: $event })">
-            </mat-form-field>
+                     (ngModelChange)="updateCreateForm({ reason: $event })" />
+            </label>
 
-            <button mat-raised-button color="primary" type="button"
-                    [disabled]="createForm().pending"
-                    (click)="legeProfilAn()">
-              <mat-icon>save</mat-icon>
-              {{ createForm().pending ? 'Wird angelegt...' : 'Profil speichern' }}
-            </button>
+            <div class="md:col-span-2">
+              <button class="btn btn-primary" type="button"
+                      [disabled]="createForm().pending"
+                      (click)="legeProfilAn()">
+                <cvm-icon name="save" [size]="16"></cvm-icon>
+                {{ createForm().pending ? 'Wird angelegt...' : 'Profil speichern' }}
+              </button>
+            </div>
           </div>
         }
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
 
-    <mat-card class="cvm-settings-card">
-      <mat-card-header>
-        <mat-card-title>Administration</mat-card-title>
-        <mat-card-subtitle>
-          Modell-Profil-Wechsel pro Umgebung (Vier-Augen-Prinzip).
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content class="cvm-settings-content">
+    <section class="card">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">Administration</h2>
+          <span class="text-caption">Modell-Profil-Wechsel pro Umgebung (Vier-Augen-Prinzip).</span>
+        </div>
+      </header>
+      <div class="card-body flex flex-col gap-4">
         @if (loadingAdmin()) {
-          <p class="cvm-settings-muted">Daten werden geladen...</p>
+          <div class="flex items-center gap-2 text-text-muted text-sm">
+            <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+            <span>Daten werden geladen...</span>
+          </div>
         } @else if (adminError()) {
-          <p class="cvm-settings-error">{{ adminError() }}</p>
-          <button mat-stroked-button (click)="ladeAdminDaten()">
-            <mat-icon>refresh</mat-icon>
-            Erneut laden
-          </button>
+          <div class="banner banner-critical">
+            <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+            <span>{{ adminError() }}</span>
+          </div>
+          <div>
+            <button class="btn btn-secondary" (click)="ladeAdminDaten()">
+              <cvm-icon name="refresh" [size]="16"></cvm-icon>
+              Erneut laden
+            </button>
+          </div>
         } @else if (environments().length === 0) {
-          <p class="cvm-settings-muted">Noch keine Umgebungen angelegt.</p>
+          <p class="text-text-muted">Noch keine Umgebungen angelegt.</p>
         } @else {
           @for (env of environments(); track env.id) {
-            <div class="cvm-env-card">
-              <div class="cvm-env-head">
-                <h3>{{ env.key }} <span class="cvm-env-sub">({{ env.stage }})</span></h3>
-                <p class="cvm-settings-muted">{{ env.name }} &middot; Mandant: {{ env.tenant || 'default' }}</p>
-                <p class="cvm-settings-small">
+            <div class="rounded-xl border border-border bg-surface-muted p-4 flex flex-col gap-3">
+              <div class="flex flex-col gap-1">
+                <h3 class="text-base font-semibold">
+                  {{ env.key }}
+                  <span class="text-sm text-text-muted font-normal">({{ env.stage }})</span>
+                </h3>
+                <p class="text-sm text-text-muted">
+                  {{ env.name }} &middot; Mandant: {{ env.tenant || 'default' }}
+                </p>
+                <p class="text-xs">
                   Aktuelles Profil:
                   <strong>{{ profileKey(env.llmModelProfileId) }}</strong>
                 </p>
               </div>
 
               @if (switchForms()[env.id]; as form) {
-                <div class="cvm-env-form">
-                  <mat-form-field appearance="outline" class="cvm-settings-field">
-                    <mat-label>Neues Modellprofil</mat-label>
-                    <mat-select
-                      [ngModel]="form.newProfileId"
-                      (ngModelChange)="updateForm(env.id, { newProfileId: $event })"
-                    >
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                  <label class="form-group">
+                    <span class="form-label">Neues Modellprofil</span>
+                    <select class="select-field"
+                            [ngModel]="form.newProfileId"
+                            (ngModelChange)="updateForm(env.id, { newProfileId: $event })">
                       @for (p of profiles(); track p.id) {
-                        <mat-option [value]="p.id">
+                        <option [value]="p.id">
                           {{ p.profileKey }} ({{ p.provider }}, {{ p.modelId }})
-                        </mat-option>
+                        </option>
                       }
-                    </mat-select>
-                  </mat-form-field>
+                    </select>
+                  </label>
 
-                  <mat-form-field appearance="outline" class="cvm-settings-field">
-                    <mat-label>Vier-Augen-Freigeber (Mail)</mat-label>
-                    <input
-                      matInput
-                      [ngModel]="form.fourEyesConfirmer"
-                      (ngModelChange)="updateForm(env.id, { fourEyesConfirmer: $event })"
-                      placeholder="j.meyer@ahs.test"
-                    >
-                  </mat-form-field>
+                  <label class="form-group">
+                    <span class="form-label">Vier-Augen-Freigeber (Mail)</span>
+                    <input class="input-field" type="email"
+                           [ngModel]="form.fourEyesConfirmer"
+                           (ngModelChange)="updateForm(env.id, { fourEyesConfirmer: $event })"
+                           placeholder="j.meyer@ahs.test" />
+                  </label>
 
-                  <mat-form-field appearance="outline" class="cvm-settings-field cvm-settings-field-wide">
-                    <mat-label>Begruendung</mat-label>
-                    <input
-                      matInput
-                      [ngModel]="form.reason"
-                      (ngModelChange)="updateForm(env.id, { reason: $event })"
-                      placeholder="z.B. Budgetanpassung"
-                    >
-                  </mat-form-field>
+                  <label class="form-group">
+                    <span class="form-label">Begruendung</span>
+                    <input class="input-field" type="text"
+                           [ngModel]="form.reason"
+                           (ngModelChange)="updateForm(env.id, { reason: $event })"
+                           placeholder="z.B. Budgetanpassung" />
+                  </label>
 
-                  <button
-                    mat-raised-button color="primary"
-                    [disabled]="form.pending"
-                    (click)="wechsleProfil(env.id)"
-                  >
-                    <mat-icon>swap_horiz</mat-icon>
-                    {{ form.pending ? 'Wird gewechselt...' : 'Profil wechseln' }}
-                  </button>
+                  <div class="md:col-span-3">
+                    <button class="btn btn-primary"
+                            [disabled]="form.pending"
+                            (click)="wechsleProfil(env.id)">
+                      <cvm-icon name="refresh" [size]="16"></cvm-icon>
+                      {{ form.pending ? 'Wird gewechselt...' : 'Profil wechseln' }}
+                    </button>
+                  </div>
                 </div>
               }
             </div>
           }
         }
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
   }
 </div>

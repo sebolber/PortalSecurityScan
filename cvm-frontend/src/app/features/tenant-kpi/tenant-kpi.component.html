@@ -1,116 +1,113 @@
-<section class="cvm-tenant-kpi">
-  <header class="cvm-tenant-kpi__header">
-    <h1 class="text-title-lg">Mandanten-KPIs</h1>
-    <p class="text-body">
-      Offene Findings, MTTR, Fix-SLA-Quote und Automatisierungsquote
-      fuer den aktuellen Mandanten. Stand:
-      {{ result()?.calculatedAt ? (result()!.calculatedAt | date: 'yyyy-MM-dd HH:mm') : '–' }}.
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Mandanten-KPIs</h1>
+      <p class="page-subtitle">
+        Offene Findings, MTTR, Fix-SLA-Quote und Automatisierungsquote
+        fuer den aktuellen Mandanten. Stand:
+        {{ result()?.calculatedAt ? (result()!.calculatedAt | date: 'yyyy-MM-dd HH:mm') : '-' }}.
+      </p>
+    </div>
   </header>
 
-  <mat-button-toggle-group
-    [value]="window()"
-    (change)="fensterWechseln($event.value)"
-    aria-label="Zeitfenster"
-  >
+  <div class="inline-flex rounded-lg border border-border bg-surface overflow-hidden h-10"
+       role="group" aria-label="Zeitfenster">
     @for (f of fenster; track f.key) {
-      <mat-button-toggle [value]="f.key">{{ f.label }}</mat-button-toggle>
+      <button type="button"
+              class="px-3 text-sm border-r border-border last:border-r-0"
+              [class.bg-primary-muted]="window() === f.key"
+              [class.text-primary]="window() === f.key"
+              (click)="fensterWechseln(f.key)">
+        {{ f.label }}
+      </button>
     }
-  </mat-button-toggle-group>
+  </div>
 
   @if (error()) {
     <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
   }
 
   @if (loading()) {
-    <mat-spinner diameter="36"></mat-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="20" class="animate-spin"></cvm-icon>
+      <span>KPIs werden geladen...</span>
+    </div>
   } @else if (result()) {
-    <div class="cvm-tenant-kpi__grid">
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Automatisierungsquote</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="cvm-tenant-kpi__hero">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <section class="card">
+        <header class="card-header">
+          <h2 class="card-title">Automatisierungsquote</h2>
+        </header>
+        <div class="card-body">
+          <div class="text-3xl font-bold text-primary">
             {{ result()!.automationRate | percent: '1.1-1' }}
           </div>
-          <p class="text-caption">
+          <p class="text-caption mt-2">
             Anteil Findings mit automatischer Bewertung im Fenster.
           </p>
-        </mat-card-content>
-      </mat-card>
+        </div>
+      </section>
 
-      <mat-card class="cvm-tenant-kpi__severity">
-        <mat-card-header>
-          <mat-card-title>Offene Findings</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <table class="cvm-tenant-kpi__table">
-            <thead>
-              <tr>
-                <th>Severity</th>
-                <th>Offen</th>
-                <th>MTTR (Tage)</th>
-                <th>SLA-Quote</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (s of severities; track s) {
+      <section class="card lg:col-span-2">
+        <header class="card-header">
+          <h2 class="card-title">Offene Findings</h2>
+        </header>
+        <div class="card-body">
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
                 <tr>
-                  <td>
-                    <span
-                      class="cvm-tenant-kpi__severity-chip"
-                      [attr.data-severity]="s"
-                    >
-                      {{ s }}
-                    </span>
-                  </td>
-                  <td>{{ openCount(s) }}</td>
-                  <td>{{ mttr(s) | number }}</td>
-                  <td>
-                    <span
-                      class="cvm-tenant-kpi__ampel"
-                      [attr.data-ampel]="slaAmpel(s)"
-                      [title]="
-                        'SLA-Quote: ' + (slaQuote(s) * 100 | number: '1.0-0') + '%'"
-                    ></span>
-                    {{ slaQuote(s) | percent: '1.0-0' }}
-                  </td>
+                  <th>Severity</th>
+                  <th>Offen</th>
+                  <th>MTTR (Tage)</th>
+                  <th>SLA-Quote</th>
                 </tr>
-              }
-            </tbody>
-          </table>
-        </mat-card-content>
-      </mat-card>
+              </thead>
+              <tbody>
+                @for (s of severities; track s) {
+                  <tr>
+                    <td>
+                      <span class="severity-chip" [attr.data-sev]="s">{{ s }}</span>
+                    </td>
+                    <td>{{ openCount(s) }}</td>
+                    <td>{{ mttr(s) | number }}</td>
+                    <td>
+                      <span class="inline-block w-2.5 h-2.5 rounded-full mr-1.5 align-middle"
+                            [style.background]="ampelColor(s)"
+                            [attr.title]="'SLA-Quote: ' + (slaQuote(s) * 100 | number: '1.0-0') + '%'"></span>
+                      {{ slaQuote(s) | percent: '1.0-0' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
 
-      <mat-card class="cvm-tenant-kpi__burndown">
-        <mat-card-header>
-          <mat-card-title>Burn-Down (offene Findings)</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div
-            class="cvm-tenant-kpi__chart"
-            echarts
-            [options]="burnDownOption()"
-            [autoResize]="true"
-          ></div>
-        </mat-card-content>
-      </mat-card>
+      <section class="card lg:col-span-3">
+        <header class="card-header">
+          <h2 class="card-title">Burn-Down (offene Findings)</h2>
+        </header>
+        <div class="card-body">
+          <div class="h-72"
+               echarts
+               [options]="burnDownOption()"
+               [autoResize]="true"></div>
+        </div>
+      </section>
 
-      <!-- Iteration 55 (CVM-105): Severity-Saeulen zusaetzlich zur Tabelle. -->
-      <mat-card class="cvm-tenant-kpi__severity-bar">
-        <mat-card-header>
-          <mat-card-title>Offene Findings je Severity</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <div
-            class="cvm-tenant-kpi__chart"
-            echarts
-            [options]="severityBarOption()"
-            [autoResize]="true"
-          ></div>
-        </mat-card-content>
-      </mat-card>
+      <section class="card lg:col-span-3">
+        <header class="card-header">
+          <h2 class="card-title">Offene Findings je Severity</h2>
+        </header>
+        <div class="card-body">
+          <div class="h-72"
+               echarts
+               [options]="severityBarOption()"
+               [autoResize]="true"></div>
+        </div>
+      </section>
     </div>
   }
-</section>
+</div>

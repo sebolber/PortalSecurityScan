@@ -1,26 +1,18 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatListModule } from '@angular/material/list';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
   ProductVersionView,
   ProductView,
   ProductsService
 } from '../../core/products/products.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
 @Component({
   selector: 'cvm-components',
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MatListModule,
-    MatProgressSpinnerModule
+    CvmIconComponent
   ],
   templateUrl: './components.component.html',
   styleUrls: ['./components.component.scss']

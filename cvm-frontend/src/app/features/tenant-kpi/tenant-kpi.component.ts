@@ -1,10 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe, PercentPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
@@ -15,6 +11,7 @@ import {
 } from '../../core/kpi/kpi.service';
 import { ChartThemeService } from '../../core/theme/chart-theme.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
 const FENSTER: readonly { key: string; label: string }[] = [
   { key: '30d', label: '30 Tage' },
@@ -46,12 +43,9 @@ const SEVERITIES: readonly Severity[] = [
     DatePipe,
     DecimalPipe,
     PercentPipe,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
     NgxEchartsDirective,
-    AhsBannerComponent
+    AhsBannerComponent,
+    CvmIconComponent
   ],
   // Iteration 52 (CVM-102): ECharts lazy in den Tenant-KPI-Chunk.
   providers: [echartsRouteProviders()],
@@ -178,5 +172,10 @@ export class TenantKpiComponent implements OnInit {
       return 'yellow';
     }
     return 'red';
+  }
+
+  ampelColor(severity: Severity): string {
+    const a = this.slaAmpel(severity);
+    return a === 'green' ? '#16a34a' : a === 'yellow' ? '#f59e0b' : '#dc2626';
   }
 }
