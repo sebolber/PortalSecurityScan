@@ -77,3 +77,16 @@ Folge-Iterationen): JGit-Adapter fuer Reachability, OSV-Mirror,
 Callsite-Migration der LLM/Feed-Adapter, Auto-Trigger
 Reachability, CI-Infrastruktur (Playwright, Karma,
 Testcontainers), Audit/Cleanup/Performance-Nachzuege.
+
+---
+
+## Folge-Session 2026-04-19 (Iteration 63+)
+
+Start: 15:23 UTC. Zeitbox: 3 Stunden.
+Branch: `claude/complete-open-tasks-gmsfB`.
+
+[15:34] Iteration 63 abgeschlossen: Profil-Save-404-Bug gefixt
+(Backend liefert 200+[] ohne aktive Vorgaenger-Version, Frontend
+nutzt `getOptional` und liefert `[]` bei 404, Editor-Reset in
+`draftSpeichern`). Naechstes: Iteration 64 Profil-Edit /
+Soft-Delete UI-Integration.

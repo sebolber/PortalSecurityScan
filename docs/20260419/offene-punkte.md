@@ -25,33 +25,16 @@
   - ~~Iteration 27 Token-Layer Feinarbeit~~ (aufgehoben - Token-Layer
     wird in 61A konsolidiert, Legacy-`--cvm-*`-Aliase entfernt).
 
-### Bug: Profil-Save meldet irrefuehrenden 404 (Diff-Endpunkt)
+### ~~Bug: Profil-Save meldet irrefuehrenden 404 (Diff-Endpunkt)~~
 
-- Symptom: Beim ersten Draft-Save auf einer Umgebung ohne
-  APPROVED-Vorgaenger zeigt die UI die rote Snackbar
-  `GET /api/v1/profiles/{id}/diff?against=latest: Nicht gefunden
-  (404)`. Der Draft wird in Wirklichkeit korrekt gespeichert; die
-  Snackbar kommt aus dem globalen `HttpErrorHandler`, obwohl
-  `ProfilesComponent#draftSpeichern` den Fehler im inneren try
-  selbst faengt.
-- Ursache Backend: `ProfileController#aufloeseGegenparameter` wirft
-  `ProfileNotFoundException("Keine aktive Vorgaengerversion gefunden.")`
-  wenn `latestActiveFor(envId)` leer ist. Das passiert bei jedem
-  frischen Environment, dessen erste Version noch im DRAFT steht.
-- Ursache Frontend: `ProfilesService#diffGegenAktiv` ruft ueber
-  `ApiClient.get()` auf; dessen Pipe triggert den globalen
-  `HttpErrorHandler` VOR dem `try/catch` in der Komponente, die
-  Snackbar erscheint trotz Abfang.
-- Gewuenschter Fix Backend: `GET /profiles/{id}/diff?against=latest`
-  liefert bei fehlender Vorgaenger-Version HTTP 200 mit leerer
-  Liste (fachlich "nichts zum Vergleichen"). Nur wenn die
-  Profil-ID selbst unbekannt ist, bleibt 404 korrekt.
-- Gewuenschter Fix Frontend: `diffGegenAktiv` mit `catchError` auf
-  404 -> `of([])` analog zu `aktivesProfil`. Dann greift der globale
-  Handler nicht.
-- Zusatz: "man kann nichts aendern" pruefen - `saving`-Flag oder
-  Fehler-State koennte den Editor sperren; Editor-Zustand nach
-  erfolgreichem Save explizit reseten (saving=false, fehler=null).
+- **Erledigt in Iteration 63** (CVM-300). `ProfileController#diff`
+  liefert bei `against=latest` ohne aktive Vorgaenger-Version jetzt
+  HTTP 200 + `[]`; 404 bleibt nur bei unbekannter Profil-ID.
+  `ProfilesService#diffGegenAktiv` nutzt `ApiClient.getOptional` und
+  gibt `[]` bei 404 zurueck. `ProfilesComponent#draftSpeichern`
+  setzt `fehler: null` nach erfolgreichem Save explizit. Neuer
+  Spec `profiles.service.spec.ts`; 3 neue Backend-Tests in
+  `ProfileControllerWebTest`.
 
 ### Konfigurationsverwaltung
 

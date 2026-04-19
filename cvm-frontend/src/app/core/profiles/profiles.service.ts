@@ -78,13 +78,21 @@ export class ProfilesService {
   /**
    * Feldweiser Diff gegen die aktuell aktive Version
    * ({@code against=latest}).
+   *
+   * <p>Iteration 63 (CVM-300): nutzt `getOptional`, damit ein 404
+   * (Profil-ID unbekannt) keinen globalen Fehler-Toast ausloest.
+   * Fachlich "noch keine Vorgaengerversion" liefert das Backend seit
+   * Iteration 63 ohnehin HTTP 200 mit leerer Liste.
    */
-  diffGegenAktiv(profileVersionId: string): Promise<ProfileDiffEntry[]> {
-    return firstValueFrom(
-      this.api.get<ProfileDiffEntry[]>(
+  async diffGegenAktiv(
+    profileVersionId: string
+  ): Promise<ProfileDiffEntry[]> {
+    const ergebnis = await firstValueFrom(
+      this.api.getOptional<ProfileDiffEntry[]>(
         `/api/v1/profiles/${profileVersionId}/diff?against=latest`
       )
     );
+    return ergebnis ?? [];
   }
 
   /** Iteration 51 (CVM-101): DRAFT-YAML aktualisieren. */

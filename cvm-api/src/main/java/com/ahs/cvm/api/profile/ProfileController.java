@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -98,32 +99,41 @@ public class ProfileController {
     }
 
     @GetMapping("/profiles/{profileVersionId}/diff")
-    @Operation(summary = "Feldweisen Diff zu einer anderen Version liefern")
+    @Operation(
+            summary = "Feldweisen Diff zu einer anderen Version liefern",
+            description =
+                    "Bei 'against=latest' ohne aktive Vorgaenger-Version wird HTTP 200 mit"
+                            + " leerer Liste geliefert (nichts zum Vergleichen). Nur bei unbekannter"
+                            + " Profil-ID antwortet der Endpunkt mit 404.")
     public ResponseEntity<List<ProfileDiffEntry>> diff(
             @PathVariable UUID profileVersionId,
             @RequestParam(value = "against", defaultValue = "latest") String against) {
-        UUID altId = aufloeseGegenparameter(profileVersionId, against);
-        List<ProfileFieldDiff> diffs = profileService.diff(altId, profileVersionId);
-        return ResponseEntity.ok(diffs.stream().map(ProfileDiffEntry::from).toList());
-    }
+        UUID envId = profileService
+                .environmentOf(profileVersionId)
+                .orElseThrow(() -> new ProfileNotFoundException(profileVersionId));
 
-    private UUID aufloeseGegenparameter(UUID version, String against) {
         if ("latest".equalsIgnoreCase(against)) {
-            UUID envId = profileService
-                    .environmentOf(version)
-                    .orElseThrow(() -> new ProfileNotFoundException(version));
-            return profileService
-                    .latestActiveFor(envId)
-                    .map(ProfileView::id)
-                    .orElseThrow(() -> new ProfileNotFoundException(
-                            "Keine aktive Vorgaengerversion gefunden."));
+            Optional<ProfileView> aktiv = profileService.latestActiveFor(envId);
+            if (aktiv.isEmpty()) {
+                return ResponseEntity.ok(List.of());
+            }
+            return diffAntwort(aktiv.get().id(), profileVersionId);
         }
+
+        UUID altId;
         try {
-            return UUID.fromString(against);
+            altId = UUID.fromString(against);
         } catch (IllegalArgumentException e) {
             throw new ProfileNotFoundException(
                     "Parameter 'against' muss 'latest' oder eine UUID sein: " + against);
         }
+        return diffAntwort(altId, profileVersionId);
+    }
+
+    private ResponseEntity<List<ProfileDiffEntry>> diffAntwort(
+            UUID altId, UUID profileVersionId) {
+        List<ProfileFieldDiff> diffs = profileService.diff(altId, profileVersionId);
+        return ResponseEntity.ok(diffs.stream().map(ProfileDiffEntry::from).toList());
     }
 
     private ProfileResponse abbilden(ProfileView p) {

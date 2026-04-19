@@ -165,6 +165,7 @@ export class ProfilesComponent implements OnInit {
         draft,
         diff,
         saving: false,
+        fehler: null,
         meldung:
           'Draft v' +
           draft.versionNumber +

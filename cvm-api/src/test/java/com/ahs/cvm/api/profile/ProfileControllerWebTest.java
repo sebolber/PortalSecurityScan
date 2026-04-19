@@ -12,10 +12,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.ahs.cvm.application.profile.ContextProfileService;
 import com.ahs.cvm.application.profile.FourEyesViolationException;
+import com.ahs.cvm.application.profile.ProfileFieldDiff;
 import com.ahs.cvm.application.profile.ProfileValidationException;
 import com.ahs.cvm.application.profile.ProfileView;
 import com.ahs.cvm.domain.enums.ProfileState;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -98,6 +100,55 @@ class ProfileControllerWebTest {
                         .content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("profile_validation_error"));
+    }
+
+    @Test
+    @DisplayName(
+            "GET /profiles/{id}/diff?against=latest: 200 + leere Liste, wenn noch keine aktive Vorgaenger-Version existiert")
+    void diffLiefertLeereListeOhneAktiv() throws Exception {
+        given(profileService.environmentOf(DRAFT_ID)).willReturn(Optional.of(ENV_ID));
+        given(profileService.latestActiveFor(ENV_ID)).willReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/profiles/{id}/diff", DRAFT_ID).param("against", "latest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName(
+            "GET /profiles/{id}/diff?against=latest: 404, wenn die Profil-ID selbst unbekannt ist")
+    void diffLiefert404BeiUnbekannterProfilId() throws Exception {
+        given(profileService.environmentOf(DRAFT_ID)).willReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/profiles/{id}/diff", DRAFT_ID).param("against", "latest"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("profile_not_found"));
+    }
+
+    @Test
+    @DisplayName(
+            "GET /profiles/{id}/diff?against=latest: 200 mit echten Diff-Eintraegen, wenn eine aktive Vorgaenger-Version existiert")
+    void diffLiefertEintraegeGegenAktiv() throws Exception {
+        UUID altId = UUID.fromString("33333333-3333-3333-3333-333333333333");
+        ProfileView aktiv =
+                new ProfileView(
+                        altId,
+                        ENV_ID,
+                        3,
+                        ProfileState.ACTIVE,
+                        "schemaVersion: 1\n",
+                        "t.tester@ahs.test",
+                        "a.admin@ahs.test",
+                        Instant.now(),
+                        Instant.now());
+        given(profileService.environmentOf(DRAFT_ID)).willReturn(Optional.of(ENV_ID));
+        given(profileService.latestActiveFor(ENV_ID)).willReturn(Optional.of(aktiv));
+        given(profileService.diff(altId, DRAFT_ID)).willReturn(List.<ProfileFieldDiff>of());
+
+        mockMvc.perform(get("/api/v1/profiles/{id}/diff", DRAFT_ID).param("against", "latest"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
