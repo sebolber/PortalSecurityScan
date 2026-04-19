@@ -106,7 +106,15 @@ Iterationen 80+ implementieren die Befunde.
     VIEWER). 5 neue Karma-Specs. Offen: persoenliche "Mein Tag"-
     Card mit zugewiesenen Queue-Items - benoetigt
     `/queue?assignee=...`-Endpoint.
-- **U-09 Secrets-Show/Hide-Toggle + Rotation** - Iteration 95.
+- ~~**U-09 Secrets-Show/Hide-Toggle + Rotation**~~ -
+  **Erledigt in Iteration 95** (CVM-335). Neuer Rotations-Dialog
+  in `admin-parameters` fuer sensible Parameter: Passwort-Input
+  mit Show/Hide-Toggle, Pflicht-Begruendung, eigener Fehlerstate.
+  Parameter-Tabelle rendert sensible Werte einheitlich als
+  `••••••••`. `wertZuruecksetzen` und `loesche` in admin-parameters
+  nutzen jetzt den `CvmConfirmService`. 7 neue Karma-Specs. Offen:
+  Rotations-Reminder und `window.confirm`-Cleanup in
+  `admin-llm-configurations`/`admin-theme`/`profiles`.
 - **U-10 Erstnutzer-Wizard** - Iteration 96.
 
 ## Stand 2026-04-19 - UI-Harmonisierung (Iteration 61) - laeuft

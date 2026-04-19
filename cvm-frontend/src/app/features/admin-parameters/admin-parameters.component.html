@@ -220,7 +220,15 @@
                     </td>
                     <td>{{ p.type }}</td>
                     <td>
-                      {{ p.value }}@if (p.unit) { {{ p.unit }} }
+                      @if (p.sensitive) {
+                        <span class="font-mono"
+                              [attr.data-testid]="'param-sensitive-mask-' + p.paramKey"
+                              title="Sensibler Wert - nur ueber Rotations-Dialog aenderbar">
+                          &bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;
+                        </span>
+                      } @else {
+                        {{ p.value }}@if (p.unit) { {{ p.unit }} }
+                      }
                     </td>
                     <td>
                       <div class="flex flex-wrap gap-1">
@@ -307,4 +315,79 @@
       </div>
     </section>
   }
+
+  <cvm-dialog
+    [open]="rotationOffen()"
+    title="Secret rotieren"
+    size="md"
+    (close)="brecheRotationAb()"
+  >
+    @if (rotationEintrag(); as eintrag) {
+      <div class="flex flex-col gap-3">
+        <p class="text-sm text-text-muted">
+          Parameter <code class="font-mono">{{ eintrag.paramKey }}</code> ist als
+          sensibel markiert. Der aktuelle Wert wird nicht angezeigt - der neue Wert
+          wird verschluesselt gespeichert und sofort angewendet.
+        </p>
+
+        <label class="form-group">
+          <span class="form-label form-label--required">Neuer Wert</span>
+          <div class="flex items-center gap-2">
+            <input
+              class="input-field grow"
+              data-testid="param-rotation-value"
+              [type]="rotationSichtbar() ? 'text' : 'password'"
+              [ngModel]="rotationWert()"
+              (ngModelChange)="rotationWert.set($event)"
+              autocomplete="new-password"
+            />
+            <button type="button" class="btn-icon"
+                    data-testid="param-rotation-toggle"
+                    (click)="rotationUmschalten()"
+                    [attr.aria-label]="rotationSichtbar() ? 'Verbergen' : 'Anzeigen'">
+              <cvm-icon [name]="rotationSichtbar() ? 'visibility' : 'visibility'" [size]="16"></cvm-icon>
+              <span class="sr-only">{{ rotationSichtbar() ? 'Verbergen' : 'Anzeigen' }}</span>
+            </button>
+          </div>
+          <span class="form-help">
+            @if (rotationSichtbar()) {
+              Wert wird im Klartext gezeigt - vor Screen-Sharing vermeiden.
+            } @else {
+              Als Passwort maskiert. Klick auf das Auge-Icon zeigt den Wert.
+            }
+          </span>
+        </label>
+
+        <label class="form-group">
+          <span class="form-label form-label--required">Aenderungsgrund</span>
+          <input class="input-field"
+                 type="text"
+                 data-testid="param-rotation-reason"
+                 [ngModel]="rotationGrund()"
+                 (ngModelChange)="rotationGrund.set($event)"
+                 maxlength="512"
+                 placeholder="z.B. Quartalsrotation 2026Q2" />
+        </label>
+
+        @if (rotationFehler(); as fehler) {
+          <p class="form-error" data-testid="param-rotation-error">{{ fehler }}</p>
+        }
+      </div>
+    }
+
+    <div footer class="flex items-center justify-end gap-2">
+      <button class="btn btn-secondary" type="button"
+              (click)="brecheRotationAb()"
+              [disabled]="rotationPending()">
+        Abbrechen
+      </button>
+      <button class="btn btn-primary" type="button"
+              data-testid="param-rotation-save"
+              (click)="speichereRotation()"
+              [disabled]="rotationPending()">
+        <cvm-icon name="save" [size]="16"></cvm-icon>
+        {{ rotationPending() ? 'Rotiere...' : 'Secret speichern' }}
+      </button>
+    </div>
+  </cvm-dialog>
 </div>

@@ -9,6 +9,8 @@ import {
   SystemParameterUpdateRequest,
   SystemParameterView
 } from '../../core/parameters/system-parameter.service';
+import { CvmConfirmService } from '../../shared/components/cvm-confirm.service';
+import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -85,6 +87,7 @@ function leeresFormular(): FormState {
   imports: [
     CommonModule,
     FormsModule,
+    CvmDialogComponent,
     CvmIconComponent,
     EmptyStateComponent
   ],
@@ -94,6 +97,7 @@ function leeresFormular(): FormState {
 export class AdminParametersComponent implements OnInit {
   private readonly service = inject(SystemParameterService);
   private readonly toast = inject(CvmToastService);
+  private readonly confirmService = inject(CvmConfirmService);
 
   readonly typen = PARAM_TYPES;
 
@@ -106,6 +110,15 @@ export class AdminParametersComponent implements OnInit {
   readonly formular = signal<FormState>(leeresFormular());
   readonly kategorieFilter = signal<string>('');
   readonly aktiverTab = signal<'parameter' | 'audit'>('parameter');
+
+  // Iteration 95 (CVM-335): Secret-Rotations-Dialog.
+  readonly rotationOffen = signal<boolean>(false);
+  readonly rotationEintrag = signal<SystemParameterView | null>(null);
+  readonly rotationWert = signal<string>('');
+  readonly rotationGrund = signal<string>('');
+  readonly rotationSichtbar = signal<boolean>(false);
+  readonly rotationPending = signal<boolean>(false);
+  readonly rotationFehler = signal<string | null>(null);
 
   readonly kategorien = computed<readonly string[]>(() => {
     const set = new Set<string>();
@@ -262,9 +275,13 @@ export class AdminParametersComponent implements OnInit {
   }
 
   async wertAendern(eintrag: SystemParameterView): Promise<void> {
+    if (eintrag.sensitive) {
+      this.oeffneRotation(eintrag);
+      return;
+    }
     const neu = window.prompt(
       'Neuer Wert fuer "' + eintrag.paramKey + '":',
-      eintrag.sensitive ? '' : eintrag.value ?? ''
+      eintrag.value ?? ''
     );
     if (neu === null) {
       return;
@@ -283,10 +300,73 @@ export class AdminParametersComponent implements OnInit {
     }
   }
 
+  /**
+   * Iteration 95 (CVM-335): Rotations-Dialog fuer sensible
+   * Parameter. Password-Feld mit Show/Hide, Pflicht-Begruendung
+   * und strukturierter Aenderungs-Flow statt zwei window.prompt-
+   * Aufrufen.
+   */
+  oeffneRotation(eintrag: SystemParameterView): void {
+    this.rotationEintrag.set(eintrag);
+    this.rotationWert.set('');
+    this.rotationGrund.set('');
+    this.rotationSichtbar.set(false);
+    this.rotationFehler.set(null);
+    this.rotationOffen.set(true);
+  }
+
+  brecheRotationAb(): void {
+    this.rotationOffen.set(false);
+    this.rotationEintrag.set(null);
+    this.rotationFehler.set(null);
+  }
+
+  rotationUmschalten(): void {
+    this.rotationSichtbar.update((v) => !v);
+  }
+
+  async speichereRotation(): Promise<void> {
+    const eintrag = this.rotationEintrag();
+    if (!eintrag) return;
+    const wert = this.rotationWert();
+    if (!wert.trim()) {
+      this.rotationFehler.set('Neuer Wert darf nicht leer sein.');
+      return;
+    }
+    const grund = this.rotationGrund().trim();
+    if (!grund) {
+      this.rotationFehler.set('Aenderungsgrund ist bei Secret-Rotation Pflicht.');
+      return;
+    }
+    this.rotationPending.set(true);
+    this.rotationFehler.set(null);
+    try {
+      await this.service.changeValue(eintrag.id, { value: wert, reason: grund });
+      this.toast.success(
+        'Secret "' + eintrag.paramKey + '" rotiert.',
+        4000
+      );
+      this.rotationOffen.set(false);
+      this.rotationEintrag.set(null);
+      await this.ladeParameter();
+    } catch (err) {
+      this.rotationFehler.set(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Secret-Rotation fehlgeschlagen.'
+      );
+    } finally {
+      this.rotationPending.set(false);
+    }
+  }
+
   async wertZuruecksetzen(eintrag: SystemParameterView): Promise<void> {
-    const bestaetigt = window.confirm(
-      'Parameter "' + eintrag.paramKey + '" auf Standardwert zuruecksetzen?'
-    );
+    const bestaetigt = await this.confirmService.confirm({
+      title: 'Auf Standardwert zuruecksetzen?',
+      message:
+        'Parameter "' + eintrag.paramKey + '" auf Standardwert zuruecksetzen?',
+      confirmLabel: 'Zuruecksetzen'
+    });
     if (!bestaetigt) {
       return;
     }
@@ -304,9 +384,12 @@ export class AdminParametersComponent implements OnInit {
   }
 
   async loesche(eintrag: SystemParameterView): Promise<void> {
-    const bestaetigt = window.confirm(
-      'Parameter "' + eintrag.paramKey + '" wirklich loeschen?'
-    );
+    const bestaetigt = await this.confirmService.confirm({
+      title: 'Parameter loeschen',
+      message: 'Parameter "' + eintrag.paramKey + '" wirklich loeschen?',
+      confirmLabel: 'Loeschen',
+      variant: 'danger'
+    });
     if (!bestaetigt) {
       return;
     }
