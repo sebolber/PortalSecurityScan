@@ -46,8 +46,8 @@ class ProductsControllerWebTest {
     @DisplayName("GET /api/v1/products: Liste mit key/name")
     void list() throws Exception {
         given(queryService.listProducts()).willReturn(List.of(
-                new ProductView(P1, "PortalCore", "PortalCore", "Kernmodul"),
-                new ProductView(UUID.randomUUID(), "SmileKH", "SmileKH", null)));
+                new ProductView(P1, "PortalCore", "PortalCore", "Kernmodul", null),
+                new ProductView(UUID.randomUUID(), "SmileKH", "SmileKH", null, null)));
 
         mockMvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk())
@@ -78,7 +78,7 @@ class ProductsControllerWebTest {
         UUID neueId = UUID.randomUUID();
         given(catalogService.anlege(any()))
                 .willReturn(new ProductView(neueId, "portalcore-test",
-                        "PortalCore-Test", "Test-Komponente"));
+                        "PortalCore-Test", "Test-Komponente", null));
 
         mockMvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)

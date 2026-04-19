@@ -186,6 +186,12 @@ public class ProductCatalogService {
             String description = input.description().trim();
             produkt.setDescription(description.isEmpty() ? null : description);
         }
+        // Iteration 76 (CVM-313): optionale Git-URL. Leer-String entfernt
+        // einen bestehenden Eintrag; null laesst das Feld unangetastet.
+        if (input.repoUrl() != null) {
+            String repoUrl = input.repoUrl().trim();
+            produkt.setRepoUrl(repoUrl.isEmpty() ? null : repoUrl);
+        }
         return ProductView.from(productRepository.save(produkt));
     }
 
@@ -239,7 +245,12 @@ public class ProductCatalogService {
         }
     }
 
-    public record ProductUpdateInput(String name, String description) {}
+    public record ProductUpdateInput(String name, String description, String repoUrl) {
+        /** Bestands-Konstruktor fuer Aufrufer ohne repo-URL-Intention. */
+        public ProductUpdateInput(String name, String description) {
+            this(name, description, null);
+        }
+    }
 
     public record ProductVersionCreateInput(
             String version, String gitCommit, Instant releasedAt) {}

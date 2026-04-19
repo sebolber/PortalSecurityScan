@@ -78,7 +78,7 @@ public class ProductsController {
 
     @PutMapping("/{productId}")
     @PreAuthorize("hasAuthority('CVM_ADMIN')")
-    @Operation(summary = "Produkt-Stammdaten aktualisieren (Name/Beschreibung).")
+    @Operation(summary = "Produkt-Stammdaten aktualisieren (Name/Beschreibung/Repo-URL).")
     @ApiResponses({
         @ApiResponse(responseCode = "200", description = "Produkt aktualisiert"),
         @ApiResponse(responseCode = "400", description = "Eingabe ungueltig"),
@@ -88,7 +88,8 @@ public class ProductsController {
             @PathVariable UUID productId,
             @Valid @RequestBody ProductUpdateRequest request) {
         ProductView updated = catalogService.aktualisiere(productId,
-                new ProductUpdateInput(request.name(), request.description()));
+                new ProductUpdateInput(
+                        request.name(), request.description(), request.repoUrl()));
         return ResponseEntity.ok(updated);
     }
 

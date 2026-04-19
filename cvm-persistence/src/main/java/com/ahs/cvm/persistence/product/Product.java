@@ -44,6 +44,15 @@ public class Product {
     @Column(name = "description")
     private String description;
 
+    /**
+     * Iteration 76 (CVM-313): optionale Git-Repository-URL (https oder
+     * ssh). Wird vom Reachability-Agenten fuer den JGit-Checkout
+     * verwendet. Kein Pflichtfeld - Closed-Source-Drittsoftware hat
+     * in der Regel kein Repo.
+     */
+    @Column(name = "repo_url")
+    private String repoUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

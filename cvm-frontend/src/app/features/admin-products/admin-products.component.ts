@@ -223,10 +223,22 @@ export class AdminProductsComponent implements OnInit {
     const neueBeschreibung = window.prompt(
       `Beschreibung fuer Produkt "${p.key}" (leer lassen = keine)`,
       p.description ?? '');
+    if (neueBeschreibung === null) {
+      return;
+    }
+    // Iteration 76 (CVM-313): optionale Git-Repository-URL.
+    const neueRepoUrl = window.prompt(
+      `Git-Repository-URL fuer Produkt "${p.key}" (leer lassen = keine; `
+        + `wird fuer Reachability genutzt)`,
+      p.repoUrl ?? '');
+    if (neueRepoUrl === null) {
+      return;
+    }
     try {
       const aktualisiert = await this.products.update(p.id, {
         name: neuerName.trim(),
-        description: neueBeschreibung === null ? null : neueBeschreibung.trim()
+        description: neueBeschreibung.trim(),
+        repoUrl: neueRepoUrl.trim()
       });
       this.toast.success(`Produkt "${aktualisiert.key}" aktualisiert.`, 3000);
       await this.ladeProdukte();

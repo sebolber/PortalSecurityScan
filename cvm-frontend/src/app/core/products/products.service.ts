@@ -7,6 +7,7 @@ export interface ProductView {
   readonly key: string;
   readonly name: string;
   readonly description: string | null;
+  readonly repoUrl: string | null;
 }
 
 export interface ProductVersionView {
@@ -26,6 +27,7 @@ export interface ProductCreateRequest {
 export interface ProductUpdateRequest {
   readonly name?: string | null;
   readonly description?: string | null;
+  readonly repoUrl?: string | null;
 }
 
 export interface ProductVersionCreateRequest {

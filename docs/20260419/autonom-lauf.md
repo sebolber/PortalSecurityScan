@@ -176,3 +176,8 @@ erneut pruefen.
 im Admin-UI (Seite /admin/cve-import) inklusive
 OsvMirrorService-Wrapper und 503-Handling. Zwei neue Karma-
 Tests.
+[17:22] Iteration 76 abgeschlossen: Product.repoUrl-Feld.
+Flyway V0040 + Entity + DTO + Service + REST-DTO + Controller
++ Frontend-Service + AdminProducts-Edit-Prompt. Bereitet den
+echten ReachabilityAutoTriggerPort-Adapter in einer Folge-
+Iteration vor.
