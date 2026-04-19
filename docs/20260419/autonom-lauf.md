@@ -61,3 +61,5 @@ Domain-Modul + Integration in ComponentCveMatchingOnScanIngestedListener
 (commit c7d8f29e).
 [11:18] Iteration 59 abgeschlossen: Tenant-Anlage (Backend + UI-
 Formular) (commit e00f0787). Timebox naehert sich dem Ende.
+[11:26] Iteration 60 abgeschlossen: Tenant Active-Toggle mit
+Default-Schutz (commit b7d6f35f).
