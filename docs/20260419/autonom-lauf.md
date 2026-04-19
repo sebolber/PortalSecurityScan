@@ -270,3 +270,17 @@ Drei neue queue-detail-Cases. Karma 126.
 Neuer Backend-Endpoint GET /findings/{id}/assessments/history
 + Lazy-Load im Queue-Detail-Panel via Details-Collapsible.
 Karma 127. Naechstes: U-05 Reachability-Detail.
+[19:25] Iteration 88 abgeschlossen: U-05 Reachability-Detail
+(Slide-In) und findingId-Deep-Link. Karma 129. Naechstes: U-06
+Admin-Aktions-Dialoge.
+[19:34] Iteration 89 abgeschlossen: U-06a Edit-Dialog fuer
+admin-products (Name/Beschreibung/Git-Repo-URL). window.prompt-
+Kette weg; 7 neue Specs; Karma 136.
+[19:43] Iteration 90 abgeschlossen: U-06b CvmConfirmService +
+CvmConfirmHostComponent als window.confirm-Ersatz. Eingesetzt in
+admin-products (Produkt+Version), admin-environments, rules. 12
+neue Specs; Karma 148. Folge-Cleanup: profiles, llm-configurations,
+parameters, theme nutzen noch window.confirm.
+[19:50] Iteration 91 abgeschlossen: U-07a Breadcrumbs +
+GlobalShortcutsDirective (? fuer Sheet, g+d/q/s/w/r fuer Nav).
+14 neue Specs; Karma 162. Naechstes: U-07b Suche + Notifications.
