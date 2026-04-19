@@ -110,3 +110,11 @@ Claude-Katalog-Flags auf live-reloadable umgestellt (ausser
 version). Neuer WireMock-Test fuer Runtime-Override ohne
 Neustart. Naechstes: Iteration 67 Feed-Clients auf
 Parameter-Resolver.
+[16:09] Iteration 67 abgeschlossen: NvdFeedClient und
+GhsaFeedClient lesen ihre api-keys pro Call via
+SystemParameterResolver (direkte Dependency auf
+cvm-application erlaubt). KEV und EPSS haben keinen api-key,
+daher keine Callsite-Migration. Katalog-Flags der beiden Feed-
+Secrets auf live-reloadable. Zwei neue WireMock-Override-
+Tests. Naechstes: Iteration 68 GitHubApiProvider (Fix-Verifikation)
+auf Resolver.

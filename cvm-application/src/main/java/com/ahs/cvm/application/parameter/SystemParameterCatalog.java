@@ -559,16 +559,16 @@ public final class SystemParameterCatalog {
                 "cvm.feed.nvd.api-key",
                 "NVD API-Key",
                 "API-Key fuer den NVD-Feed. Optional, erhoeht das Rate-Limit.",
-                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                "Iteration 67: Wird AES-GCM-verschluesselt gespeichert und pro Call ausgelesen. Kein Neustart noetig.",
                 CATEGORY_ENRICHMENT, "nvd",
-                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, true, true, false));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.feed.ghsa.api-key",
                 "GitHub GHSA-Token",
                 "Personal Access Token fuer die GHSA-GraphQL-API.",
-                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                "Iteration 67: Wird AES-GCM-verschluesselt gespeichert und pro Call ausgelesen. Kein Neustart noetig.",
                 CATEGORY_ENRICHMENT, "ghsa",
-                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, true, true, false));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.ai.fix-verification.github.token",
                 "Fix-Verifikation GitHub-Token",

@@ -81,11 +81,11 @@ class SystemParameterCatalogTest {
                 .as("cvm.llm.claude.api-key live-reloadable nach Iteration 66")
                 .isFalse();
         assertThat(findEntry("cvm.feed.nvd.api-key").restartRequired())
-                .as("cvm.feed.nvd.api-key noch restartRequired bis Iteration 67")
-                .isTrue();
+                .as("cvm.feed.nvd.api-key live-reloadable nach Iteration 67")
+                .isFalse();
         assertThat(findEntry("cvm.feed.ghsa.api-key").restartRequired())
-                .as("cvm.feed.ghsa.api-key noch restartRequired bis Iteration 67")
-                .isTrue();
+                .as("cvm.feed.ghsa.api-key live-reloadable nach Iteration 67")
+                .isFalse();
         assertThat(findEntry("cvm.ai.fix-verification.github.token").restartRequired())
                 .as("cvm.ai.fix-verification.github.token noch restartRequired bis Iteration 68")
                 .isTrue();
@@ -342,6 +342,8 @@ class SystemParameterCatalogTest {
                 "cvm.llm.claude.timeout-seconds",
                 "cvm.llm.claude.model",
                 "cvm.llm.claude.api-key",
+                "cvm.feed.nvd.api-key",
+                "cvm.feed.ghsa.api-key",
                 "cvm.ai.reachability.enabled",
                 "cvm.ai.reachability.timeout-seconds",
                 "cvm.ai.auto-assessment.enabled",

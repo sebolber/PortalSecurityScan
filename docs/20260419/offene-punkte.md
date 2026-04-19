@@ -91,8 +91,15 @@
       seconds` aendert. Katalog-Flags der Claude-Keys (ausser
       `version`) entsprechend auf `hotReload=true`,
       `restartRequired=false` umgestellt.
-    - Offen bleiben: Feed-Clients (Iteration 67) und GitHub-
-      Token-Adapter fuer Fix-Verifikation (Iteration 68).
+    - **Teil erledigt in Iteration 67** (CVM-304): NvdFeedClient
+      und GhsaFeedClient lesen `cvm.feed.nvd.api-key` und
+      `cvm.feed.ghsa.api-key` pro Call aus dem
+      `SystemParameterResolver`. `GhsaFeedClient#isEnabled()`
+      nutzt den aufgeloesten Token. Katalog-Flags beider Secrets
+      auf live-reloadable. KEV und EPSS haben keinen api-key und
+      brauchen keine Callsite-Migration.
+    - Offen bleibt: GitHub-Token-Adapter fuer Fix-Verifikation
+      (Iteration 68).
   - **ArchUnit-Regel** erledigt in Iteration 46 (zwei Regeln:
     Repository und Secret-Cipher duerfen nur aus
     `com.ahs.cvm.application.parameter..` referenziert werden).
