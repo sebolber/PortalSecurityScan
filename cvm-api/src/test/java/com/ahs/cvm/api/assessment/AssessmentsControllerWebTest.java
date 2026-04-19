@@ -86,7 +86,7 @@ class AssessmentsControllerWebTest {
         willThrow(new AssessmentFourEyesViolationException(
                         "Vier-Augen-Prinzip verletzt: Downgrade auf NOT_APPLICABLE"))
                 .given(writeService)
-                .approveView(eq(ASSESSMENT_ID), eq("t.tester@ahs.test"), any());
+                .approveView(eq(ASSESSMENT_ID), eq("t.tester@ahs.test"), any(), any());
 
         mockMvc.perform(post("/api/v1/assessments/{id}/approve", ASSESSMENT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -98,7 +98,7 @@ class AssessmentsControllerWebTest {
     @Test
     @DisplayName("POST /assessments/{id}/approve: 200 OK mit Status APPROVED")
     void approveOK() throws Exception {
-        given(writeService.approveView(eq(ASSESSMENT_ID), eq("a.admin@ahs.test"), any()))
+        given(writeService.approveView(eq(ASSESSMENT_ID), eq("a.admin@ahs.test"), any(), any()))
                 .willReturn(view(AhsSeverity.HIGH, AssessmentStatus.APPROVED));
 
         mockMvc.perform(post("/api/v1/assessments/{id}/approve", ASSESSMENT_ID)
