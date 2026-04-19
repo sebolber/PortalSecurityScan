@@ -4,13 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
@@ -185,6 +188,124 @@ class OsvComponentLookupTest {
         assertThat(r).hasSize(2);
         assertThat(r.get("pkg:npm/lib-a@1.0")).containsExactly("CVE-2030-0001");
         assertThat(r.get("pkg:npm/lib-b@1.0")).containsExactly("CVE-2030-0001");
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Retry-After: 429 wird einmalig nach Retry-After-Sekunden wiederholt")
+    void retryAfter429WirdEinmaligWiederholt() {
+        OsvProperties p = defaultsEnabled();
+        p.setMaxRetryAfterSeconds(5);
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        AtomicInteger slept = new AtomicInteger(-1);
+        OsvComponentLookup lookup = new OsvComponentLookup(
+                p, builder, seconds -> slept.set(seconds));
+
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS)
+                        .header("Retry-After", "2")
+                        .body(""));
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withSuccess("""
+                        { "results": [ { "vulns": [ { "id": "CVE-2030-0001" } ] } ] }
+                        """, MediaType.APPLICATION_JSON));
+
+        Map<String, List<String>> r = lookup.findCveIdsForPurls(List.of(
+                "pkg:npm/foo@1.0"));
+
+        assertThat(slept.get()).isEqualTo(2);
+        assertThat(r.get("pkg:npm/foo@1.0")).containsExactly("CVE-2030-0001");
+        server.verify();
+    }
+
+    @Test
+    @DisplayName("Retry-After: 429 ohne Header wartet Default 1 s")
+    void retryAfter429OhneHeader() {
+        OsvProperties p = defaultsEnabled();
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        AtomicInteger slept = new AtomicInteger(-1);
+        OsvComponentLookup lookup = new OsvComponentLookup(
+                p, builder, seconds -> slept.set(seconds));
+
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).body(""));
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withSuccess("""
+                        { "results": [ { "vulns": [ { "id": "CVE-2030-0002" } ] } ] }
+                        """, MediaType.APPLICATION_JSON));
+
+        Map<String, List<String>> r = lookup.findCveIdsForPurls(List.of(
+                "pkg:npm/foo@1.0"));
+
+        assertThat(slept.get()).isEqualTo(1);
+        assertThat(r.get("pkg:npm/foo@1.0")).containsExactly("CVE-2030-0002");
+    }
+
+    @Test
+    @DisplayName("Retry-After: Obergrenze durch maxRetryAfterSeconds greift")
+    void retryAfterObergrenze() {
+        OsvProperties p = defaultsEnabled();
+        p.setMaxRetryAfterSeconds(3);
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        AtomicInteger slept = new AtomicInteger(-1);
+        OsvComponentLookup lookup = new OsvComponentLookup(
+                p, builder, seconds -> slept.set(seconds));
+
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS)
+                        .header("Retry-After", "999")
+                        .body(""));
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withSuccess("""
+                        { "results": [ { "vulns": [ { "id": "CVE-2030-0003" } ] } ] }
+                        """, MediaType.APPLICATION_JSON));
+
+        lookup.findCveIdsForPurls(List.of("pkg:npm/foo@1.0"));
+
+        assertThat(slept.get()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("Retry-After: retryOn429=false wirft weiter, Map bleibt leer")
+    void retryDeaktiviert() {
+        OsvProperties p = defaultsEnabled();
+        p.setRetryOn429(false);
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OsvComponentLookup lookup = new OsvComponentLookup(
+                p, builder, seconds -> {});
+
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS).body(""));
+
+        Map<String, List<String>> r = lookup.findCveIdsForPurls(List.of(
+                "pkg:npm/foo@1.0"));
+        assertThat(r).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Retry-After: zweimal 429 landet als leere Map")
+    void retryZweimal429LeereMap() {
+        OsvProperties p = defaultsEnabled();
+        RestClient.Builder builder = RestClient.builder();
+        MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
+        OsvComponentLookup lookup = new OsvComponentLookup(
+                p, builder, seconds -> {});
+
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS)
+                        .header("Retry-After", "0").body(""));
+        server.expect(requestTo("https://osv.test/v1/querybatch"))
+                .andRespond(withStatus(HttpStatus.TOO_MANY_REQUESTS)
+                        .header("Retry-After", "0").body(""));
+
+        Map<String, List<String>> r = lookup.findCveIdsForPurls(List.of(
+                "pkg:npm/foo@1.0"));
+
+        assertThat(r).isEmpty();
         server.verify();
     }
 

@@ -30,6 +30,20 @@ public class OsvProperties {
     /** HTTP-Timeout in Millisekunden. */
     private int timeoutMs = 15_000;
 
+    /**
+     * Auf HTTP 429 einmalig retrien? Default {@code true}. Setzen
+     * auf {@code false} deaktiviert das Retry komplett (429 fuehrt
+     * direkt zu einer leeren Map mit Warn-Log).
+     */
+    private boolean retryOn429 = true;
+
+    /**
+     * Obergrenze fuer die im {@code Retry-After}-Header angegebene
+     * Wartezeit. Schuetzt vor Server, der 900 s zurueckschickt und
+     * damit einen Scan-Run blockieren koennte.
+     */
+    private int maxRetryAfterSeconds = 30;
+
     public boolean isEnabled() {
         return enabled;
     }
@@ -60,5 +74,21 @@ public class OsvProperties {
 
     public void setTimeoutMs(int timeoutMs) {
         this.timeoutMs = timeoutMs;
+    }
+
+    public boolean isRetryOn429() {
+        return retryOn429;
+    }
+
+    public void setRetryOn429(boolean retryOn429) {
+        this.retryOn429 = retryOn429;
+    }
+
+    public int getMaxRetryAfterSeconds() {
+        return maxRetryAfterSeconds;
+    }
+
+    public void setMaxRetryAfterSeconds(int maxRetryAfterSeconds) {
+        this.maxRetryAfterSeconds = maxRetryAfterSeconds;
     }
 }

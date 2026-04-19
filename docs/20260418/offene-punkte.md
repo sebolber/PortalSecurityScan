@@ -1,9 +1,9 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 34c - offen
+## Stand 2026-04-19 nach Iteration 35 - offen
 
-- **OSV-Rate-Limit / Retry-After** (Iteration 35). OSV-Client
-  feuert heute ohne Throttle; 429 + Retry-After fehlt.
+- ~~**OSV-Rate-Limit / Retry-After**~~ erledigt in 35
+  (`retryOn429`, `maxRetryAfterSeconds`).
 - **OSV-Mirror** fuer air-gapped-Installationen.
 - **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
 - **OpenAI-/Azure-/Adesso-Adapter**: fehlen, sobald ein Mandant
@@ -11,6 +11,15 @@
   EnvironmentModelResolver (Log-Warnung).
 - **Bundle-Budget-Reduktion** als eigene Iteration (aktuell
   maximumError auf 2.5mb hochgesetzt).
+- **OSV HTTP-Date-Retry-After**: aktuell nur Sekunden-Form decodiert.
+- **OSV Client-Throttle** (z.B. Bucket4j) noch nicht verdrahtet; bei
+  Bedarf Iteration 35b.
+
+> Iteration 35 am 2026-04-19 hat 429-Retry mit Retry-After-Header
+> im OSV-Client umgesetzt. Details:
+> `docs/20260419/iteration-35-fortschritt.md`.
+
+## Stand 2026-04-19 nach Iteration 34c - offen (vorher)
 
 > Iteration 34c am 2026-04-19 hat den LlmGateway an die neue
 > `LlmConfiguration` angebunden: TenantLlmSettings +

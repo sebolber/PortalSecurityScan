@@ -10,10 +10,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 /**
@@ -37,10 +39,17 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
 
     private final OsvProperties props;
     private final RestClient restClient;
+    private final Sleeper sleeper;
 
     public OsvComponentLookup(OsvProperties props, RestClient.Builder builder) {
+        this(props, builder, Sleeper.defaultSleeper());
+    }
+
+    /** Konstruktor fuer Tests, damit wir nicht echte Sekunden warten muessen. */
+    OsvComponentLookup(OsvProperties props, RestClient.Builder builder, Sleeper sleeper) {
         this.props = props;
         this.restClient = builder.baseUrl(props.getBaseUrl()).build();
+        this.sleeper = sleeper;
     }
 
     /**
@@ -54,10 +63,12 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
     void logStartupStatus() {
         if (isEnabled()) {
             log.info(
-                    "OSV-Enrichment aktiv: base-url={}, batch-size={}, timeout-ms={}",
+                    "OSV-Enrichment aktiv: base-url={}, batch-size={}, timeout-ms={}, retryOn429={}, maxRetryAfterSeconds={}",
                     props.getBaseUrl(),
                     props.getBatchSize(),
-                    props.getTimeoutMs());
+                    props.getTimeoutMs(),
+                    props.isRetryOn429(),
+                    props.getMaxRetryAfterSeconds());
         } else {
             log.info(
                     "OSV-Enrichment DEAKTIVIERT (cvm.enrichment.osv.enabled=false oder leere base-url). "
@@ -91,12 +102,14 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
     private Map<String, List<String>> abfragen(List<String> purls) {
         try {
             Map<String, Object> body = neuRequestBody(purls);
-            JsonNode response = restClient.post()
-                    .uri("/v1/querybatch")
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .retrieve()
-                    .body(JsonNode.class);
+            JsonNode response = mitRetryAuf429(
+                    "querybatch",
+                    () -> restClient.post()
+                            .uri("/v1/querybatch")
+                            .header("Content-Type", "application/json")
+                            .body(body)
+                            .retrieve()
+                            .body(JsonNode.class));
             if (response == null) {
                 return Map.of();
             }
@@ -175,12 +188,80 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
      * Protokollfehlern, damit ein Einzelausfall den gesamten Scan-Run
      * nicht blockiert.
      */
+    /**
+     * Fuehrt {@code call} aus und retried einmalig auf HTTP-429, wenn
+     * {@link OsvProperties#isRetryOn429()} gesetzt ist. Die Wartezeit
+     * wird aus dem {@code Retry-After}-Header gelesen (nur Sekunden-
+     * Form); {@link OsvProperties#getMaxRetryAfterSeconds()} deckelt
+     * sie, damit der Server uns nicht 15 Minuten blockieren kann.
+     */
+    private <T> T mitRetryAuf429(String label, Supplier<T> call) {
+        try {
+            return call.get();
+        } catch (HttpClientErrorException.TooManyRequests tooMany) {
+            if (!props.isRetryOn429()) {
+                log.warn("OSV-{} lieferte 429 und Retry ist deaktiviert.", label);
+                throw tooMany;
+            }
+            int wait = retryAfterSekunden(tooMany);
+            log.info("OSV-{} lieferte 429; einmalig nach {} s wiederholen.",
+                    label, wait);
+            sleeper.sleepSeconds(wait);
+            return call.get();
+        }
+    }
+
+    private int retryAfterSekunden(HttpClientErrorException ex) {
+        String header = ex.getResponseHeaders() == null
+                ? null
+                : ex.getResponseHeaders().getFirst("Retry-After");
+        int wait = 1;
+        if (header != null) {
+            try {
+                wait = Integer.parseInt(header.trim());
+            } catch (NumberFormatException ignored) {
+                // Retry-After kann auch ein HTTP-Datum sein; wir
+                // behandeln nur die Sekunden-Variante. Andernfalls
+                // Fallback auf 1 s.
+                wait = 1;
+            }
+        }
+        if (wait < 0) {
+            wait = 0;
+        }
+        int max = Math.max(0, props.getMaxRetryAfterSeconds());
+        return Math.min(wait, max);
+    }
+
+    /**
+     * Test-Hook: erlaubt das Durchreichen eines synchronen Sleepers.
+     */
+    @FunctionalInterface
+    interface Sleeper {
+        void sleepSeconds(int seconds);
+
+        static Sleeper defaultSleeper() {
+            return seconds -> {
+                if (seconds <= 0) {
+                    return;
+                }
+                try {
+                    Thread.sleep(seconds * 1000L);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            };
+        }
+    }
+
     private List<String> resolveAliasesFromDetail(String advisoryId) {
         try {
-            JsonNode detail = restClient.get()
-                    .uri("/v1/vulns/{id}", advisoryId)
-                    .retrieve()
-                    .body(JsonNode.class);
+            JsonNode detail = mitRetryAuf429(
+                    "vulns/" + advisoryId,
+                    () -> restClient.get()
+                            .uri("/v1/vulns/{id}", advisoryId)
+                            .retrieve()
+                            .body(JsonNode.class));
             if (detail == null) {
                 return List.of();
             }
