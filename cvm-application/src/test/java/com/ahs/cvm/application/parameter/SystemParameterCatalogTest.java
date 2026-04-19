@@ -270,6 +270,57 @@ class SystemParameterCatalogTest {
     }
 
     @Test
+    @DisplayName("restartRequired ist fuer Keys gesetzt, die beim Boot in RestClient.Builder/Bucket4j/@Scheduled zementiert werden")
+    void restart_required_markiert_richtige_keys() {
+        // Muss restartRequired=true haben (RestClient.Builder, Bucket4j, @Scheduled):
+        String[] mussRestart = {
+                "cvm.llm.claude.version",
+                "cvm.llm.claude.timeout-seconds",
+                "cvm.llm.claude.model",
+                "cvm.llm.ollama.base-url",
+                "cvm.llm.ollama.model",
+                "cvm.llm.embedding.ollama.base-url",
+                "cvm.llm.embedding.ollama.model",
+                "cvm.llm.openai.default-model",
+                "cvm.llm.rate-limit.global-per-minute",
+                "cvm.llm.rate-limit.tenant-per-minute",
+                "cvm.pipeline.gate.per-minute",
+                "cvm.security.cors.allowed-origins",
+                "cvm.assessment.expiry-cron",
+                "cvm.ai.fix-verification.watchdog-cron",
+                "cvm.ai.profile-assist.cleanup-cron",
+                "cvm.ai.rule-extraction.cron"
+        };
+        for (String key : mussRestart) {
+            assertThat(findEntry(key).restartRequired())
+                    .as("restartRequired fuer %s", key)
+                    .isTrue();
+        }
+
+        // Muss restartRequired=false haben (Laufzeit-lesbar):
+        String[] mussNichtRestart = {
+                "cvm.llm.enabled",
+                "cvm.llm.injection.mode",
+                "cvm.ai.reachability.enabled",
+                "cvm.ai.reachability.timeout-seconds",
+                "cvm.ai.auto-assessment.enabled",
+                "cvm.ai.anomaly.enabled",
+                "cvm.ai.copilot.enabled",
+                "cvm.enrichment.osv.enabled",
+                "cvm.feed.nvd.enabled",
+                "cvm.alerts.mode",
+                "cvm.alerts.from",
+                "cvm.assessment.default-valid-months",
+                "cvm.scheduler.enabled"
+        };
+        for (String key : mussNichtRestart) {
+            assertThat(findEntry(key).restartRequired())
+                    .as("restartRequired fuer %s", key)
+                    .isFalse();
+        }
+    }
+
+    @Test
     @DisplayName("Keine Block-A.2-Keys werden fuer nicht-migrierbare Prefixes eingebunden")
     void nicht_migrieren_liste_respektiert() {
         Set<String> keys = paramKeys();

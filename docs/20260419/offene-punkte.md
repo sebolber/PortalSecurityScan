@@ -26,9 +26,10 @@
   - **Zugriffs-Wrapper** (`getEffective(...)`) Teil 1 erledigt in
     Iteration 43 fuer ReachabilityConfig, AutoAssessmentConfig,
     neuer OsvEffectiveProperties, neuer FeedEffectiveProperties.
-    Teil 2 (FixVerificationConfig, RuleExtractionConfig, AlertConfig,
-    AssessmentConfig, `restartRequired=true`-Marker fuer Beans mit
-    zementiertem `RestClient.Builder`) folgt Iteration 44.
+    Teil 2 erledigt in Iteration 44 fuer FixVerificationConfig,
+    RuleExtractionConfig, AlertConfig, AssessmentConfig,
+    AnomalyConfig. `restartRequired`-Marker am Katalog + UI-Chip
+    "Neustart noetig" ebenfalls in Iteration 44.
   - **Callsite-Migration** fuer OSV/Feed-Clients
     (`OsvComponentLookup`, `NvdFeedClient`, `GhsaFeedClient`,
     `KevFeedClient`, `EpssFeedClient`) vom statischen

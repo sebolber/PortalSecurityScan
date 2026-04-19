@@ -1,10 +1,15 @@
 package com.ahs.cvm.ai.anomaly;
 
+import com.ahs.cvm.application.parameter.SystemParameterResolver;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * Konfiguration des Anomalie-Checks (Iteration 18, CVM-43).
+ *
+ * <p>Die {@code *Effective()}-Methoden lesen zur Laufzeit den System-
+ * Parameter-Store mit Fallback auf die @Value-Defaults.
  *
  * <ul>
  *   <li>{@code cvm.ai.anomaly.enabled} Default {@code false}.</li>
@@ -28,6 +33,7 @@ public class AnomalyConfig {
     private final int manyAcceptRiskThreshold;
     private final double similarRejectionThreshold;
     private final boolean useLlmSecondStage;
+    private SystemParameterResolver resolver;
 
     public AnomalyConfig(
             @Value("${cvm.ai.anomaly.enabled:false}") boolean enabled,
@@ -42,9 +48,52 @@ public class AnomalyConfig {
         this.useLlmSecondStage = useLlm;
     }
 
+    @Autowired(required = false)
+    public void setResolver(SystemParameterResolver resolver) {
+        this.resolver = resolver;
+    }
+
     public boolean enabled() { return enabled; }
     public double kevEpssThreshold() { return kevEpssThreshold; }
     public int manyAcceptRiskThreshold() { return manyAcceptRiskThreshold; }
     public double similarRejectionThreshold() { return similarRejectionThreshold; }
     public boolean useLlmSecondStage() { return useLlmSecondStage; }
+
+    public boolean enabledEffective() {
+        if (resolver == null) {
+            return enabled;
+        }
+        return resolver.resolveBoolean("cvm.ai.anomaly.enabled", enabled);
+    }
+
+    public double kevEpssThresholdEffective() {
+        if (resolver == null) {
+            return kevEpssThreshold;
+        }
+        return resolver.resolveDouble("cvm.ai.anomaly.kev-epss-threshold", kevEpssThreshold);
+    }
+
+    public int manyAcceptRiskThresholdEffective() {
+        if (resolver == null) {
+            return manyAcceptRiskThreshold;
+        }
+        return Math.max(1, resolver.resolveInt(
+                "cvm.ai.anomaly.many-accept-risk-threshold", manyAcceptRiskThreshold));
+    }
+
+    public double similarRejectionThresholdEffective() {
+        if (resolver == null) {
+            return similarRejectionThreshold;
+        }
+        return resolver.resolveDouble(
+                "cvm.ai.anomaly.similar-rejection-threshold", similarRejectionThreshold);
+    }
+
+    public boolean useLlmSecondStageEffective() {
+        if (resolver == null) {
+            return useLlmSecondStage;
+        }
+        return resolver.resolveBoolean(
+                "cvm.ai.anomaly.use-llm-second-stage", useLlmSecondStage);
+    }
 }

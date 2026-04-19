@@ -28,12 +28,17 @@ public record SystemParameterView(
         boolean adminOnly,
         Instant createdAt,
         Instant updatedAt,
-        String updatedBy
+        String updatedBy,
+        boolean restartRequired
 ) {
 
     private static final String MASKED = "***";
 
     public static SystemParameterView from(SystemParameter entity) {
+        return from(entity, restartRequiredFromCatalog(entity.getParamKey()));
+    }
+
+    public static SystemParameterView from(SystemParameter entity, boolean restartRequired) {
         String displayedValue = entity.isSensitive() && entity.getValue() != null && !entity.getValue().isBlank()
                 ? MASKED
                 : entity.getValue();
@@ -59,7 +64,16 @@ public record SystemParameterView(
                 entity.isAdminOnly(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                entity.getUpdatedBy()
+                entity.getUpdatedBy(),
+                restartRequired
         );
+    }
+
+    private static boolean restartRequiredFromCatalog(String paramKey) {
+        return SystemParameterCatalog.entries().stream()
+                .filter(e -> e.paramKey().equals(paramKey))
+                .findFirst()
+                .map(SystemParameterCatalogEntry::restartRequired)
+                .orElse(false);
     }
 }

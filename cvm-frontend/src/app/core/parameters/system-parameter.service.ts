@@ -42,6 +42,7 @@ export interface SystemParameterView {
   readonly createdAt: string;
   readonly updatedAt: string;
   readonly updatedBy: string | null;
+  readonly restartRequired?: boolean;
 }
 
 export interface SystemParameterAuditLogView {

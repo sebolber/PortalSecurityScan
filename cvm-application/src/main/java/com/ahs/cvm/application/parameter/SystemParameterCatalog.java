@@ -87,80 +87,81 @@ public final class SystemParameterCatalog {
                 "cvm.llm.rate-limit.global-per-minute",
                 "Globales Rate-Limit (pro Minute)",
                 "Maximale Anzahl LLM-Calls systemweit pro Minute (Bucket4j).",
-                null,
+                "Bucket4j wird beim Boot gebaut - Aenderung erfordert Neustart.",
                 CATEGORY_AI_LLM, "rate-limit",
-                SystemParameterType.INTEGER, "120", true, null, null, "calls/min", false, true, true));
+                SystemParameterType.INTEGER, "120", true, null, null, "calls/min", false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.rate-limit.tenant-per-minute",
                 "Mandanten-Rate-Limit (pro Minute)",
                 "Maximale Anzahl LLM-Calls pro Mandant und Minute.",
-                null,
+                "Bucket4j wird beim Boot gebaut - Aenderung erfordert Neustart.",
                 CATEGORY_AI_LLM, "rate-limit",
-                SystemParameterType.INTEGER, "30", true, null, null, "calls/min", false, true, true));
+                SystemParameterType.INTEGER, "30", true, null, null, "calls/min", false, false, true, true));
 
         // Claude-Fallback-Adapter (Konfig ohne api-key; Secret folgt Iteration 45)
+        // Beim Boot in RestClient.Builder zementiert -> restartRequired=true.
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.claude.version",
                 "Claude API-Version",
                 "Wert fuer den Header anthropic-version im Claude-Adapter.",
-                null,
+                "Header wird beim Boot in den RestClient hinterlegt - Neustart noetig.",
                 CATEGORY_AI_LLM, "claude",
-                SystemParameterType.STRING, "2023-06-01", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "2023-06-01", true, null, null, null, false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.claude.timeout-seconds",
                 "Claude HTTP-Timeout",
                 "Maximale Wartezeit fuer einen einzelnen Claude-API-Call.",
-                null,
+                "Timeout wird im HTTP-Client beim Boot gesetzt - Neustart noetig.",
                 CATEGORY_AI_LLM, "claude",
-                SystemParameterType.INTEGER, "30", true, null, null, "Sekunden", false, false, true));
+                SystemParameterType.INTEGER, "30", true, null, null, "Sekunden", false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.claude.model",
                 "Claude-Fallback-Modell",
                 "Modell-Bezeichner fuer den Claude-Adapter, wenn kein Profil existiert.",
-                null,
+                "Default wird beim Boot gelesen - Neustart noetig.",
                 CATEGORY_AI_LLM, "claude",
-                SystemParameterType.STRING, "claude-sonnet-4-6", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "claude-sonnet-4-6", true, null, null, null, false, false, true, true));
 
         // Ollama-Adapter
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.ollama.base-url",
                 "Ollama-Basis-URL",
                 "HTTP-Basis-URL des Ollama-Servers (on-prem).",
-                null,
+                "Base-URL wird beim Boot in den RestClient hinterlegt - Neustart noetig.",
                 CATEGORY_AI_LLM, "ollama",
-                SystemParameterType.URL, "http://ollama:11434", true, null, null, null, false, false, true));
+                SystemParameterType.URL, "http://ollama:11434", true, null, null, null, false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.ollama.model",
                 "Ollama-Fallback-Modell",
                 "Modell-Bezeichner fuer den Ollama-Adapter, wenn kein Profil existiert.",
-                null,
+                "Default wird beim Boot gelesen - Neustart noetig.",
                 CATEGORY_AI_LLM, "ollama",
-                SystemParameterType.STRING, "llama3.1:8b-instruct", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "llama3.1:8b-instruct", true, null, null, null, false, false, true, true));
 
         // OpenAI-kompatibler Adapter (nur Default-Modell, kein Key)
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.openai.default-model",
                 "OpenAI-Fallback-Modell",
                 "Modell-Bezeichner fuer den OpenAI-kompatiblen Adapter.",
-                null,
+                "Default wird beim Boot gelesen - Neustart noetig.",
                 CATEGORY_AI_LLM, "openai",
-                SystemParameterType.STRING, "gpt-4o-mini", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "gpt-4o-mini", true, null, null, null, false, false, true, true));
 
         // Embedding-Adapter
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.embedding.ollama.base-url",
                 "Embedding-Ollama-Basis-URL",
                 "HTTP-Basis-URL des Ollama-Servers fuer Embeddings (RAG).",
-                null,
+                "Base-URL wird beim Boot in den RestClient hinterlegt - Neustart noetig.",
                 CATEGORY_AI_LLM, "embedding",
-                SystemParameterType.URL, "http://ollama:11434", true, null, null, null, false, false, true));
+                SystemParameterType.URL, "http://ollama:11434", true, null, null, null, false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.embedding.ollama.model",
                 "Embedding-Modell",
                 "Modell-Bezeichner fuer Embeddings (RAG).",
-                null,
+                "Modell wird beim Boot gelesen - Neustart noetig.",
                 CATEGORY_AI_LLM, "embedding",
-                SystemParameterType.STRING, "nomic-embed-text", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "nomic-embed-text", true, null, null, null, false, false, true, true));
     }
 
     private static void addAiReachability(List<SystemParameterCatalogEntry> list) {
@@ -345,9 +346,9 @@ public final class SystemParameterCatalog {
                 "cvm.pipeline.gate.per-minute",
                 "Pipeline-Gate Rate-Limit",
                 "Maximale Anzahl Gate-Checks pro Minute (Bucket4j).",
-                null,
+                "Bucket4j wird beim Boot gebaut - Aenderung erfordert Neustart.",
                 CATEGORY_PIPELINE_GATE, "rate-limit",
-                SystemParameterType.INTEGER, "20", true, null, null, "calls/min", false, true, true));
+                SystemParameterType.INTEGER, "20", true, null, null, "calls/min", false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.pipeline.gate.post-mr-comment",
                 "Pipeline-Gate MR-Kommentar",
@@ -494,30 +495,30 @@ public final class SystemParameterCatalog {
                 "cvm.assessment.expiry-cron",
                 "Cron: Assessment-Ablauf",
                 "Cron-Ausdruck fuer den AssessmentExpiryJob.",
-                "Spring-Cron-Format: sek min std tag mon dow.",
+                "Spring-Cron-Format: sek min std tag mon dow. Neustart noetig.",
                 CATEGORY_SCHEDULER, "cron",
-                SystemParameterType.STRING, "0 0 3 * * *", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "0 0 3 * * *", true, null, null, null, false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.ai.fix-verification.watchdog-cron",
                 "Cron: Fix-Verifikation Watchdog",
                 "Cron-Ausdruck fuer den OpenFixWatchdog.",
-                null,
+                "Neustart noetig.",
                 CATEGORY_SCHEDULER, "cron",
-                SystemParameterType.STRING, "0 0 4 * * *", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "0 0 4 * * *", true, null, null, null, false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.ai.profile-assist.cleanup-cron",
                 "Cron: Profil-Assistent Cleanup",
                 "Cron-Ausdruck fuer den ProfileAssistSessionCleanupJob.",
-                null,
+                "Neustart noetig.",
                 CATEGORY_SCHEDULER, "cron",
-                SystemParameterType.STRING, "0 15 2 * * *", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "0 15 2 * * *", true, null, null, null, false, false, true, true));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.ai.rule-extraction.cron",
                 "Cron: Regel-Extraktion",
                 "Cron-Ausdruck fuer den RuleExtractionJob.",
-                null,
+                "Neustart noetig.",
                 CATEGORY_SCHEDULER, "cron",
-                SystemParameterType.STRING, "0 30 2 * * *", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "0 30 2 * * *", true, null, null, null, false, false, true, true));
     }
 
     private static void addSecurity(List<SystemParameterCatalogEntry> list) {
@@ -527,7 +528,7 @@ public final class SystemParameterCatalog {
                 "Komma-separierte Liste erlaubter CORS-Origins.",
                 "Wirkt nur beim Boot - Aenderung erfordert Neustart.",
                 CATEGORY_SECURITY, "cors",
-                SystemParameterType.STRING, "http://localhost:4200", true, null, null, null, false, false, true));
+                SystemParameterType.STRING, "http://localhost:4200", true, null, null, null, false, false, true, true));
     }
 
     private static void ensureUnique(List<SystemParameterCatalogEntry> list) {

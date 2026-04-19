@@ -201,6 +201,10 @@
                     <mat-chip *ngIf="p.required" color="warn" highlighted>Pflicht</mat-chip>
                     <mat-chip *ngIf="p.sensitive" highlighted>Sensibel</mat-chip>
                     <mat-chip *ngIf="p.hotReload" highlighted>Hot</mat-chip>
+                    <mat-chip *ngIf="p.restartRequired" color="warn" highlighted
+                              title="Aenderung erfordert Neustart der Anwendung">
+                      Neustart noetig
+                    </mat-chip>
                   </mat-chip-set>
                 </td>
               </ng-container>

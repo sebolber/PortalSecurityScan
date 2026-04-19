@@ -9,3 +9,7 @@ Log (append-only):
 [09:09] Iteration 42 abgeschlossen: Parameter-Katalog Block A.2
 (commit 5058cd36). Naechstes: Iteration 43 getEffective-Wrapper
 Teil 1 (ReachabilityConfig, OsvProperties, Feed*Config, AutoAssessmentConfig).
+[09:16] Iteration 43 abgeschlossen: Parameter-Store-Lesepfad
+(Reachability, AutoAssessment, OSV, Feeds) + SystemParameterResolver
+(commit a49a6f0b). Naechstes: Iteration 44 getEffective-Wrapper Teil 2
+(FixVerification, RuleExtraction, Alert, Assessment + restartRequired-Marker).

@@ -13,6 +13,10 @@ import com.ahs.cvm.domain.enums.SystemParameterType;
  *
  * <p>{@code sensitive=true} bleibt in Iteration 41 ungenutzt: Secrets werden
  * in Iteration 45 separat via AES-GCM eingepflegt.
+ *
+ * <p>{@code restartRequired=true} markiert Schluessel, deren Wert beim Boot
+ * in einen {@code RestClient.Builder} oder {@code @Scheduled(cron=...)}
+ * zementiert wird. Das Frontend zeigt hierfuer ein "Neustart noetig"-Badge.
  */
 public record SystemParameterCatalogEntry(
         String paramKey,
@@ -29,7 +33,8 @@ public record SystemParameterCatalogEntry(
         String unit,
         boolean sensitive,
         boolean hotReload,
-        boolean adminOnly) {
+        boolean adminOnly,
+        boolean restartRequired) {
 
     public SystemParameterCatalogEntry {
         if (paramKey == null || paramKey.isBlank()) {
@@ -44,5 +49,30 @@ public record SystemParameterCatalogEntry(
         if (type == null) {
             throw new IllegalArgumentException("type darf nicht leer sein");
         }
+    }
+
+    /**
+     * Convenience-Konstruktor fuer Eintraege ohne Neustart-Zwang
+     * (das Gros der Parameter).
+     */
+    public SystemParameterCatalogEntry(
+            String paramKey,
+            String label,
+            String description,
+            String handbook,
+            String category,
+            String subcategory,
+            SystemParameterType type,
+            String defaultValue,
+            boolean required,
+            String validationRules,
+            String options,
+            String unit,
+            boolean sensitive,
+            boolean hotReload,
+            boolean adminOnly) {
+        this(paramKey, label, description, handbook, category, subcategory,
+                type, defaultValue, required, validationRules, options, unit,
+                sensitive, hotReload, adminOnly, false);
     }
 }
