@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -41,6 +42,7 @@ public class OsvComponentLookup implements ComponentVulnerabilityLookup {
     private final RestClient restClient;
     private final Sleeper sleeper;
 
+    @Autowired
     public OsvComponentLookup(OsvProperties props, RestClient.Builder builder) {
         this(props, builder, Sleeper.defaultSleeper());
     }
