@@ -130,7 +130,18 @@ describe('RoleMenuService', () => {
       'rules',
       'admin-products',
       'admin-environments',
-      'admin-theme'
+      'admin-theme',
+      'admin-llm-configurations'
     ]);
+  });
+
+  it('Admin sieht LLM-Konfigurationen als Kind von Einstellungen', () => {
+    const ids = flatIds(service.visibleEntries([CVM_ROLES.ADMIN]));
+    expect(ids).toContain('admin-llm-configurations');
+  });
+
+  it('Nicht-Admin (Viewer) sieht LLM-Konfigurationen nicht', () => {
+    const ids = flatIds(service.visibleEntries([CVM_ROLES.VIEWER]));
+    expect(ids).not.toContain('admin-llm-configurations');
   });
 });

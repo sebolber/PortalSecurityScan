@@ -31,6 +31,12 @@ export class ApiClient {
     return this.http.put<T>(this.url(path), body).pipe(this.handleError('PUT ' + path));
   }
 
+  delete<T = void>(path: string): Observable<T> {
+    return this.http
+      .delete<T>(this.url(path))
+      .pipe(this.handleError('DELETE ' + path));
+  }
+
   url(path: string): string {
     const base = this.config.get().apiBaseUrl.replace(/\/$/, '');
     const suffix = path.startsWith('/') ? path : '/' + path;

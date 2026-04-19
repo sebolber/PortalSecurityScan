@@ -1,21 +1,29 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 34 - offen
+## Stand 2026-04-19 nach Iteration 34b - offen
 
-- **Frontend-UI fuer LLM-Konfigurationen** (Iteration 34b). Backend
-  ist durch: neue Tabelle `llm_configuration`, CRUD-Endpoints unter
-  `/api/v1/admin/llm-configurations`, Secret AES-GCM-verschluesselt.
-  Fehlt: Angular-Seite `/admin/llm-configurations` mit Liste +
-  Formular (Provider-Dropdown, Model-Feld, BaseUrl-Default-Vorschau,
-  Secret-Maskierung, isActive-Toggle). Muss in den Shell-Menueeintrag
-  "Einstellungen" aufgenommen werden. Referenz: Plan in
-  `docs/20260419/iteration-34-plan.md`, Provider-Liste ueber
-  `GET /api/v1/admin/llm-configurations/providers`.
 - **LlmGateway-Anbindung an LlmConfiguration** (Iteration 34c). Die
   bestehenden Adapter (Claude, Ollama) waehlen heute noch via
   Spring-Profile. Sie sollen zur Laufzeit die aktive Konfig pro
   Mandant ziehen, dabei das Secret ueber
   `LlmConfigurationService.resolveSecret(id)` entschluesseln.
+- **Bundle-Budget-Reduktion** als eigene Iteration. In 34b wurde der
+  `maximumError`-Schwellwert von 2mb auf 2.5mb angehoben, weil das
+  Baseline-Bundle nach Material-Icons-Self-Hosting bereits 2.13MB
+  misst. Echte Reduktion (Lazy-Login-Chunk / ECharts nur on-demand)
+  bleibt offen.
+
+> Iteration 34b am 2026-04-19 hat die Angular-Seite
+> `/admin/llm-configurations` (Liste + Formular + Aktivierung) und
+> den Menueintrag unter "Einstellungen" ausgeliefert. Details:
+> `docs/20260419/iteration-34b-fortschritt.md`. Build + Lint + Backend-
+> Tests gruen; Karma bleibt Chromium-blockiert.
+
+## Stand 2026-04-19 nach Iteration 34 - offen (vorher)
+
+- ~~**Frontend-UI fuer LLM-Konfigurationen**~~ erledigt in 34b.
+- **LlmGateway-Anbindung an LlmConfiguration** (Iteration 34c) - siehe
+  oben, weiter offen.
 - **OSV-Mirror** fuer air-gapped-Installationen (Iteration 35
   Kandidat).
 - **OSV-Rate-Limit / Retry-After**.

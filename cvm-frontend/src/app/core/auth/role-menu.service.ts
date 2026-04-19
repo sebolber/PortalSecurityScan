@@ -76,6 +76,15 @@ const ADMIN_THEME_ENTRY: MenuEntry = {
   requiredRoles: [CVM_ROLES.ADMIN]
 };
 
+const ADMIN_LLM_ENTRY: MenuEntry = {
+  id: 'admin-llm-configurations',
+  label: 'LLM-Konfigurationen',
+  path: '/admin/llm-configurations',
+  icon: 'smart_toy',
+  section: 'einstellungen',
+  requiredRoles: [CVM_ROLES.ADMIN]
+};
+
 const SETTINGS_ENTRY: MenuEntry = {
   id: 'settings',
   label: 'Einstellungen',
@@ -100,7 +109,8 @@ const SETTINGS_ENTRY: MenuEntry = {
     RULES_ENTRY,
     ADMIN_PRODUCTS_ENTRY,
     ADMIN_ENVIRONMENTS_ENTRY,
-    ADMIN_THEME_ENTRY
+    ADMIN_THEME_ENTRY,
+    ADMIN_LLM_ENTRY
   ]
 };
 
