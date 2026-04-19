@@ -3,9 +3,10 @@
 # CVE-Relevance-Manager (CVM) - Start-Skript
 #
 # Usage:
-#   scripts/start.sh <git-branch> [optionen]
+#   scripts/start.sh [<git-branch>] [optionen]
 #
 # Beispiele:
+#   scripts/start.sh                     # aktueller HEAD, kein git-Update
 #   scripts/start.sh main
 #   scripts/start.sh claude/continue-next-session-WIofO
 #   scripts/start.sh feature/foo --skip-frontend
@@ -13,7 +14,9 @@
 #
 # Was es tut:
 #   1. Pruefung der Voraussetzungen (git, java, mvnw, docker, node, npm).
-#   2. Branch auschecken (mit Schutz vor unsauberem Working-Tree).
+#   2. Wenn ein Branch uebergeben wurde: fetch + checkout + ff-pull
+#      (mit Schutz vor unsauberem Working-Tree).
+#      Ohne Branch-Argument bleibt der aktuelle HEAD unveraendert.
 #   3. Docker-Compose-Stack hochfahren (postgres + keycloak + mailhog).
 #   4. Backend (Spring Boot) starten und auf /actuator/health warten.
 #   5. Frontend (Angular ng serve) starten und auf TCP-Port 4200 warten.
@@ -70,7 +73,11 @@ usage() {
 ${C_BOLD}CVM Start-Skript${C_RESET}
 
 Usage:
-  $(basename "$0") <git-branch> [optionen]
+  $(basename "$0") [<git-branch>] [optionen]
+
+Wird ein Branch (z.B. main oder feature/foo) uebergeben, macht das Skript
+vorher ein git fetch + checkout + ff-pull. Ohne Argument bleibt der aktuelle
+HEAD unveraendert und das Skript startet direkt.
 
 Optionen:
   --skip-docker       Docker-Compose-Stack nicht starten (postgres muss laufen)
@@ -85,6 +92,7 @@ Optionen:
   -h | --help         Diese Hilfe anzeigen
 
 Beispiele:
+  $(basename "$0")                     # aktueller HEAD, ohne git-Update
   $(basename "$0") main
   $(basename "$0") claude/continue-next-session-WIofO --no-tail
   $(basename "$0") feature/foo --skip-frontend
@@ -116,9 +124,7 @@ while (( "$#" )); do
 done
 
 if [[ -z "${BRANCH}" ]]; then
-    fail "Kein Branch angegeben."
-    usage
-    exit 64
+    info "Kein Branch angegeben - starte auf aktuellem HEAD ohne git-Update."
 fi
 
 # --- Cleanup-Hook -------------------------------------------------------------
@@ -580,7 +586,11 @@ mkdir -p "${LOG_DIR}"
 info "Log-Verzeichnis: ${LOG_DIR}"
 
 check_prereqs
-checkout_branch
+if [[ -n "${BRANCH}" ]]; then
+    checkout_branch
+else
+    info "Ueberspringe git-Update (kein Branch-Argument)."
+fi
 prepare_ports
 start_docker
 start_backend
