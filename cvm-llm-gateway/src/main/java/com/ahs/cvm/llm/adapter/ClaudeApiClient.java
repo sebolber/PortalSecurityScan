@@ -3,6 +3,7 @@ package com.ahs.cvm.llm.adapter;
 import com.ahs.cvm.llm.LlmClient;
 import com.ahs.cvm.llm.TenantLlmSettings;
 import com.ahs.cvm.llm.TenantLlmSettingsProvider;
+import com.ahs.cvm.llm.config.LlmGlobalParameterResolver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -11,7 +12,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,13 @@ import org.springframework.web.client.RestClient;
  * erwartet; alternativ waere {@code tool_use} moeglich. Der Adapter
  * liest das JSON aus dem ersten {@code content}-Block und uebergibt
  * es dem {@link com.ahs.cvm.llm.validate.OutputValidator}.
+ *
+ * <p>Iteration 66 (CVM-303): api-key / model / base-url /
+ * timeout-seconds werden pro Call ueber den
+ * {@link LlmGlobalParameterResolver} aufgeloest. Aenderungen im
+ * System-Parameter-Store greifen ohne Neustart. Der
+ * {@code RestClient} wird lazy neu gebaut, wenn sich base-url oder
+ * timeout-seconds aendern.
  */
 @Component
 @ConditionalOnProperty(prefix = "cvm.llm", name = "enabled", havingValue = "true")
@@ -44,12 +54,20 @@ public class ClaudeApiClient implements LlmClient {
     private static final String DEFAULT_MODEL = "claude-sonnet-4-6";
     static final String PROVIDER = "anthropic";
 
-    private final RestClient defaultRestClient;
+    private static final String PARAM_BASE_URL = "cvm.llm.claude.base-url";
+    private static final String PARAM_MODEL = "cvm.llm.claude.model";
+    private static final String PARAM_API_KEY = "cvm.llm.claude.api-key";
+    private static final String PARAM_TIMEOUT = "cvm.llm.claude.timeout-seconds";
+
     private final String defaultBaseUrl;
     private final String version;
     private final String defaultApiKey;
     private final String defaultModel;
+    private final int defaultTimeoutSeconds;
     private final Optional<TenantLlmSettingsProvider> settingsProvider;
+    private final Optional<LlmGlobalParameterResolver> globalResolver;
+
+    private final AtomicReference<CachedClient> cachedDefault = new AtomicReference<>();
 
     @Autowired
     public ClaudeApiClient(
@@ -58,17 +76,17 @@ public class ClaudeApiClient implements LlmClient {
             @Value("${cvm.llm.claude.timeout-seconds:30}") int timeoutSeconds,
             @Value("${cvm.llm.claude.model:claude-sonnet-4-6}") String model,
             @Value("${cvm.llm.claude.api-key:${ANTHROPIC_API_KEY:}}") String apiKey,
-            Optional<TenantLlmSettingsProvider> settingsProvider) {
+            Optional<TenantLlmSettingsProvider> settingsProvider,
+            Optional<LlmGlobalParameterResolver> globalResolver) {
         this.defaultApiKey = apiKey;
         this.defaultModel = model == null || model.isBlank() ? DEFAULT_MODEL : model;
         this.defaultBaseUrl = baseUrl;
         this.version = version;
+        this.defaultTimeoutSeconds = Math.max(1, timeoutSeconds);
         this.settingsProvider = settingsProvider;
-        this.defaultRestClient = RestClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader("anthropic-version", version)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
+        this.globalResolver = globalResolver == null
+                ? Optional.empty()
+                : globalResolver;
     }
 
     /** Test-Konstruktor, damit WireMock-URLs injiziert werden koennen. */
@@ -80,14 +98,26 @@ public class ClaudeApiClient implements LlmClient {
     public ClaudeApiClient(
             RestClient restClient, String apiKey, String model,
             Optional<TenantLlmSettingsProvider> settingsProvider) {
-        this.defaultRestClient = restClient;
+        this(restClient, apiKey, model, settingsProvider, Optional.empty());
+    }
+
+    /** Test-Konstruktor mit Tenant-Provider + Global-Resolver. */
+    public ClaudeApiClient(
+            RestClient restClient, String apiKey, String model,
+            Optional<TenantLlmSettingsProvider> settingsProvider,
+            Optional<LlmGlobalParameterResolver> globalResolver) {
         this.defaultBaseUrl = null;
         this.version = "2023-06-01";
         this.defaultApiKey = apiKey;
         this.defaultModel = model;
+        this.defaultTimeoutSeconds = 30;
         this.settingsProvider = settingsProvider == null
                 ? Optional.empty()
                 : settingsProvider;
+        this.globalResolver = globalResolver == null
+                ? Optional.empty()
+                : globalResolver;
+        this.cachedDefault.set(new CachedClient(null, 30, restClient));
     }
 
     @Override
@@ -103,16 +133,24 @@ public class ClaudeApiClient implements LlmClient {
     @Override
     public LlmResponse complete(LlmRequest request) {
         Optional<TenantLlmSettings> tenant = resolveTenantOverride();
-        RestClient client = tenant
+
+        String effectiveBaseUrl = tenant
                 .filter(TenantLlmSettings::hasBaseUrl)
-                .map(this::buildTenantRestClient)
-                .orElse(defaultRestClient);
-        String effectiveModel = tenant.map(TenantLlmSettings::model)
-                .orElse(defaultModel);
+                .map(TenantLlmSettings::baseUrl)
+                .orElseGet(() -> resolveFromGlobal(PARAM_BASE_URL, defaultBaseUrl));
+        String effectiveModel = tenant
+                .map(TenantLlmSettings::model)
+                .orElseGet(() -> resolveFromGlobal(PARAM_MODEL, defaultModel));
         String effectiveApiKey = tenant
                 .filter(TenantLlmSettings::hasApiKey)
                 .map(TenantLlmSettings::apiKey)
-                .orElse(defaultApiKey);
+                .orElseGet(() -> resolveFromGlobal(PARAM_API_KEY, defaultApiKey));
+        int effectiveTimeout = globalResolver
+                .flatMap(r -> r.resolve(PARAM_TIMEOUT))
+                .map(this::parseTimeout)
+                .orElse(defaultTimeoutSeconds);
+
+        RestClient client = clientFor(effectiveBaseUrl, effectiveTimeout);
 
         ObjectNode body = buildBody(request, effectiveModel);
         Instant start = Instant.now();
@@ -126,26 +164,56 @@ public class ClaudeApiClient implements LlmClient {
         return parseResponse(response, latency, effectiveModel);
     }
 
+    private String resolveFromGlobal(String paramKey, String fallback) {
+        return globalResolver
+                .flatMap(r -> r.resolve(paramKey))
+                .filter(v -> !v.isBlank())
+                .orElse(fallback);
+    }
+
+    private int parseTimeout(String raw) {
+        try {
+            int v = Integer.parseInt(raw.trim());
+            return v > 0 ? v : defaultTimeoutSeconds;
+        } catch (NumberFormatException ex) {
+            return defaultTimeoutSeconds;
+        }
+    }
+
+    /**
+     * Liefert einen {@link RestClient} fuer die gegebene base-url
+     * und Timeout-Kombination. Bei Gleichheit mit dem gecachten
+     * Eintrag wird wiederverwendet, sonst lazy neu gebaut.
+     */
+    private RestClient clientFor(String baseUrl, int timeoutSeconds) {
+        CachedClient current = cachedDefault.get();
+        if (current != null
+                && Objects.equals(current.baseUrl, baseUrl)
+                && current.timeoutSeconds == timeoutSeconds) {
+            return current.client;
+        }
+        RestClient fresh = buildRestClient(baseUrl, timeoutSeconds);
+        cachedDefault.set(new CachedClient(baseUrl, timeoutSeconds, fresh));
+        return fresh;
+    }
+
+    private RestClient buildRestClient(String baseUrl, int timeoutSeconds) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        int millis = Math.max(1, timeoutSeconds) * 1000;
+        factory.setConnectTimeout(millis);
+        factory.setReadTimeout(millis);
+        return RestClient.builder()
+                .baseUrl(baseUrl)
+                .requestFactory(factory)
+                .defaultHeader("anthropic-version", version)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+    }
+
     private Optional<TenantLlmSettings> resolveTenantOverride() {
         return settingsProvider
                 .flatMap(TenantLlmSettingsProvider::resolveCurrent)
                 .filter(s -> PROVIDER.equals(s.provider()));
-    }
-
-    private RestClient buildTenantRestClient(TenantLlmSettings settings) {
-        try {
-            return RestClient.builder()
-                    .baseUrl(settings.baseUrl())
-                    .requestFactory(new SimpleClientHttpRequestFactory())
-                    .defaultHeader("anthropic-version", version)
-                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    .build();
-        } catch (RuntimeException ex) {
-            log.warn(
-                    "Fallback auf Default-Claude-Endpoint, Tenant-baseUrl ungueltig: {}",
-                    settings.baseUrl());
-            return defaultRestClient;
-        }
     }
 
     private ObjectNode buildBody(LlmRequest request, String effectiveModel) {
@@ -212,4 +280,6 @@ public class ClaudeApiClient implements LlmClient {
         ArrayNode arr = buildBody(request, defaultModel).withArray("messages");
         return MAPPER.convertValue(arr, List.class);
     }
+
+    private record CachedClient(String baseUrl, int timeoutSeconds, RestClient client) {}
 }

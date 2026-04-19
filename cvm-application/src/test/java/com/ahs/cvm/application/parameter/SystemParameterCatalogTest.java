@@ -58,8 +58,12 @@ class SystemParameterCatalogTest {
     }
 
     @Test
-    @DisplayName("Secrets (sensitive=true) tragen kein defaultValue, sind PASSWORD und restartRequired=true")
+    @DisplayName("Secrets (sensitive=true) tragen kein defaultValue und sind PASSWORD")
     void secrets_korrekt_konfiguriert() {
+        // Iteration 66 (CVM-303): cvm.llm.claude.api-key ist jetzt
+        // live-reloadable (restartRequired=false). Die drei verbleibenden
+        // Secrets bleiben restartRequired, bis ihre Adapter migriert sind
+        // (Iteration 67/68).
         String[] secretKeys = {
                 "cvm.llm.claude.api-key",
                 "cvm.feed.nvd.api-key",
@@ -69,11 +73,22 @@ class SystemParameterCatalogTest {
         for (String key : secretKeys) {
             SystemParameterCatalogEntry entry = findEntry(key);
             assertThat(entry.sensitive()).as("sensitive fuer %s", key).isTrue();
-            assertThat(entry.restartRequired()).as("restartRequired fuer %s", key).isTrue();
             assertThat(entry.type()).as("type fuer %s", key)
                     .isEqualTo(SystemParameterType.PASSWORD);
             assertThat(entry.defaultValue()).as("defaultValue fuer %s", key).isNull();
         }
+        assertThat(findEntry("cvm.llm.claude.api-key").restartRequired())
+                .as("cvm.llm.claude.api-key live-reloadable nach Iteration 66")
+                .isFalse();
+        assertThat(findEntry("cvm.feed.nvd.api-key").restartRequired())
+                .as("cvm.feed.nvd.api-key noch restartRequired bis Iteration 67")
+                .isTrue();
+        assertThat(findEntry("cvm.feed.ghsa.api-key").restartRequired())
+                .as("cvm.feed.ghsa.api-key noch restartRequired bis Iteration 67")
+                .isTrue();
+        assertThat(findEntry("cvm.ai.fix-verification.github.token").restartRequired())
+                .as("cvm.ai.fix-verification.github.token noch restartRequired bis Iteration 68")
+                .isTrue();
     }
 
     @Test
@@ -294,10 +309,11 @@ class SystemParameterCatalogTest {
     @DisplayName("restartRequired ist fuer Keys gesetzt, die beim Boot in RestClient.Builder/Bucket4j/@Scheduled zementiert werden")
     void restart_required_markiert_richtige_keys() {
         // Muss restartRequired=true haben (RestClient.Builder, Bucket4j, @Scheduled):
+        // Iteration 66 (CVM-303): Claude-Timeout, -Model und -ApiKey
+        // wurden auf live-reloadable umgestellt und aus dieser Liste
+        // entfernt; Version bleibt als RestClient-Header restartRequired.
         String[] mussRestart = {
                 "cvm.llm.claude.version",
-                "cvm.llm.claude.timeout-seconds",
-                "cvm.llm.claude.model",
                 "cvm.llm.ollama.base-url",
                 "cvm.llm.ollama.model",
                 "cvm.llm.embedding.ollama.base-url",
@@ -322,6 +338,10 @@ class SystemParameterCatalogTest {
         String[] mussNichtRestart = {
                 "cvm.llm.enabled",
                 "cvm.llm.injection.mode",
+                "cvm.llm.claude.base-url",
+                "cvm.llm.claude.timeout-seconds",
+                "cvm.llm.claude.model",
+                "cvm.llm.claude.api-key",
                 "cvm.ai.reachability.enabled",
                 "cvm.ai.reachability.timeout-seconds",
                 "cvm.ai.auto-assessment.enabled",

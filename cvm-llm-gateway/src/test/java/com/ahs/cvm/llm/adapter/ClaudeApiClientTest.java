@@ -13,9 +13,11 @@ import com.ahs.cvm.llm.LlmClient.LlmResponse;
 import com.ahs.cvm.llm.LlmClient.Message;
 import com.ahs.cvm.llm.TenantLlmSettings;
 import com.ahs.cvm.llm.TenantLlmSettingsProvider;
+import com.ahs.cvm.llm.config.LlmGlobalParameterResolver;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -166,6 +168,98 @@ class ClaudeApiClientTest {
                     .isEqualTo("tenant-key-xyz");
         } finally {
             tenantWiremock.stop();
+        }
+    }
+
+    @Test
+    @DisplayName(
+            "ClaudeApi: Global-Resolver-Override greift ohne Neustart - "
+                    + "neue base-url und api-key werden beim naechsten Call uebernommen")
+    void parameterResolverOverrideGreiftOhneRestart() {
+        // Zwei WireMock-Instanzen: "default" und "override".
+        WireMockServer overrideWiremock = new WireMockServer(
+                WireMockConfiguration.options().dynamicPort());
+        overrideWiremock.start();
+        try {
+            wiremock.stubFor(post(urlEqualTo("/v1/messages"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("""
+                                    {
+                                      "id": "msg-default",
+                                      "model": "claude-sonnet-4-6",
+                                      "content": [
+                                        {"type":"text","text":"{\\"severity\\":\\"LOW\\"}"}
+                                      ],
+                                      "usage": {"input_tokens": 1, "output_tokens": 1}
+                                    }""")));
+            overrideWiremock.stubFor(post(urlEqualTo("/v1/messages"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("""
+                                    {
+                                      "id": "msg-override",
+                                      "model": "claude-override",
+                                      "content": [
+                                        {"type":"text","text":"{\\"severity\\":\\"HIGH\\"}"}
+                                      ],
+                                      "usage": {"input_tokens": 2, "output_tokens": 2}
+                                    }""")));
+
+            // Veraenderliche Map, damit der Resolver zwischen Calls
+            // unterschiedliche Werte liefern kann.
+            Map<String, String> parameterStore = new HashMap<>();
+            parameterStore.put("cvm.llm.claude.base-url", wiremock.baseUrl());
+            parameterStore.put("cvm.llm.claude.api-key", "key-default");
+            parameterStore.put("cvm.llm.claude.model", "claude-sonnet-4-6");
+            LlmGlobalParameterResolver resolver =
+                    key -> Optional.ofNullable(parameterStore.get(key));
+
+            RestClient seedClient = RestClient.builder()
+                    .baseUrl(wiremock.baseUrl())
+                    .requestFactory(new SimpleClientHttpRequestFactory())
+                    .defaultHeader("anthropic-version", "2023-06-01")
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .build();
+            ClaudeApiClient resolverAware = new ClaudeApiClient(
+                    seedClient, "fallback-key", "claude-sonnet-4-6",
+                    Optional.empty(), Optional.of(resolver));
+
+            LlmResponse first = resolverAware.complete(request());
+            assertThat(first.rawText()).contains("LOW");
+            assertThat(
+                    wiremock.findAll(WireMock.postRequestedFor(urlEqualTo("/v1/messages"))))
+                    .hasSize(1);
+            assertThat(wiremock.findAll(
+                            WireMock.postRequestedFor(urlEqualTo("/v1/messages")))
+                    .get(0).getHeader("x-api-key"))
+                    .isEqualTo("key-default");
+
+            // Laufzeit-Aenderung simulieren: Resolver zeigt jetzt auf
+            // den Override-Server, der api-key wechselt.
+            parameterStore.put("cvm.llm.claude.base-url", overrideWiremock.baseUrl());
+            parameterStore.put("cvm.llm.claude.api-key", "key-override");
+            parameterStore.put("cvm.llm.claude.model", "claude-override");
+
+            LlmResponse second = resolverAware.complete(request());
+            assertThat(second.rawText()).contains("HIGH");
+            assertThat(second.modelId()).isEqualTo("claude-override");
+            assertThat(overrideWiremock.findAll(
+                    WireMock.postRequestedFor(urlEqualTo("/v1/messages"))))
+                    .hasSize(1);
+            assertThat(overrideWiremock.findAll(
+                            WireMock.postRequestedFor(urlEqualTo("/v1/messages")))
+                    .get(0).getHeader("x-api-key"))
+                    .isEqualTo("key-override");
+
+            // Default-Server hat weiterhin nur einen Call gesehen.
+            assertThat(
+                    wiremock.findAll(WireMock.postRequestedFor(urlEqualTo("/v1/messages"))))
+                    .hasSize(1);
+        } finally {
+            overrideWiremock.stop();
         }
     }
 

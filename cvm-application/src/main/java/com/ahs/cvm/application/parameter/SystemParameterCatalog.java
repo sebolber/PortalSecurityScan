@@ -99,8 +99,19 @@ public final class SystemParameterCatalog {
                 CATEGORY_AI_LLM, "rate-limit",
                 SystemParameterType.INTEGER, "30", true, null, null, "calls/min", false, false, true, true));
 
-        // Claude-Fallback-Adapter (Konfig ohne api-key; Secret folgt Iteration 45)
-        // Beim Boot in RestClient.Builder zementiert -> restartRequired=true.
+        // Claude-Fallback-Adapter.
+        // Iteration 66 (CVM-303): base-url, timeout-seconds, model und
+        // api-key werden jetzt pro Call ueber den
+        // SystemParameterResolver aufgeloest und sind damit live
+        // umschaltbar. anthropic-version bleibt im RestClient-Header
+        // hart verdrahtet und erfordert weiterhin einen Neustart.
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.llm.claude.base-url",
+                "Claude Basis-URL",
+                "Basis-URL fuer den Claude-Fallback-Adapter (z.B. Proxy oder Mandanten-Endpunkt).",
+                "Wird pro Call ausgelesen; RestClient wird lazy rebuilt. Kein Neustart noetig.",
+                CATEGORY_AI_LLM, "claude",
+                SystemParameterType.STRING, "https://api.anthropic.com", true, null, null, null, false, true, true, false));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.claude.version",
                 "Claude API-Version",
@@ -112,16 +123,16 @@ public final class SystemParameterCatalog {
                 "cvm.llm.claude.timeout-seconds",
                 "Claude HTTP-Timeout",
                 "Maximale Wartezeit fuer einen einzelnen Claude-API-Call.",
-                "Timeout wird im HTTP-Client beim Boot gesetzt - Neustart noetig.",
+                "Wird pro Call ausgelesen; RestClient wird lazy rebuilt. Kein Neustart noetig.",
                 CATEGORY_AI_LLM, "claude",
-                SystemParameterType.INTEGER, "30", true, null, null, "Sekunden", false, false, true, true));
+                SystemParameterType.INTEGER, "30", true, null, null, "Sekunden", false, true, true, false));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.llm.claude.model",
                 "Claude-Fallback-Modell",
                 "Modell-Bezeichner fuer den Claude-Adapter, wenn kein Profil existiert.",
-                "Default wird beim Boot gelesen - Neustart noetig.",
+                "Wird pro Call ausgelesen. Kein Neustart noetig.",
                 CATEGORY_AI_LLM, "claude",
-                SystemParameterType.STRING, "claude-sonnet-4-6", true, null, null, null, false, false, true, true));
+                SystemParameterType.STRING, "claude-sonnet-4-6", true, null, null, null, false, true, true, false));
 
         // Ollama-Adapter
         list.add(new SystemParameterCatalogEntry(
@@ -541,9 +552,9 @@ public final class SystemParameterCatalog {
                 "cvm.llm.claude.api-key",
                 "Anthropic API-Key",
                 "API-Key fuer den Claude-Fallback-Adapter.",
-                "Wird AES-GCM-verschluesselt gespeichert; Aenderung erfordert Neustart.",
+                "Iteration 66: Wird AES-GCM-verschluesselt gespeichert und pro Call ausgelesen. Kein Neustart noetig.",
                 CATEGORY_AI_LLM, "claude",
-                SystemParameterType.PASSWORD, null, false, null, null, null, true, false, true, true));
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, true, true, false));
         list.add(new SystemParameterCatalogEntry(
                 "cvm.feed.nvd.api-key",
                 "NVD API-Key",

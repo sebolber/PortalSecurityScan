@@ -82,6 +82,17 @@
     `NvdFeedClient`, `GhsaFeedClient`, `GitHubApiProvider`) vom
     `@Value` auf den Resolver (+ Lazy-Bean-Build, damit DB-Aenderung
     ohne Neustart greift).
+    - **Teil erledigt in Iteration 66** (CVM-303): ClaudeApiClient
+      laeuft jetzt ueber neuen Port `LlmGlobalParameterResolver`
+      (im `cvm-llm-gateway`-Modul) + Adapter
+      `SystemParameterLlmGlobalResolver` (in `cvm-ai-services`).
+      RestClient wird lazy rebuilt, wenn sich
+      `cvm.llm.claude.base-url` oder `cvm.llm.claude.timeout-
+      seconds` aendert. Katalog-Flags der Claude-Keys (ausser
+      `version`) entsprechend auf `hotReload=true`,
+      `restartRequired=false` umgestellt.
+    - Offen bleiben: Feed-Clients (Iteration 67) und GitHub-
+      Token-Adapter fuer Fix-Verifikation (Iteration 68).
   - **ArchUnit-Regel** erledigt in Iteration 46 (zwei Regeln:
     Repository und Secret-Cipher duerfen nur aus
     `com.ahs.cvm.application.parameter..` referenziert werden).

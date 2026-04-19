@@ -102,3 +102,11 @@ Warnungen). RoleMenuService-Spec-Kinderliste auf 9 aktuelle
 Eintraege aktualisiert, QueueApiService und AiAuditService
 expectOne-Predicate-Cases mit expliziten expect() ergaenzt.
 Naechstes: Iteration 66 ClaudeApiClient auf Parameter-Resolver.
+[16:00] Iteration 66 abgeschlossen: ClaudeApiClient nutzt jetzt
+den neuen Port LlmGlobalParameterResolver + Adapter
+SystemParameterLlmGlobalResolver (in cvm-ai-services).
+RestClient wird lazy rebuilt bei baseUrl-/timeout-Aenderung,
+Claude-Katalog-Flags auf live-reloadable umgestellt (ausser
+version). Neuer WireMock-Test fuer Runtime-Override ohne
+Neustart. Naechstes: Iteration 67 Feed-Clients auf
+Parameter-Resolver.
