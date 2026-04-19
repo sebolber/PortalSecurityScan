@@ -198,6 +198,24 @@ public final class SystemParameterCatalog {
                 null,
                 CATEGORY_AI_REACHABILITY, "agent",
                 SystemParameterType.STRING, "claude", true, null, null, null, false, false, true));
+        // Iteration 70 (CVM-307): Auto-Trigger fuer Reachability bei
+        // niedriger AI-Confidence. Beide Eintraege sind live-reloadable.
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.reachability.auto-trigger-threshold",
+                "Auto-Trigger Confidence-Schwelle",
+                "Confidence-Grenzwert, unterhalb dessen ein AI-Vorschlag automatisch "
+                        + "einen Reachability-Lauf ausloest. Wert zwischen 0 und 1.",
+                "Wird pro Event gelesen. Kein Neustart noetig.",
+                CATEGORY_AI_REACHABILITY, "auto-trigger",
+                SystemParameterType.DECIMAL, "0.6", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.reachability.auto-trigger-cooldown-minutes",
+                "Auto-Trigger Cooldown",
+                "Mindestabstand zwischen zwei Auto-Triggers fuer dasselbe "
+                        + "(ProduktVersion, CVE)-Paar.",
+                "In-Memory-Rate-Limit. Kein Neustart noetig.",
+                CATEGORY_AI_REACHABILITY, "auto-trigger",
+                SystemParameterType.INTEGER, "60", true, null, null, "Minuten", false, true, true));
     }
 
     private static void addRag(List<SystemParameterCatalogEntry> list) {

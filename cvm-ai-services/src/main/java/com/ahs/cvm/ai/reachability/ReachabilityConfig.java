@@ -1,6 +1,7 @@
 package com.ahs.cvm.ai.reachability;
 
 import com.ahs.cvm.application.parameter.SystemParameterResolver;
+import java.math.BigDecimal;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,15 +27,32 @@ public class ReachabilityConfig {
     private final boolean enabled;
     private final Duration timeout;
     private final String binary;
+    private final BigDecimal autoTriggerThreshold;
+    private final int autoTriggerCooldownMinutes;
     private SystemParameterResolver resolver;
 
+    @Autowired
     public ReachabilityConfig(
             @Value("${cvm.ai.reachability.enabled:false}") boolean enabled,
             @Value("${cvm.ai.reachability.timeout-seconds:300}") int timeoutSeconds,
-            @Value("${cvm.ai.reachability.binary:claude}") String binary) {
+            @Value("${cvm.ai.reachability.binary:claude}") String binary,
+            @Value("${cvm.ai.reachability.auto-trigger-threshold:0.6}") BigDecimal autoTriggerThreshold,
+            @Value("${cvm.ai.reachability.auto-trigger-cooldown-minutes:60}") int autoTriggerCooldownMinutes) {
         this.enabled = enabled;
         this.timeout = Duration.ofSeconds(Math.max(5, timeoutSeconds));
         this.binary = binary == null || binary.isBlank() ? "claude" : binary;
+        this.autoTriggerThreshold = clamp01(autoTriggerThreshold == null
+                ? new BigDecimal("0.6") : autoTriggerThreshold);
+        this.autoTriggerCooldownMinutes = Math.max(0, autoTriggerCooldownMinutes);
+    }
+
+    /**
+     * Bestands-Konstruktor aus Iteration 15. Bleibt fuer Bestands-
+     * Unit-Tests erhalten, die die Iteration-70-Parameter
+     * (auto-trigger-threshold/cooldown) nicht brauchen.
+     */
+    public ReachabilityConfig(boolean enabled, int timeoutSeconds, String binary) {
+        this(enabled, timeoutSeconds, binary, new BigDecimal("0.6"), 60);
     }
 
     @Autowired(required = false)
@@ -75,5 +93,39 @@ public class ReachabilityConfig {
         }
         String value = resolver.resolveString("cvm.ai.reachability.binary", binary);
         return value == null || value.isBlank() ? "claude" : value;
+    }
+
+    /** Iteration 70 (CVM-307). */
+    public BigDecimal autoTriggerThresholdEffective() {
+        if (resolver == null) {
+            return autoTriggerThreshold;
+        }
+        double v = resolver.resolveDouble(
+                "cvm.ai.reachability.auto-trigger-threshold",
+                autoTriggerThreshold.doubleValue());
+        return clamp01(BigDecimal.valueOf(v));
+    }
+
+    /** Iteration 70 (CVM-307). */
+    public int autoTriggerCooldownMinutesEffective() {
+        if (resolver == null) {
+            return autoTriggerCooldownMinutes;
+        }
+        return Math.max(0, resolver.resolveInt(
+                "cvm.ai.reachability.auto-trigger-cooldown-minutes",
+                autoTriggerCooldownMinutes));
+    }
+
+    private static BigDecimal clamp01(BigDecimal value) {
+        if (value == null) {
+            return new BigDecimal("0.6");
+        }
+        if (value.signum() < 0) {
+            return BigDecimal.ZERO;
+        }
+        if (value.compareTo(BigDecimal.ONE) > 0) {
+            return BigDecimal.ONE;
+        }
+        return value;
     }
 }

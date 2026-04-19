@@ -2,6 +2,7 @@ package com.ahs.cvm.ai.autoassessment;
 
 import com.ahs.cvm.ai.rag.IndexingService;
 import com.ahs.cvm.ai.rag.RetrievalService;
+import com.ahs.cvm.ai.reachability.ReachabilityConfig;
 import com.ahs.cvm.ai.rag.RetrievalService.RagHit;
 import com.ahs.cvm.application.cascade.AiAssessmentSuggesterPort;
 import com.ahs.cvm.application.cascade.CascadeInput;
@@ -43,6 +44,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,6 +78,8 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
     private final AiSuggestionRepository suggestionRepository;
     private final AiSourceRefRepository sourceRefRepository;
     private final AiCallAuditRepository auditRepository;
+    private ApplicationEventPublisher eventPublisher;
+    private ReachabilityConfig reachabilityConfig;
 
     public AutoAssessmentOrchestrator(
             AutoAssessmentConfig config,
@@ -95,6 +100,18 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
         this.suggestionRepository = suggestionRepository;
         this.sourceRefRepository = sourceRefRepository;
         this.auditRepository = auditRepository;
+    }
+
+    /** Iteration 70 (CVM-307): Event-Publisher fuer Auto-Trigger. */
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher publisher) {
+        this.eventPublisher = publisher;
+    }
+
+    /** Iteration 70 (CVM-307). */
+    @Autowired(required = false)
+    public void setReachabilityConfig(ReachabilityConfig reachabilityConfig) {
+        this.reachabilityConfig = reachabilityConfig;
     }
 
     @Override
@@ -179,6 +196,8 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
         AiSuggestion suggestion = persistiereSuggestion(
                 response, finding, ctx, proposed, rationale, confidence, out);
 
+        publiziereAutoTriggerEvent(finding, confidence, request.triggeredBy());
+
         return Optional.of(CascadeOutcome.ai(
                 suggestion.getId(),
                 proposed,
@@ -186,6 +205,47 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
                 confidence,
                 usedFields,
                 targetStatus));
+    }
+
+    /**
+     * Iteration 70 (CVM-307): publiziert einen
+     * {@link LowConfidenceAiSuggestionEvent}, wenn Publisher und
+     * ReachabilityConfig vorhanden sind und die Confidence die
+     * konfigurierte Schwelle unterschreitet. Die eigentliche
+     * Entscheidung (Rate-Limit, Feature-Flag) trifft der
+     * nachgelagerte Listener.
+     */
+    private void publiziereAutoTriggerEvent(
+            Finding finding, BigDecimal confidence, String triggeredBy) {
+        if (eventPublisher == null || reachabilityConfig == null) {
+            return;
+        }
+        BigDecimal schwelle = reachabilityConfig.autoTriggerThresholdEffective();
+        if (confidence == null || confidence.compareTo(schwelle) >= 0) {
+            return;
+        }
+        try {
+            UUID productVersionId = finding.getScan() != null
+                    && finding.getScan().getProductVersion() != null
+                    ? finding.getScan().getProductVersion().getId()
+                    : null;
+            String cveKey = finding.getCve() != null
+                    ? finding.getCve().getCveId()
+                    : null;
+            if (cveKey == null || cveKey.isBlank()) {
+                return;
+            }
+            eventPublisher.publishEvent(new LowConfidenceAiSuggestionEvent(
+                    finding.getId(),
+                    productVersionId,
+                    cveKey,
+                    confidence,
+                    triggeredBy == null || triggeredBy.isBlank()
+                            ? "system:auto-assessment"
+                            : triggeredBy));
+        } catch (RuntimeException ex) {
+            log.warn("Auto-Trigger-Event-Publikation fehlgeschlagen: {}", ex.getMessage());
+        }
     }
 
     private AiSuggestion persistiereSuggestion(

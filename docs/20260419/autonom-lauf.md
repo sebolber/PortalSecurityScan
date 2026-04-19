@@ -133,3 +133,14 @@ Dual-Write-Key-Rotation, Backup-Strategie, Abgrenzung und
 Fehlerbehandlung). Damit ist Block B (Parameter-Store-
 Callsite-Migration) abgeschlossen. Naechstes: Block C
 Reachability (Auto-Trigger / JGit / OSV).
+[16:38] Iteration 70 abgeschlossen: Reachability-Auto-Trigger-
+Schwellwert und Rate-Limit implementiert. Neuer Event
+LowConfidenceAiSuggestionEvent + Port
+ReachabilityAutoTriggerPort (Noop-Adapter als Default) +
+Service ReachabilityAutoTriggerService mit in-memory Rate-
+Limit pro (productVersionId, cveKey). Zwei neue
+Parameter-Store-Eintraege (threshold, cooldown).
+AutoAssessmentOrchestrator publiziert den Event, wenn
+Publisher und ReachabilityConfig vorhanden sind. 7 neue
+Service-Tests. Naechstes: Iteration 71 JGit-Adapter fuer
+Reachability (Sandbox-abhaengig, ggf. skip-in-CI-Vermerk).

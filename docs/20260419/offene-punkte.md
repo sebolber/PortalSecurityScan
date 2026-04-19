@@ -216,8 +216,18 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   SLA-Ampel ergaenzt in Iteration 55; Burn-Down war bereits vorhanden.
 - JGit-Adapter fuer Reachability (aktuell `NoopGitCheckoutAdapter`),
   SSH-Key aus Vault, Network-Sandboxing fuer den Subprocess.
-- Auto-Trigger der Reachability, wenn AI-Vorschlag-Confidence unter
-  Schwelle.
+  Bleibt offen; zusaetzlich folgt daraus der Ersatz des
+  `NoopReachabilityAutoTriggerAdapter` durch einen echten
+  Adapter, der `ReachabilityAgent.analyze(...)` aufruft.
+- ~~Auto-Trigger der Reachability, wenn AI-Vorschlag-Confidence
+  unter Schwelle~~ - **Teil erledigt in Iteration 70**
+  (CVM-307). Neuer Event `LowConfidenceAiSuggestionEvent`, Port
+  `ReachabilityAutoTriggerPort` + Noop-Default-Adapter, Service
+  `ReachabilityAutoTriggerService` mit Schwellwert- und
+  Rate-Limit-Logik (konfigurierbar ueber
+  `cvm.ai.reachability.auto-trigger-threshold` und
+  `cvm.ai.reachability.auto-trigger-cooldown-minutes`). Echter
+  Trigger-Adapter kommt zusammen mit dem JGit-Adapter.
 - Playwright-E2E + axe-core in CI, Karma in CI, Testcontainers-IT auf
   Docker-Desktop-macOS. *(Iteration 65 hat die Karma-Suite lokal
   wieder vollstaendig gruen bekommen - 91 Tests SUCCESS, keine "has
