@@ -1,11 +1,26 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 37 - offen
+## Stand 2026-04-19 nach Iteration 38 - offen
+
+- ~~**Produkt-Soft-Delete**~~ erledigt in 38.
+- **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).
+- **OSV-Mirror** fuer air-gapped-Installationen.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+- **OpenAI-/Azure-/Adesso-LLM-Adapter**: fehlen, Fallback mit
+  Log-Warnung aktiv.
+- **Bundle-Budget-Reduktion**.
+
+> Iteration 38 am 2026-04-19 hat Flyway V0029 + Soft-Delete-Pfad
+> fuer Produkte geliefert (Service, DELETE-Endpunkt, Frontend-
+> IconButton). Details:
+> `docs/20260419/iteration-38-fortschritt.md`.
+
+## Stand 2026-04-19 nach Iteration 37 - offen (vorher)
 
 - ~~**Cross-Link Queue-Detail -> CVE-Detail**~~ erledigt in 37.
 - ~~**Produkt-Edit**~~ erledigt in 37 (Name/Beschreibung; Key
   bleibt unveraenderlich).
-- **Produkt-Soft-Delete** (Folge-Iteration).
+- ~~**Produkt-Soft-Delete**~~ erledigt in 38.
 - **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).
 - **OSV-Mirror** fuer air-gapped-Installationen.
 - **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.

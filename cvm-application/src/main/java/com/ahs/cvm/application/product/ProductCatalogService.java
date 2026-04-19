@@ -126,6 +126,24 @@ public class ProductCatalogService {
     }
 
     /**
+     * Soft-Delete (Iteration 38, CVM-82). Das Produkt bleibt in der
+     * Datenbank stehen (Scans/Findings referenzieren es weiter), der
+     * Eintrag verschwindet nur aus den Admin-Listen.
+     */
+    @Transactional
+    public void loesche(UUID productId) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId darf nicht null sein.");
+        }
+        Product produkt = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        if (produkt.getDeletedAt() == null) {
+            produkt.setDeletedAt(Instant.now());
+            productRepository.save(produkt);
+        }
+    }
+
+    /**
      * Aktualisiert Name und Beschreibung eines Produkts. Der Key ist
      * fachlich unveraenderlich und wird bewusst nicht ueberschrieben
      * (sonst waeren SBOM-Referenzen inkonsistent).

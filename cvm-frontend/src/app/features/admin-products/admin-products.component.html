@@ -106,6 +106,12 @@
                       aria-label="Produkt bearbeiten">
                 <mat-icon>edit</mat-icon>
               </button>
+              <button mat-icon-button type="button"
+                      color="warn"
+                      (click)="loescheProdukt(p)"
+                      aria-label="Produkt loeschen">
+                <mat-icon>delete</mat-icon>
+              </button>
             </td>
           </ng-container>
           <tr mat-header-row *matHeaderRowDef="produktSpalten"></tr>

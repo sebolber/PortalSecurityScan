@@ -63,6 +63,12 @@ export class ProductsService {
     );
   }
 
+  delete(productId: string): Promise<void> {
+    return firstValueFrom(
+      this.api.delete<void>(`/api/v1/products/${productId}`)
+    );
+  }
+
   createVersion(
     productId: string,
     req: ProductVersionCreateRequest

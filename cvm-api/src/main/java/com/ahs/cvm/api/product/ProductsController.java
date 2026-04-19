@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -89,6 +90,18 @@ public class ProductsController {
         ProductView updated = catalogService.aktualisiere(productId,
                 new ProductUpdateInput(request.name(), request.description()));
         return ResponseEntity.ok(updated);
+    }
+
+    @DeleteMapping("/{productId}")
+    @PreAuthorize("hasAuthority('CVM_ADMIN')")
+    @Operation(summary = "Produkt soft-loeschen (CVM_ADMIN). Scans bleiben erhalten.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "204", description = "Produkt geloescht"),
+        @ApiResponse(responseCode = "404", description = "Produkt nicht gefunden")
+    })
+    public ResponseEntity<Void> loeschen(@PathVariable UUID productId) {
+        catalogService.loesche(productId);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{productId}/versions")

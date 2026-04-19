@@ -43,6 +43,14 @@ public class Product {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    /**
+     * Soft-Delete-Marker (Iteration 38, CVM-82). {@code null} =
+     * aktiv; gesetzt = logisch entfernt. Scans und Findings bleiben
+     * erhalten, das Produkt verschwindet aber aus der Admin-UI.
+     */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @PrePersist
     void initialisiere() {
         if (id == null) {

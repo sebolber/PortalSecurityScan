@@ -225,4 +225,42 @@ class ProductCatalogServiceTest {
                 new ProductUpdateInput(null, "   "));
         assertThat(result.description()).isNull();
     }
+
+    @Test
+    @DisplayName("loesche: setzt deletedAt auf Jetzt")
+    void loescheHappyPath() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).key("portalcore-test").name("Name").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        service.loesche(productId);
+
+        assertThat(p.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("loesche: bereits geloeschte Produkte werden nicht erneut markiert")
+    void loescheIdempotent() {
+        UUID productId = UUID.randomUUID();
+        Instant gesetzt = Instant.parse("2026-01-01T00:00:00Z");
+        Product p = Product.builder()
+                .id(productId).key("portalcore-test").name("Name")
+                .deletedAt(gesetzt).build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        service.loesche(productId);
+
+        assertThat(p.getDeletedAt()).isEqualTo(gesetzt);
+    }
+
+    @Test
+    @DisplayName("loesche: unbekannte Id wirft ProductNotFoundException")
+    void loescheUnbekannt() {
+        UUID productId = UUID.randomUUID();
+        given(productRepo.findById(productId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.loesche(productId))
+                .isInstanceOf(ProductNotFoundException.class);
+    }
 }

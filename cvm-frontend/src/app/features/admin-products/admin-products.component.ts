@@ -189,6 +189,32 @@ export class AdminProductsComponent implements OnInit {
   }
 
   /**
+   * Soft-Delete mit Bestaetigungsdialog (Iteration 38, CVM-82).
+   * Referenzierte Scans/Findings bleiben erhalten, das Produkt
+   * verschwindet nur aus Admin-/Queue-Listen.
+   */
+  async loescheProdukt(p: ProductView): Promise<void> {
+    const bestaetigt = window.confirm(
+      `Produkt "${p.key}" wirklich soft-loeschen? Bestehende Scans bleiben erhalten.`
+    );
+    if (!bestaetigt) {
+      return;
+    }
+    try {
+      await this.products.delete(p.id);
+      if (this.selectedProductId() === p.id) {
+        this.selectedProductId.set(null);
+      }
+      this.snack.open(`Produkt "${p.key}" geloescht.`, 'OK', { duration: 3000 });
+      await this.ladeProdukte();
+    } catch (err) {
+      this.snack.open(
+        this.fehlermeldung(err, 'Loeschen fehlgeschlagen.'),
+        'OK', { duration: 5000 });
+    }
+  }
+
+  /**
    * Minimal-Edit fuer Name/Beschreibung eines Produkts. Nutzt zwei
    * window.prompt-Dialoge, damit der Admin-Flow ohne eigenes
    * Formular-Modal auskommt (Iteration 37, CVM-81).

@@ -28,10 +28,10 @@ public class ProductQueryService {
 
     @Transactional(readOnly = true)
     public List<ProductView> listProducts() {
-        return productRepository.findAll().stream()
-                .sorted(Comparator.comparing(
-                        p -> p.getKey() == null ? "" : p.getKey(),
-                        String.CASE_INSENSITIVE_ORDER))
+        // Soft-Delete (Iteration 38, CVM-82): gefilterte Abfrage liefert
+        // nur noch aktive Produkte. Tote Eintraege bleiben in der Tabelle
+        // fuer Audit-/Finding-Referenzen.
+        return productRepository.findByDeletedAtIsNullOrderByKeyAsc().stream()
                 .map(ProductView::from)
                 .toList();
     }
