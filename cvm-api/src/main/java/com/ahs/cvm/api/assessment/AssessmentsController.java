@@ -71,7 +71,8 @@ public class AssessmentsController {
                     request.plannedFor(),
                     request.mitigationNotes());
         }
-        FindingQueueView view = writeService.approveView(id, request.approverId(), mitigation);
+        FindingQueueView view = writeService.approveView(
+                id, request.approverId(), mitigation, request.severity());
         return ResponseEntity.ok(AssessmentResponse.from(view));
     }
 

@@ -46,6 +46,11 @@ export interface QueueFilter {
 /** Eingabe fuer {@code POST /api/v1/assessments/{id}/approve}. */
 export interface ApproveCommand {
   readonly approverId: string;
+  /**
+   * Optionale neue Severity. Wenn gesetzt, uebernimmt die Freigabe diese
+   * statt der urspruenglichen Vorschlags-Severity (Iteration 61, CVM-62).
+   */
+  readonly severity?: Severity;
   readonly strategy?: string;
   readonly targetVersion?: string;
   readonly plannedFor?: string;

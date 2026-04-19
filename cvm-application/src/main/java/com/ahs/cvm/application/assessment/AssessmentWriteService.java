@@ -186,7 +186,20 @@ public class AssessmentWriteService {
     @Transactional
     public FindingQueueView approveView(
             UUID assessmentId, String approverId, MitigationInput mitigation) {
-        return FindingQueueView.from(approveMitMitigation(assessmentId, approverId, mitigation));
+        return approveView(assessmentId, approverId, mitigation, null);
+    }
+
+    /**
+     * Iteration 61 (CVM-62): Approve kann eine optionale neue Severity
+     * uebernehmen ({@code overrideSeverity}). Wenn null, wird die
+     * urspruengliche Severity uebernommen (altes Verhalten).
+     */
+    @Transactional
+    public FindingQueueView approveView(
+            UUID assessmentId, String approverId, MitigationInput mitigation,
+            AhsSeverity overrideSeverity) {
+        return FindingQueueView.from(
+                approveMitMitigation(assessmentId, approverId, mitigation, overrideSeverity));
     }
 
     @Transactional
@@ -197,6 +210,13 @@ public class AssessmentWriteService {
     @Transactional
     public Assessment approveMitMitigation(
             UUID assessmentId, String approverId, MitigationInput mitigation) {
+        return approveMitMitigation(assessmentId, approverId, mitigation, null);
+    }
+
+    @Transactional
+    public Assessment approveMitMitigation(
+            UUID assessmentId, String approverId, MitigationInput mitigation,
+            AhsSeverity overrideSeverity) {
         requireNichtLeer(approverId, "approverId");
         Assessment bestehend = assessmentRepository.findById(assessmentId)
                 .orElseThrow(() -> new AssessmentNotFoundException(assessmentId));
@@ -208,11 +228,15 @@ public class AssessmentWriteService {
                     bestehend.getStatus(), AssessmentStatus.APPROVED);
         }
 
-        boolean viererAugenPflicht = VIER_AUGEN_DOWNGRADE.contains(bestehend.getSeverity());
+        AhsSeverity effektiveSeverity = overrideSeverity != null
+                ? overrideSeverity
+                : bestehend.getSeverity();
+
+        boolean viererAugenPflicht = VIER_AUGEN_DOWNGRADE.contains(effektiveSeverity);
         if (viererAugenPflicht && Objects.equals(approverId, bestehend.getDecidedBy())) {
             throw new AssessmentFourEyesViolationException(
                     "Vier-Augen-Prinzip verletzt: Downgrade auf "
-                            + bestehend.getSeverity() + " durch Autor '"
+                            + effektiveSeverity + " durch Autor '"
                             + approverId + "' nicht erlaubt.");
         }
 
@@ -228,7 +252,7 @@ public class AssessmentWriteService {
                 .cve(bestehend.getCve())
                 .version(bestehend.getVersion() + 1)
                 .status(AssessmentStatus.APPROVED)
-                .severity(bestehend.getSeverity())
+                .severity(effektiveSeverity)
                 .proposalSource(bestehend.getProposalSource())
                 .rationale(bestehend.getRationale())
                 .rationaleSourceFields(bestehend.getRationaleSourceFields())

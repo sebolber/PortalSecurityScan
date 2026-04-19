@@ -19,6 +19,7 @@ import { QueueDetailComponent } from './queue-detail.component';
 import { QueueHelpOverlayComponent } from './queue-help-overlay.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { Severity } from '../../shared/components/severity-badge.component';
 import { QueueEntry, RejectCommand, ApproveCommand } from './queue.types';
 
 /**
@@ -181,6 +182,7 @@ export class QueueComponent implements OnInit {
     const approverId = this.auth.username() || 'unknown';
     const command: ApproveCommand = {
       approverId,
+      severity: payload.severity as Severity,
       strategy: payload.strategy,
       targetVersion: payload.targetVersion,
       plannedFor: payload.plannedFor
