@@ -11,10 +11,12 @@ Iterationen 80+ implementieren die Befunde.
 - ~~U-01a Workflow-CTAs Scan/Queue/Dashboard~~ - **Erledigt in
   Iteration 80** (CVM-320). Scan-Upload->Queue-Deep-Link,
   Queue-Empty-State, Dashboard-Handlungskarten.
-- **U-01b Workflow-CTAs Reachability/FixVerif/Anomaly/Waiver**
-  - Iteration 81. Ziel: Reachability-CTA "zurueck zur Queue",
-  FixVerif "Waiver anlegen", Anomaly "Zum Finding",
-  Waiver-Detail "Bericht erzeugen".
+- ~~U-01b Workflow-CTAs Reachability/FixVerif/Anomaly/Waiver~~ -
+  **Erledigt in Iteration 81** (CVM-321). Reachability ->
+  Fix-Verifikation, Fix-Verifikation -> Waiver, Anomalie ->
+  Waiver, Waiver -> Bericht. Vier neue Karma-Specs. Per-Zeile-
+  Navigation auf Finding-Ebene wartet auf findingId-Filter in
+  der Queue (U-02a).
 - **U-02a Queue-Status-Filter + URL-Persistenz** - Iteration 82.
   Status-Chips (ALLE/OFFEN/APPROVED/REJECTED/NEEDS_VERIFICATION),
   Filter-State via `ActivatedRoute.queryParams`.

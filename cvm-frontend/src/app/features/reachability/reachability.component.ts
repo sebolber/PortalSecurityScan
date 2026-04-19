@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   ReachabilityQueryService,
   ReachabilityResult,
@@ -28,6 +29,7 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     DatePipe,
     DecimalPipe,
     AhsBannerComponent,

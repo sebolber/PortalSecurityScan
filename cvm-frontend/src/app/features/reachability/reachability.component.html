@@ -8,16 +8,26 @@
         gestartet (POST /api/v1/findings/&#123;id&#125;/reachability).
       </p>
     </div>
-    <button
-      type="button"
-      class="btn btn-secondary"
-      data-testid="reachability-refresh"
-      (click)="laden()"
-      [disabled]="loading()"
-    >
-      <cvm-icon name="refresh" [size]="16"></cvm-icon>
-      Neu laden
-    </button>
+    <div class="flex items-center gap-2">
+      <a
+        class="btn btn-secondary"
+        routerLink="/fix-verification"
+        data-testid="reachability-to-fix-verification"
+      >
+        <cvm-icon name="verified" [size]="16"></cvm-icon>
+        Zur Fix-Verifikation
+      </a>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        data-testid="reachability-refresh"
+        (click)="laden()"
+        [disabled]="loading()"
+      >
+        <cvm-icon name="refresh" [size]="16"></cvm-icon>
+        Neu laden
+      </button>
+    </div>
   </header>
 
   <section class="card p-4">

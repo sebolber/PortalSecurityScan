@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   AnomalyService,
   AnomalyView
@@ -25,6 +26,7 @@ const FENSTER: readonly { key: number; label: string }[] = [
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     DatePipe,
     AhsBannerComponent,
     EmptyStateComponent,

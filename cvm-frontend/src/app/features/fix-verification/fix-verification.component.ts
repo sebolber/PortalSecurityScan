@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import {
   FixVerificationQueryHttpService,
   FixVerificationSummaryView,
@@ -28,6 +29,7 @@ const GRADES: readonly (VerificationGrade | 'ALL')[] = [
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     DatePipe,
     AhsBannerComponent,
     EmptyStateComponent,
