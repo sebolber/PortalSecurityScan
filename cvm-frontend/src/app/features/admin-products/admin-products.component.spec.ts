@@ -2,14 +2,25 @@ import { TestBed } from '@angular/core/testing';
 import { AdminProductsComponent } from './admin-products.component';
 import {
   ProductsService,
-  ProductView
+  ProductView,
+  ProductVersionView
 } from '../../core/products/products.service';
+import { CvmConfirmService } from '../../shared/components/cvm-confirm.service';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
 
 class FakeToast {
   success = jasmine.createSpy('success');
   warning = jasmine.createSpy('warning');
   error = jasmine.createSpy('error');
+}
+
+class FakeConfirm {
+  result = true;
+  lastOptions: unknown = null;
+  confirm(options: unknown): Promise<boolean> {
+    this.lastOptions = options;
+    return Promise.resolve(this.result);
+  }
 }
 
 /**
@@ -19,6 +30,7 @@ class FakeToast {
 describe('AdminProductsComponent - Iteration 89 (Edit-Dialog)', () => {
   let products: jasmine.SpyObj<ProductsService>;
   let toast: FakeToast;
+  let confirmService: FakeConfirm;
 
   const beispielProdukt: ProductView = {
     id: 'p1',
@@ -40,12 +52,14 @@ describe('AdminProductsComponent - Iteration 89 (Edit-Dialog)', () => {
     ]);
     products.list.and.returnValue(Promise.resolve([]));
     toast = new FakeToast();
+    confirmService = new FakeConfirm();
 
     TestBed.configureTestingModule({
       imports: [AdminProductsComponent],
       providers: [
         { provide: ProductsService, useValue: products },
-        { provide: CvmToastService, useValue: toast }
+        { provide: CvmToastService, useValue: toast },
+        { provide: CvmConfirmService, useValue: confirmService }
       ]
     });
   });
@@ -174,5 +188,47 @@ describe('AdminProductsComponent - Iteration 89 (Edit-Dialog)', () => {
     expect(component.editDialogOffen()).toBeFalse();
     expect(component.editProdukt()).toBeNull();
     expect(component.editRepoUrlFehler()).toBeNull();
+  });
+
+  it('Iteration 90: loescheProdukt nutzt CvmConfirmService statt window.confirm', async () => {
+    const component = TestBed.createComponent(AdminProductsComponent)
+      .componentInstance;
+    confirmService.result = true;
+    products.delete.and.returnValue(Promise.resolve());
+
+    await component.loescheProdukt(beispielProdukt);
+
+    expect(products.delete).toHaveBeenCalledOnceWith('p1');
+    expect((confirmService.lastOptions as { variant: string }).variant)
+      .toBe('danger');
+    expect(toast.success).toHaveBeenCalled();
+  });
+
+  it('Iteration 90: loescheProdukt-Abbruch ruft DELETE nicht', async () => {
+    const component = TestBed.createComponent(AdminProductsComponent)
+      .componentInstance;
+    confirmService.result = false;
+
+    await component.loescheProdukt(beispielProdukt);
+    expect(products.delete).not.toHaveBeenCalled();
+  });
+
+  it('Iteration 90: loescheVersion nutzt CvmConfirmService', async () => {
+    const component = TestBed.createComponent(AdminProductsComponent)
+      .componentInstance;
+    confirmService.result = true;
+    products.deleteVersion.and.returnValue(Promise.resolve());
+    products.versions.and.returnValue(Promise.resolve([]));
+    const version: ProductVersionView = {
+      id: 'v1',
+      productId: 'p1',
+      version: '1.0.0-test',
+      gitCommit: null,
+      releasedAt: null
+    };
+    component.selectedProductId.set('p1');
+
+    await component.loescheVersion('p1', version);
+    expect(products.deleteVersion).toHaveBeenCalledOnceWith('p1', 'v1');
   });
 });

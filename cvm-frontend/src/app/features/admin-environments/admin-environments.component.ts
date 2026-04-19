@@ -6,6 +6,7 @@ import {
   EnvironmentsService
 } from '../../core/environments/environments.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmConfirmService } from '../../shared/components/cvm-confirm.service';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -47,6 +48,7 @@ function initialForm(): EnvFormState {
 export class AdminEnvironmentsComponent implements OnInit {
   private readonly service = inject(EnvironmentsService);
   private readonly toast = inject(CvmToastService);
+  private readonly confirmService = inject(CvmConfirmService);
 
   readonly stages = STAGES;
 
@@ -119,11 +121,14 @@ export class AdminEnvironmentsComponent implements OnInit {
   }
 
   async loesche(env: EnvironmentView): Promise<void> {
-    const confirmed = window.confirm(
-      'Umgebung "' + env.key + '" wirklich entfernen?\n\n'
+    const confirmed = await this.confirmService.confirm({
+      title: 'Umgebung entfernen',
+      message: 'Umgebung "' + env.key + '" wirklich entfernen?\n\n'
         + 'Soft-Delete: Scans und Findings bleiben erhalten, die Umgebung '
-        + 'verschwindet nur aus den Listen.'
-    );
+        + 'verschwindet nur aus den Listen.',
+      confirmLabel: 'Entfernen',
+      variant: 'danger'
+    });
     if (!confirmed) {
       return;
     }

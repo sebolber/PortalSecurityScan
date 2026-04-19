@@ -8,6 +8,7 @@ import {
   ProductView,
   ProductsService
 } from '../../core/products/products.service';
+import { CvmConfirmService } from '../../shared/components/cvm-confirm.service';
 import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
@@ -46,6 +47,7 @@ interface VersionCreateForm {
 export class AdminProductsComponent implements OnInit {
   private readonly products = inject(ProductsService);
   private readonly toast = inject(CvmToastService);
+  private readonly confirmService = inject(CvmConfirmService);
 
   readonly produkte = signal<readonly ProductView[]>([]);
   readonly versionen = signal<Record<string, readonly ProductVersionView[]>>({});
@@ -181,9 +183,13 @@ export class AdminProductsComponent implements OnInit {
    * Soft-Delete einer Produkt-Version (Iteration 49, CVM-99).
    */
   async loescheVersion(productId: string, v: ProductVersionView): Promise<void> {
-    const bestaetigt = window.confirm(
-      `Version "${v.version}" wirklich soft-loeschen? Scans und Findings bleiben erhalten.`
-    );
+    const bestaetigt = await this.confirmService.confirm({
+      title: 'Version entfernen',
+      message: `Version "${v.version}" wirklich soft-loeschen?\n\n`
+        + 'Scans und Findings bleiben erhalten.',
+      confirmLabel: 'Entfernen',
+      variant: 'danger'
+    });
     if (!bestaetigt) {
       return;
     }
@@ -202,9 +208,13 @@ export class AdminProductsComponent implements OnInit {
    * verschwindet nur aus Admin-/Queue-Listen.
    */
   async loescheProdukt(p: ProductView): Promise<void> {
-    const bestaetigt = window.confirm(
-      `Produkt "${p.key}" wirklich soft-loeschen? Bestehende Scans bleiben erhalten.`
-    );
+    const bestaetigt = await this.confirmService.confirm({
+      title: 'Produkt entfernen',
+      message: `Produkt "${p.key}" wirklich soft-loeschen?\n\n`
+        + 'Bestehende Scans bleiben erhalten.',
+      confirmLabel: 'Entfernen',
+      variant: 'danger'
+    });
     if (!bestaetigt) {
       return;
     }

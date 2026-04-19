@@ -65,6 +65,15 @@ Iterationen 80+ implementieren die Befunde.
     `http(s)://|ssh://|git@` validiert. 7 neue Karma-Specs.
     `loescheProdukt` nutzt weiter `window.confirm` und wandert
     zusammen mit Rules/Environments in U-06b.
+  - ~~**U-06b CvmConfirmService ersetzt window.confirm**~~ -
+    **Erledigt in Iteration 90** (CVM-330). Neuer
+    `CvmConfirmService` + `CvmConfirmHostComponent` (Promise-
+    basiertes API, danger-Variante fuer Soft-Delete). Eingesetzt
+    in `admin-products` (Produkt/Version), `admin-environments`
+    und `rules`. 12 neue Karma-Specs. Offene Folge-Cleanups:
+    `profiles.draftLoeschen`, `admin-llm-configurations`,
+    `admin-parameters`, `admin-theme` nutzen noch
+    `window.confirm`.
 - **U-07a Breadcrumbs + globale Shortcut-Sheet** - Iteration 91.
 - **U-07b Globale Suche + Bell-Notifications** - Iteration 92.
 - **U-08 Dashboard-Handlungszentrale + Report-Listing** -

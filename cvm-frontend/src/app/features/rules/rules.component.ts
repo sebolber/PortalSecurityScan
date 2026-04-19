@@ -9,6 +9,7 @@ import {
   RulesService
 } from '../../core/rules/rules.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmConfirmService } from '../../shared/components/cvm-confirm.service';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -69,6 +70,7 @@ export class RulesComponent implements OnInit {
   private readonly rulesService = inject(RulesService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(CvmToastService);
+  private readonly confirmService = inject(CvmConfirmService);
 
   readonly severities = SEVERITIES;
 
@@ -152,12 +154,15 @@ export class RulesComponent implements OnInit {
 
   /** Iteration 50 (CVM-100): Soft-Delete. */
   async loesche(rule: RuleResponse): Promise<void> {
-    const bestaetigt = window.confirm(
-      'Regel "' + rule.ruleKey + '" wirklich soft-loeschen?\n\n'
+    const bestaetigt = await this.confirmService.confirm({
+      title: 'Regel entfernen',
+      message: 'Regel "' + rule.ruleKey + '" wirklich soft-loeschen?\n\n'
         + 'Soft-Delete = technisch entfernt (Regel-Engine ignoriert sie).\n'
         + 'Unterscheidet sich von RETIRED (fachlich abgeloest). '
-        + 'Historische Assessments behalten ihre Rationale.'
-    );
+        + 'Historische Assessments behalten ihre Rationale.',
+      confirmLabel: 'Soft-Delete',
+      variant: 'danger'
+    });
     if (!bestaetigt) {
       return;
     }
