@@ -35,3 +35,6 @@ Soft-Delete.
 Abgrenzung RETIRED (Flyway V0033) (commit 8c1b374a). Block B
 (User-Feedback Soft-Delete) damit komplett. Naechstes: Block C
 Iteration 51 Profil-Edit + Soft-Delete.
+[10:28] Iteration 51 abgeschlossen: Profil-DRAFT-Edit + Soft-Delete
+(Flyway V0034, Controller, Service-APIs) (commit 07019918).
+Naechstes: Iteration 52 Bundle-Budget-Reduktion.

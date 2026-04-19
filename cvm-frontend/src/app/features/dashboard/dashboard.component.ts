@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
+import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
 import { AhsCardComponent } from '../../shared/components/ahs-card.component';
 import {
   Severity,
@@ -36,6 +37,8 @@ interface SeverityCount {
     SeverityBadgeComponent,
     NgxEchartsDirective
   ],
+  // Iteration 52 (CVM-102): ECharts lazy in den Dashboard-Chunk.
+  providers: [echartsRouteProviders()],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })

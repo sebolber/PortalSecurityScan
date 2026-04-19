@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { ShellComponent } from './shell/shell.component';
-import { LoginCallbackComponent } from './login-callback/login-callback.component';
 import { authGuard } from './core/auth/auth.guard';
 import { CVM_ROLES } from './core/auth/cvm-roles';
 
@@ -205,6 +204,13 @@ export const APP_ROUTES: Routes = [
       }
     ]
   },
-  { path: 'login-callback', component: LoginCallbackComponent },
+  {
+    // Iteration 52 (CVM-102): Login-Callback lazy, damit der Keycloak-
+    // Rueckleit-Pfad nicht im Haupt-Bundle landet.
+    path: 'login-callback',
+    loadComponent: () =>
+      import('./login-callback/login-callback.component')
+        .then((m) => m.LoginCallbackComponent)
+  },
   { path: '**', redirectTo: 'dashboard' }
 ];

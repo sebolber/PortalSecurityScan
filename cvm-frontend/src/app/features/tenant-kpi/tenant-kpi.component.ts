@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
+import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
 import {
   KpiResult,
   KpiService,
@@ -52,6 +53,8 @@ const SEVERITIES: readonly Severity[] = [
     NgxEchartsDirective,
     AhsBannerComponent
   ],
+  // Iteration 52 (CVM-102): ECharts lazy in den Tenant-KPI-Chunk.
+  providers: [echartsRouteProviders()],
   templateUrl: './tenant-kpi.component.html',
   styleUrls: ['./tenant-kpi.component.scss']
 })
