@@ -16,3 +16,6 @@ Teil 1 (ReachabilityConfig, OsvProperties, Feed*Config, AutoAssessmentConfig).
 [09:31] Iteration 44 abgeschlossen: Parameter-Store-Lesepfad Teil 2 +
 restartRequired-Marker + UI-Chip (commit 23550a99). Naechstes:
 Iteration 45 Secret-Behandlung AES-GCM.
+[09:40] Iteration 45 abgeschlossen: AES-GCM-Secret-Verschluesselung
+fuer sensible System-Parameter (commit 0d0871dc). Naechstes:
+Iteration 46 ArchUnit-Regel + E2E-Test Reachability-Flag.

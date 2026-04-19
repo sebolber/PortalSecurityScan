@@ -51,11 +51,14 @@
     `NvdFeedClient`, `GhsaFeedClient`, `GitHubApiProvider`) vom
     `@Value` auf den Resolver (+ Lazy-Bean-Build, damit DB-Aenderung
     ohne Neustart greift).
-  - **ArchUnit-Regel**: nur das Parameter-Modul greift aufs
-    Repository.
-  - **End-to-End-Test** fuer mindestens einen Parameter
-    (`cvm.ai.reachability.enabled`), der nachweist, dass eine
-    DB-Aenderung den Agent-Aufruf ohne Restart beeinflusst.
+  - **ArchUnit-Regel** erledigt in Iteration 46 (zwei Regeln:
+    Repository und Secret-Cipher duerfen nur aus
+    `com.ahs.cvm.application.parameter..` referenziert werden).
+  - **End-to-End-Test** fuer `cvm.ai.reachability.enabled`
+    erledigt in Iteration 46 (`ReachabilityRuntimeOverrideE2ETest`
+    mit realen Service-Klassen + Mock-Repository). Ein zusaetzlicher
+    Testcontainers-Lauf bleibt als CI-Follow-up offen
+    (Sandbox-Docker nicht verfuegbar).
   - **Nicht migrieren** (dokumentieren, damit nachher niemand
     versucht): `spring.datasource.*`, `spring.jpa.*`,
     `spring.flyway.*`, `spring.security.oauth2.resourceserver.jwt.*`,
