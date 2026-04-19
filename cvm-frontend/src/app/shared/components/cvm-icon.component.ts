@@ -2,8 +2,6 @@ import { ChangeDetectionStrategy, Component, Input, computed, signal } from '@an
 import { CommonModule } from '@angular/common';
 import {
   LucideAngularModule,
-  LUCIDE_ICONS,
-  LucideIconProvider,
   // Icons (Mapping nach Iteration 61-Plan, Abschnitt 7)
   AlertCircle,
   AlertTriangle,
@@ -85,7 +83,7 @@ import {
  *
  * Verwendung:
  *   <cvm-icon name="search" />
- *   <cvm-icon name="check" size="20" />
+ *   <cvm-icon name="check" [size]="20" />
  *
  * Der Name entspricht dem Lucide-Namen in kebab-case oder camelCase,
  * oder dem frueheren Material-Namen (siehe Mapping in der plan-Datei).
@@ -143,8 +141,10 @@ const ICON_REGISTRY: Record<string, unknown> = {
   'shield-alert': ShieldAlert,
   'light-mode': Sun,
   'light_mode': Sun,
+  sun: Sun,
   'dark-mode': Moon,
   'dark_mode': Moon,
+  moon: Moon,
   visibility: Eye,
   'visibility-off': EyeOff,
   'visibility_off': EyeOff,
@@ -199,20 +199,11 @@ const ICON_REGISTRY: Record<string, unknown> = {
   'loader-2': Loader2
 };
 
-const ICON_PROVIDERS = Array.from(
-  new Set(Object.values(ICON_REGISTRY))
-).map((icon) => ({
-  provide: LUCIDE_ICONS,
-  multi: true,
-  useValue: new LucideIconProvider({ icon: icon as never } as never)
-}));
-
 @Component({
   selector: 'cvm-icon',
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: ICON_PROVIDERS,
   template: `
     @if (resolved(); as r) {
       <lucide-icon
