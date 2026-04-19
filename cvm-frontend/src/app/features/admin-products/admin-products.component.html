@@ -235,4 +235,65 @@
       </div>
     </section>
   }
+
+  <cvm-dialog
+    [open]="editDialogOffen()"
+    title="Produkt bearbeiten"
+    size="md"
+    (close)="brecheEditAb()"
+  >
+    <div class="flex flex-col gap-4">
+      <label class="form-group">
+        <span class="form-label form-label--required">Name</span>
+        <input class="input-field"
+               type="text"
+               data-testid="admin-products-edit-name"
+               [ngModel]="editName()"
+               (ngModelChange)="editName.set($event)"
+               maxlength="200"
+               required />
+      </label>
+
+      <label class="form-group">
+        <span class="form-label">Beschreibung</span>
+        <textarea class="input-field"
+                  rows="3"
+                  data-testid="admin-products-edit-desc"
+                  [ngModel]="editBeschreibung()"
+                  (ngModelChange)="editBeschreibung.set($event)"
+                  maxlength="1000"></textarea>
+      </label>
+
+      <label class="form-group">
+        <span class="form-label">Git-Repository-URL (optional)</span>
+        <input class="input-field"
+               type="text"
+               data-testid="admin-products-edit-repo"
+               [ngModel]="editRepoUrl()"
+               (ngModelChange)="editRepoUrl.set($event)"
+               maxlength="512"
+               placeholder="https://gitlab.example.com/team/repo.git" />
+        @if (editRepoUrlFehler(); as msg) {
+          <span class="form-error" data-testid="admin-products-edit-repo-error">{{ msg }}</span>
+        } @else {
+          <span class="form-help">http(s)://, ssh:// oder git&#64; - leer lassen zum Entfernen.</span>
+        }
+      </label>
+    </div>
+
+    <div footer class="flex items-center justify-end gap-2">
+      <button class="btn btn-secondary" type="button"
+              (click)="brecheEditAb()"
+              [disabled]="editPending()">
+        Abbrechen
+      </button>
+      <button class="btn btn-primary" type="button"
+              data-testid="admin-products-edit-save"
+              (click)="speichereEdit()"
+              [disabled]="editPending()">
+        <cvm-icon name="check" [size]="16"></cvm-icon>
+        {{ editPending() ? 'Speichern...' : 'Speichern' }}
+      </button>
+    </div>
+  </cvm-dialog>
 </div>

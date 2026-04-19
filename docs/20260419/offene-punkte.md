@@ -58,6 +58,13 @@ Iterationen 80+ implementieren die Befunde.
 - **U-06 Einheitliches Admin-Aktions-Menue** - Iteration 89-90.
   Dreipunkt-Menue in Rules/Products/Environments/Profiles,
   `window.prompt` -> `cvm-dialog`.
+  - ~~**U-06a Admin-Produkte Edit-Dialog**~~ - **Erledigt in
+    Iteration 89** (CVM-329). `bearbeiteProdukt` oeffnet jetzt
+    einen `<cvm-dialog>` mit Feldern fuer Name, Beschreibung und
+    Git-Repository-URL. Name ist Pflicht, repoUrl wird gegen
+    `http(s)://|ssh://|git@` validiert. 7 neue Karma-Specs.
+    `loescheProdukt` nutzt weiter `window.confirm` und wandert
+    zusammen mit Rules/Environments in U-06b.
 - **U-07a Breadcrumbs + globale Shortcut-Sheet** - Iteration 91.
 - **U-07b Globale Suche + Bell-Notifications** - Iteration 92.
 - **U-08 Dashboard-Handlungszentrale + Report-Listing** -

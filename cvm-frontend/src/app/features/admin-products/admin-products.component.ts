@@ -8,6 +8,7 @@ import {
   ProductView,
   ProductsService
 } from '../../core/products/products.service';
+import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { UuidChipComponent } from '../../shared/components/uuid-chip.component';
@@ -36,6 +37,7 @@ interface VersionCreateForm {
     CommonModule,
     FormsModule,
     CvmIconComponent,
+    CvmDialogComponent,
     UuidChipComponent
   ],
   templateUrl: './admin-products.component.html',
@@ -64,6 +66,15 @@ export class AdminProductsComponent implements OnInit {
     releasedAt: ''
   });
   readonly versionPending = signal<boolean>(false);
+
+  // Iteration 89 (CVM-329): Edit-Dialog ersetzt window.prompt-Kette.
+  readonly editDialogOffen = signal(false);
+  readonly editProdukt = signal<ProductView | null>(null);
+  readonly editName = signal('');
+  readonly editBeschreibung = signal('');
+  readonly editRepoUrl = signal('');
+  readonly editPending = signal(false);
+  readonly editRepoUrlFehler = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
     await this.ladeProdukte();
@@ -214,37 +225,59 @@ export class AdminProductsComponent implements OnInit {
    * window.prompt-Dialoge, damit der Admin-Flow ohne eigenes
    * Formular-Modal auskommt (Iteration 37, CVM-81).
    */
-  async bearbeiteProdukt(p: ProductView): Promise<void> {
-    const neuerName = window.prompt(
-      `Name fuer Produkt "${p.key}"`, p.name);
-    if (neuerName === null) {
+  /**
+   * Iteration 89 (CVM-329): ersetzt die bisherige window.prompt-
+   * Kette durch einen cvm-dialog mit echten Formular-Feldern.
+   */
+  bearbeiteProdukt(p: ProductView): void {
+    this.editProdukt.set(p);
+    this.editName.set(p.name);
+    this.editBeschreibung.set(p.description ?? '');
+    this.editRepoUrl.set(p.repoUrl ?? '');
+    this.editRepoUrlFehler.set(null);
+    this.editDialogOffen.set(true);
+  }
+
+  async speichereEdit(): Promise<void> {
+    const p = this.editProdukt();
+    if (!p) {
       return;
     }
-    const neueBeschreibung = window.prompt(
-      `Beschreibung fuer Produkt "${p.key}" (leer lassen = keine)`,
-      p.description ?? '');
-    if (neueBeschreibung === null) {
+    const name = this.editName().trim();
+    if (!name) {
+      this.toast.warning('Name ist Pflichtfeld.');
       return;
     }
-    // Iteration 76 (CVM-313): optionale Git-Repository-URL.
-    const neueRepoUrl = window.prompt(
-      `Git-Repository-URL fuer Produkt "${p.key}" (leer lassen = keine; `
-        + `wird fuer Reachability genutzt)`,
-      p.repoUrl ?? '');
-    if (neueRepoUrl === null) {
+    const repoUrl = this.editRepoUrl().trim();
+    if (repoUrl && !/^(https?:\/\/|git@|ssh:\/\/)/.test(repoUrl)) {
+      this.editRepoUrlFehler.set(
+        'URL muss mit http(s)://, ssh:// oder git@ beginnen.'
+      );
       return;
     }
+    this.editRepoUrlFehler.set(null);
+    this.editPending.set(true);
     try {
       const aktualisiert = await this.products.update(p.id, {
-        name: neuerName.trim(),
-        description: neueBeschreibung.trim(),
-        repoUrl: neueRepoUrl.trim()
+        name,
+        description: this.editBeschreibung().trim(),
+        repoUrl
       });
       this.toast.success(`Produkt "${aktualisiert.key}" aktualisiert.`, 3000);
+      this.editDialogOffen.set(false);
+      this.editProdukt.set(null);
       await this.ladeProdukte();
     } catch (err) {
       this.toast.error(this.fehlermeldung(err, 'Aktualisierung fehlgeschlagen.'));
+    } finally {
+      this.editPending.set(false);
     }
+  }
+
+  brecheEditAb(): void {
+    this.editDialogOffen.set(false);
+    this.editProdukt.set(null);
+    this.editRepoUrlFehler.set(null);
   }
 
   private fehlermeldung(err: unknown, fallback: string): string {
