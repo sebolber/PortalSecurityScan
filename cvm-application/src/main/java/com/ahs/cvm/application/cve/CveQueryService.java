@@ -110,8 +110,13 @@ public class CveQueryService {
             boolean onlyKev, int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = size <= 0 ? 20 : Math.min(size, 200);
+        // Nie null uebergeben: sonst kann Hibernate den Parametertyp
+        // beim Binden nicht zuverlaessig ableiten und PG-JDBC bindet als
+        // bytea, wodurch die Typpruefung im LIKE ('text ~~ bytea')
+        // scheitert - auch wenn der OR-Zweig logisch kurzgeschlossen
+        // waere. Empty-String als "kein Filter" ist eindeutig typbar.
         String searchLower = (searchTerm == null || searchTerm.isBlank())
-                ? null
+                ? ""
                 : searchTerm.trim().toLowerCase(Locale.ROOT);
         BigDecimal minScore = untergrenze(severityFilter);
         BigDecimal maxScore = obergrenze(severityFilter);

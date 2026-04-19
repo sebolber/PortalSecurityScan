@@ -22,14 +22,18 @@ public interface CveRepository extends JpaRepository<Cve, UUID> {
      * sonst INFORMATIONAL. Die Query uebergibt die (optionalen)
      * Lower-/Upper-Grenzen; den Mapping-Teil uebernimmt der Service.
      *
-     * @param searchLower  Kleinbuchstaben-Suchstring (null = kein Filter)
+     * @param searchLower  Kleinbuchstaben-Suchstring; leerer String
+     *                     bedeutet "kein Filter". Darf nicht {@code null}
+     *                     sein - PG-JDBC bindet Null-Strings sonst als
+     *                     {@code bytea} und die LIKE-Typpruefung schlaegt
+     *                     fehl (siehe CveQueryService#findPage).
      * @param minScore     Optional (exklusive/inklusive gem. Caller)
      * @param maxScore     Optional
      * @param informational Wenn {@code true}: nur CVEs mit CVSS = 0 oder null
      * @param onlyKev      Wenn {@code true}: kev_listed = true
      */
     @Query("SELECT c FROM Cve c WHERE "
-            + "(:searchLower IS NULL "
+            + "(:searchLower = '' "
             + "  OR LOWER(c.cveId) LIKE CONCAT('%', :searchLower, '%') "
             + "  OR LOWER(c.summary) LIKE CONCAT('%', :searchLower, '%')) "
             + "AND (:minScore IS NULL OR c.cvssBaseScore >= :minScore) "
