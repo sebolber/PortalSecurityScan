@@ -44,6 +44,29 @@ export class TenantsService {
       )
     );
   }
+
+  /**
+   * Iteration 62 (CVM-62): Setzt den Mandanten als Default.
+   * Der bisherige Default wird zurueckgesetzt.
+   */
+  setDefault(tenantId: string): Promise<TenantView> {
+    return firstValueFrom(
+      this.api.post<TenantView, Record<string, never>>(
+        '/api/v1/admin/tenants/' + tenantId + '/default',
+        {}
+      )
+    );
+  }
+
+  /**
+   * Iteration 62 (CVM-62): Aktuell eingeloggter Mandant (aus JWT
+   * abgeleitet). Liefert null, wenn kein Mandant zugeordnet ist.
+   */
+  current(): Promise<TenantView | null> {
+    return firstValueFrom(
+      this.api.getOptional<TenantView>('/api/v1/tenant/current', [204, 404])
+    );
+  }
 }
 
 export interface TenantCreateRequest {

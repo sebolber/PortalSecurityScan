@@ -71,6 +71,17 @@ public class TenantsController {
         return ResponseEntity.ok(lookup.setActive(tenantId, request.active()));
     }
 
+    /**
+     * Iteration 62 (CVM-62): Default-Mandant setzen. Der gewaehlte
+     * Mandant muss aktiv sein; der bisherige Default wird zurueckgesetzt.
+     */
+    @PostMapping("/{tenantId}/default")
+    @PreAuthorize("hasAuthority('CVM_ADMIN')")
+    @Operation(summary = "Mandanten als Default setzen (Admin).")
+    public ResponseEntity<TenantView> setDefault(@PathVariable UUID tenantId) {
+        return ResponseEntity.ok(lookup.setDefault(tenantId));
+    }
+
     @ExceptionHandler(TenantKeyAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(
             TenantKeyAlreadyExistsException ex) {

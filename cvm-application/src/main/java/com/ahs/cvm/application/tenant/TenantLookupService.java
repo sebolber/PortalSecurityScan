@@ -112,6 +112,46 @@ public class TenantLookupService {
         return TenantView.from(tenant);
     }
 
+    /**
+     * Iteration 62 (CVM-62): Lese-Zugriff auf einen konkreten Tenant
+     * per ID - z.B. fuer die "aktueller Mandant"-Anzeige in der UI.
+     */
+    @Transactional(readOnly = true)
+    public Optional<TenantView> findById(UUID tenantId) {
+        if (tenantId == null) return Optional.empty();
+        return tenantRepository.findById(tenantId).map(TenantView::from);
+    }
+
+    /**
+     * Iteration 62 (CVM-62): Setzt den angegebenen Mandanten als
+     * Default und setzt die Flag bei allen anderen zurueck. Der neue
+     * Default-Mandant muss aktiv sein.
+     */
+    @Transactional
+    public TenantView setDefault(UUID tenantId) {
+        if (tenantId == null) {
+            throw new IllegalArgumentException("tenantId darf nicht null sein.");
+        }
+        Tenant neuerDefault = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(
+                        "Mandant nicht gefunden: " + tenantId));
+        if (!neuerDefault.isActive()) {
+            throw new IllegalStateException(
+                    "Default-Mandant muss aktiv sein. Erst aktivieren, dann als Default setzen.");
+        }
+        for (Tenant t : tenantRepository.findAll()) {
+            if (t.isDefaultTenant() && !t.getId().equals(tenantId)) {
+                t.setDefaultTenant(false);
+                tenantRepository.save(t);
+            }
+        }
+        if (!neuerDefault.isDefaultTenant()) {
+            neuerDefault.setDefaultTenant(true);
+            tenantRepository.save(neuerDefault);
+        }
+        return TenantView.from(neuerDefault);
+    }
+
     public static final class TenantKeyAlreadyExistsException extends RuntimeException {
         public TenantKeyAlreadyExistsException(String key) {
             super("Mandant mit key '" + key + "' existiert bereits.");

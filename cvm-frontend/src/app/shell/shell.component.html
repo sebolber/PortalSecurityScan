@@ -10,35 +10,21 @@
     <span class="cvm-brand__name">{{ brandingTitle() }}</span>
   </a>
 
-  <div class="relative">
-    <button
-      type="button"
-      class="btn btn-ghost gap-2"
-      (click)="toggleProductMenu()"
-      [attr.aria-expanded]="productMenuOpen()"
-      [attr.aria-label]="texte.shell.productSelector"
+  @if (loggedIn() && tenantSig(); as tenant) {
+    <div
+      class="inline-flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-surface-muted text-sm"
+      [attr.title]="'Aktueller Mandant: ' + tenant.name + ' (' + tenant.tenantKey + ')'"
     >
-      <cvm-icon name="layers" [size]="18"></cvm-icon>
-      <span class="hidden md:inline">{{ selectedProductLabel() }}</span>
-      <cvm-icon name="chevron-down" [size]="16"></cvm-icon>
-    </button>
-    @if (productMenuOpen()) {
-      <div class="cvm-menu" role="menu">
-        @for (p of produkte; track trackProduct($index, p)) {
-          <button
-            type="button"
-            role="menuitem"
-            class="cvm-menu__item"
-            [class.cvm-menu__item--active]="p.key === selectedProduct"
-            (click)="pickProduct(p.key)"
-          >
-            <cvm-icon [name]="p.key === selectedProduct ? 'check' : 'circle'" [size]="14"></cvm-icon>
-            <span>{{ p.label }}</span>
-          </button>
-        }
+      <cvm-icon name="shield" [size]="16" class="text-primary"></cvm-icon>
+      <div class="flex flex-col leading-tight">
+        <span class="font-medium">{{ tenant.name }}</span>
+        <span class="text-xs text-text-muted font-mono">{{ tenant.tenantKey }}</span>
       </div>
-    }
-  </div>
+      @if (tenant.defaultTenant) {
+        <span class="badge badge-info text-xs" title="Default-Mandant">Default</span>
+      }
+    </div>
+  }
 
   <div class="grow"></div>
 

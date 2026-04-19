@@ -129,16 +129,32 @@
                 </td>
                 <td>{{ t.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
                 <td>
-                  <button type="button"
-                          class="btn-icon"
-                          [disabled]="t.defaultTenant"
-                          [attr.aria-label]="t.active ? 'Mandant deaktivieren' : 'Mandant aktivieren'"
-                          [attr.title]="t.defaultTenant
-                            ? 'Default-Mandant - nicht umschaltbar'
-                            : (t.active ? 'Deaktivieren' : 'Aktivieren')"
-                          (click)="toggleActive(t)">
-                    <cvm-icon [name]="t.active ? 'check-circle' : 'circle'" [size]="18"></cvm-icon>
-                  </button>
+                  <div class="flex items-center gap-1">
+                    <button type="button"
+                            class="btn-icon"
+                            [disabled]="t.defaultTenant"
+                            [attr.aria-label]="t.active ? 'Mandant deaktivieren' : 'Mandant aktivieren'"
+                            [attr.title]="t.defaultTenant
+                              ? 'Default-Mandant - nicht umschaltbar'
+                              : (t.active ? 'Deaktivieren' : 'Aktivieren')"
+                            (click)="toggleActive(t)">
+                      <cvm-icon [name]="t.active ? 'check-circle' : 'circle'" [size]="18"></cvm-icon>
+                    </button>
+                    <button type="button"
+                            class="btn btn-ghost btn-sm"
+                            [disabled]="t.defaultTenant || !t.active || defaultPending() === t.id"
+                            [attr.title]="!t.active
+                              ? 'Nur aktive Mandanten koennen Default sein'
+                              : (t.defaultTenant ? 'Ist bereits Default' : 'Als Default setzen')"
+                            (click)="alsDefaultSetzen(t)">
+                      @if (defaultPending() === t.id) {
+                        <cvm-icon name="loader" [size]="14" class="animate-spin"></cvm-icon>
+                      } @else {
+                        <cvm-icon name="flag" [size]="14"></cvm-icon>
+                      }
+                      Default
+                    </button>
+                  </div>
                 </td>
               </tr>
             }

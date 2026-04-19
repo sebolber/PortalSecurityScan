@@ -51,6 +51,9 @@ export class AdminTenantsComponent implements OnInit {
   readonly saving = signal(false);
   readonly saveError = signal<string | null>(null);
 
+  // Iteration 62 (CVM-62): Default-Mandant-Pending-Marker (Row-Id).
+  readonly defaultPending = signal<string | null>(null);
+
   ngOnInit(): void {
     void this.laden();
   }
@@ -111,6 +114,33 @@ export class AdminTenantsComponent implements OnInit {
 
   trackId(_: number, t: TenantView): string {
     return t.id;
+  }
+
+  /**
+   * Iteration 62 (CVM-62): Mandanten als Default setzen. Nur fuer aktive
+   * Mandanten. Der bisherige Default wird im Backend zurueckgesetzt.
+   */
+  async alsDefaultSetzen(t: TenantView): Promise<void> {
+    if (!t.active) {
+      this.toast.warning('Nur aktive Mandanten koennen Default sein.');
+      return;
+    }
+    if (t.defaultTenant) {
+      return;
+    }
+    this.defaultPending.set(t.id);
+    try {
+      const updated = await this.service.setDefault(t.id);
+      this.toast.success(
+        '"' + updated.tenantKey + '" ist jetzt Default-Mandant.',
+        3000
+      );
+      await this.laden();
+    } catch {
+      this.toast.error('Default-Setzen fehlgeschlagen.');
+    } finally {
+      this.defaultPending.set(null);
+    }
   }
 
   /** Iteration 60 (CVM-110): Mandanten-Aktivitaet umschalten. */

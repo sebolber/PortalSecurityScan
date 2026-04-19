@@ -11,6 +11,7 @@ import { LocaleService } from '../core/i18n/locale.service';
 import { AlertBannerService } from '../core/alerts/alert-banner.service';
 import { ThemeService } from '../core/theme/theme.service';
 import { BrandingHttpService } from '../core/theme/branding.service';
+import { TenantsService, TenantView } from '../core/tenants/tenants.service';
 import { AlertBannerComponent } from './alert-banner.component';
 import { CvmIconComponent } from '../shared/components/cvm-icon.component';
 
@@ -41,6 +42,7 @@ export class ShellComponent implements OnInit {
   private readonly bannerService = inject(AlertBannerService);
   private readonly theme = inject(ThemeService);
   private readonly branding = inject(BrandingHttpService);
+  private readonly tenants = inject(TenantsService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly texte = this.locale.messages;
@@ -99,25 +101,20 @@ export class ShellComponent implements OnInit {
     this.rollenChips().map((r) => r.label).join(', ')
   );
 
-  readonly produkte: readonly { key: string; label: string }[] = [
-    { key: 'PortalCore-Test', label: 'PortalCore-Test (1.14.2-test)' },
-    { key: 'SmileKH-Test', label: 'SmileKH-Test' }
-  ];
+  /**
+   * Iteration 62 (CVM-62): Aktueller Mandant aus dem JWT. Wird aus
+   * `/api/v1/tenant/current` geladen; ein Switch ist hier bewusst
+   * nicht moeglich, weil der Mandant ueber das Keycloak-Token und
+   * den {@code TenantContextFilter} gesetzt wird. Wechsel = erneuter
+   * Login mit anderem Mandanten-Kontext.
+   */
+  readonly tenantSig = signal<TenantView | null>(null);
+  readonly tenantLabel = computed<string>(() => {
+    const t = this.tenantSig();
+    return t ? t.name : this.texte.app.notLoggedIn;
+  });
 
-  selectedProduct = this.produkte[0]?.key ?? '';
-
-  readonly selectedProductLabel = computed(
-    () =>
-      this.produkte.find((p) => p.key === this.selectedProduct)?.label
-        ?? this.texte.shell.productSelector
-  );
-
-  readonly productMenuOpen = signal(false);
   readonly userMenuOpen = signal(false);
-
-  trackProduct(_: number, p: { key: string }): string {
-    return p.key;
-  }
 
   ngOnInit(): void {
     this.theme.init();
@@ -125,6 +122,7 @@ export class ShellComponent implements OnInit {
     if (this.auth.loggedIn()) {
       void this.bannerService.refresh();
       void this.ladeBranding();
+      void this.ladeTenant();
     }
     interval(60_000)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -144,28 +142,24 @@ export class ShellComponent implements OnInit {
     }
   }
 
+  private async ladeTenant(): Promise<void> {
+    try {
+      this.tenantSig.set(await this.tenants.current());
+    } catch {
+      this.tenantSig.set(null);
+    }
+  }
+
   toggleTheme(): void {
     this.theme.toggle();
   }
 
-  toggleProductMenu(): void {
-    this.productMenuOpen.update((v) => !v);
-    this.userMenuOpen.set(false);
-  }
-
   toggleUserMenu(): void {
     this.userMenuOpen.update((v) => !v);
-    this.productMenuOpen.set(false);
   }
 
   closeMenus(): void {
-    this.productMenuOpen.set(false);
     this.userMenuOpen.set(false);
-  }
-
-  pickProduct(key: string): void {
-    this.selectedProduct = key;
-    this.productMenuOpen.set(false);
   }
 
   async login(): Promise<void> {
