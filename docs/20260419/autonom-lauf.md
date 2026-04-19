@@ -63,3 +63,17 @@ Domain-Modul + Integration in ComponentCveMatchingOnScanIngestedListener
 Formular) (commit e00f0787). Timebox naehert sich dem Ende.
 [11:26] Iteration 60 abgeschlossen: Tenant Active-Toggle mit
 Default-Schutz (commit b7d6f35f).
+
+ZEITBOX ERREICHT.
+Gesamtbilanz: 20 Iterationen (41-60), 18 Feature-Commits plus
+Doku-Fixups. Parameter-Store komplett (Katalog + Lesepfad +
+Secrets + ArchUnit + E2E), Queue-Filter-Layout, Soft-Delete fuer
+Umgebungen/Produkt-Versionen/Regeln/Profile, Bundle-Reduktion
+2.1 MB -> 1.1 MB, Rules-Editor Update-Form, Monaco-Editor und
+Side-by-Side-Diff in Profiles, KPI-UI Severity-Saeulen +
+SLA-Ampel, Tenant-Liste/-Anlage/-Toggle, PURL-Canonicalization.
+Offene Restpunkte (siehe offene-punkte.md, groessere
+Folge-Iterationen): JGit-Adapter fuer Reachability, OSV-Mirror,
+Callsite-Migration der LLM/Feed-Adapter, Auto-Trigger
+Reachability, CI-Infrastruktur (Playwright, Karma,
+Testcontainers), Audit/Cleanup/Performance-Nachzuege.
