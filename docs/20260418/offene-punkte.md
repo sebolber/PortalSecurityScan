@@ -4,6 +4,29 @@
 
 - ~~**OpenAI-/Azure-/Adesso-LLM-Adapter**~~ erledigt in 40 als
   einziger OpenAiCompatibleClient mit Bearer-/api-key-Schwenk.
+- **Queue-Filter oberhalb der Liste**: Die Filterkriterien der
+  Bewertungs-Queue stehen heute in einer Sidebar rechts/links.
+  Sie sollen oberhalb der Liste als horizontale Filter-Leiste
+  angeordnet werden, damit die Bewertungs-Tabelle die volle
+  Breite bekommt. Betrifft `queue.component.html/.ts` und
+  `queue-filter-sidebar.component.ts` (umbenennen zu
+  `queue-filter-bar` o.ae.).
+- **Regeln loeschen** (Backend + Frontend). Rules-Endpunkt hat
+  heute keine DELETE-Route. Fachlich entweder Soft-Delete
+  (neue Spalte `deleted_at`, Pattern wie Iteration 38) oder
+  Status RETIRED (bereits vorhanden) endgueltig konsolidieren.
+  UI: Loeschen-IconButton in der Regel-Liste (CVM_ADMIN /
+  CVM_RULE_APPROVER).
+- **Produkt-Versionen loeschen** (Soft-Delete). Spalte
+  `product_version.deleted_at` analog V0029, DELETE-Endpunkt
+  `DELETE /api/v1/products/{productId}/versions/{versionId}`,
+  UI-IconButton in der Versionsliste des Admin-Produkte-
+  Screens.
+- **Umgebungen loeschen** (Soft-Delete). Spalte
+  `environment.deleted_at`, DELETE-Endpunkt
+  `DELETE /api/v1/admin/environments/{id}`, UI-IconButton in
+  der Umgebungs-Tabelle. Scans/Findings referenzieren weiter
+  die Umgebung, der Eintrag verschwindet nur aus Admin-UIs.
 - **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).
 - **OSV-Mirror** fuer air-gapped-Installationen.
 - **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
