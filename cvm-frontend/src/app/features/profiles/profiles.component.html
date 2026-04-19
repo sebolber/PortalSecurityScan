@@ -246,6 +246,32 @@
                     Draft aktivieren (Vier-Augen)
                   }
                 </button>
+                <!-- Iteration 64 (CVM-301): Draft bearbeiten / loeschen -->
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  (click)="draftBearbeiten(row)"
+                  [disabled]="!darfAutor() || row.deleting"
+                  data-testid="draft-bearbeiten"
+                >
+                  <cvm-icon name="edit" [size]="16"></cvm-icon>
+                  Draft bearbeiten
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger"
+                  (click)="draftLoeschen(row)"
+                  [disabled]="!darfAutor() || row.deleting"
+                  data-testid="draft-loeschen"
+                >
+                  @if (row.deleting) {
+                    <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
+                    Loesche...
+                  } @else {
+                    <cvm-icon name="trash-2" [size]="16"></cvm-icon>
+                    Draft loeschen
+                  }
+                </button>
                 @if (!darfApprove()) {
                   <span class="text-caption">
                     Rolle <code>CVM_PROFILE_APPROVER</code> fehlt.

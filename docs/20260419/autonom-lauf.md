@@ -90,3 +90,9 @@ Branch: `claude/complete-open-tasks-gmsfB`.
 nutzt `getOptional` und liefert `[]` bei 404, Editor-Reset in
 `draftSpeichern`). Naechstes: Iteration 64 Profil-Edit /
 Soft-Delete UI-Integration.
+[15:45] Iteration 64 abgeschlossen: Profil-Draft-Edit und
+Soft-Delete im Frontend ("Draft bearbeiten" ruft
+draftAktualisieren, "Draft loeschen" mit window.confirm und
+Toast, neues Dispatch-Flag in draftSpeichern). Karma-Specs
+fuer Service + Component ergaenzt. Naechstes: Iteration 65
+Karma-Specs auf neue Selektoren umstellen.

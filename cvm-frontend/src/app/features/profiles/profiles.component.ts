@@ -32,6 +32,11 @@ interface ProfileRow {
   fehler: string | null;
   // Iteration 57 (CVM-107): Side-by-Side-Diff (Monaco) anzeigen.
   diffOffen: boolean;
+  // Iteration 64 (CVM-301): Editor auf bestehenden Draft mappen,
+  // damit `draftSpeichern` statt einer neuen Version einen
+  // `draftAktualisieren`-PUT schickt.
+  bearbeitetDraft: boolean;
+  deleting: boolean;
 }
 
 const DEFAULT_YAML = `schemaVersion: 1
@@ -119,7 +124,9 @@ export class ProfilesComponent implements OnInit {
           approving: false,
           meldung: null,
           fehler: null,
-          diffOffen: false
+          diffOffen: false,
+          bearbeitetDraft: false,
+          deleting: false
         });
       }
       this.rows.set(rows);
@@ -131,8 +138,34 @@ export class ProfilesComponent implements OnInit {
   }
 
   editorUmschalten(row: ProfileRow): void {
+    const naechster = !row.editorOffen;
     this.patchRow(row, {
-      editorOffen: !row.editorOffen,
+      editorOffen: naechster,
+      fehler: null,
+      meldung: null,
+      // "Neuen Draft anlegen" oeffnet immer im Neu-Modus; beim
+      // Zuklappen Flag zuruecksetzen, damit der naechste Einstieg
+      // wieder unabhaengig startet.
+      bearbeitetDraft: false,
+      editorYaml: naechster
+        ? row.profile?.yamlSource ?? DEFAULT_YAML
+        : row.editorYaml
+    });
+  }
+
+  /**
+   * Iteration 64 (CVM-301): Bestehenden Draft zur Bearbeitung in
+   * den Monaco-Editor laden. Ein Folge-Save fuehrt einen PUT-
+   * Update aus statt eine neue Version anzulegen.
+   */
+  draftBearbeiten(row: ProfileRow): void {
+    if (!row.draft) {
+      return;
+    }
+    this.patchRow(row, {
+      editorOffen: true,
+      editorYaml: row.draft.yamlSource,
+      bearbeitetDraft: true,
       fehler: null,
       meldung: null
     });
@@ -150,17 +183,25 @@ export class ProfilesComponent implements OnInit {
     const autor = this.auth.username() || 'unbekannt';
     this.patchRow(row, { saving: true, fehler: null, meldung: null });
     try {
-      const draft = await this.profileService.draftAnlegen(
-        row.env.id,
-        row.editorYaml,
-        autor
-      );
+      const draft =
+        row.bearbeitetDraft && row.draft
+          ? await this.profileService.draftAktualisieren(
+              row.draft.id,
+              row.editorYaml,
+              autor
+            )
+          : await this.profileService.draftAnlegen(
+              row.env.id,
+              row.editorYaml,
+              autor
+            );
       let diff: readonly ProfileDiffEntry[] | null = null;
       try {
         diff = await this.profileService.diffGegenAktiv(draft.id);
       } catch {
         diff = null;
       }
+      const aktualisierung = row.bearbeitetDraft;
       this.patchRow(row, {
         draft,
         diff,
@@ -169,9 +210,14 @@ export class ProfilesComponent implements OnInit {
         meldung:
           'Draft v' +
           draft.versionNumber +
-          ' gespeichert. Freigabe durch anderen User noetig.'
+          (aktualisierung
+            ? ' aktualisiert. Freigabe durch anderen User noetig.'
+            : ' gespeichert. Freigabe durch anderen User noetig.')
       });
-      this.toast.success('Draft angelegt', 4000);
+      this.toast.success(
+        aktualisierung ? 'Draft aktualisiert' : 'Draft angelegt',
+        4000
+      );
     } catch (err) {
       this.patchRow(row, {
         saving: false,
@@ -179,6 +225,56 @@ export class ProfilesComponent implements OnInit {
           err instanceof Error && err.message
             ? err.message
             : 'YAML konnte nicht akzeptiert werden.'
+      });
+    }
+  }
+
+  /**
+   * Iteration 64 (CVM-301): Soft-Delete eines Drafts. Das Backend
+   * schuetzt ACTIVE-Versionen; hier behandeln wir nur den Draft-
+   * Fall. Pattern folgt `AdminProductsComponent#loescheProdukt`
+   * (window.confirm + Toast).
+   */
+  async draftLoeschen(row: ProfileRow): Promise<void> {
+    if (!row.draft) {
+      return;
+    }
+    if (!this.darfAutor()) {
+      this.patchRow(row, { fehler: 'Rolle CVM_PROFILE_AUTHOR erforderlich.' });
+      return;
+    }
+    const bestaetigt = window.confirm(
+      'Draft v' +
+        row.draft.versionNumber +
+        ' der Umgebung ' +
+        row.env.key +
+        ' wirklich soft-loeschen?'
+    );
+    if (!bestaetigt) {
+      return;
+    }
+    const versionNr = row.draft.versionNumber;
+    const draftId = row.draft.id;
+    this.patchRow(row, { deleting: true, fehler: null, meldung: null });
+    try {
+      await this.profileService.loesche(draftId);
+      this.patchRow(row, {
+        draft: null,
+        diff: null,
+        editorOffen: false,
+        editorYaml: row.profile?.yamlSource ?? DEFAULT_YAML,
+        bearbeitetDraft: false,
+        deleting: false,
+        meldung: 'Draft v' + versionNr + ' geloescht.'
+      });
+      this.toast.success('Draft geloescht', 4000);
+    } catch (err) {
+      this.patchRow(row, {
+        deleting: false,
+        fehler:
+          err instanceof Error && err.message
+            ? err.message
+            : 'Loeschen fehlgeschlagen.'
       });
     }
   }

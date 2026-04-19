@@ -160,9 +160,18 @@
 
 Siehe `docs/20260418/offene-punkte.md`, insbesondere:
 
-- ~~Profil-Edit / -Soft-Delete im Frontend~~ - Backend + Service in
-  Iteration 51 (PUT/DELETE `/api/v1/profiles/{id}`); UI-Integration
-  folgt mit Monaco (Iteration 54).
+- ~~Profil-Edit / -Soft-Delete im Frontend~~ - **Erledigt in
+  Iteration 64** (CVM-301). `ProfilesComponent` bietet pro DRAFT-
+  Panel die Aktionen "Draft bearbeiten" (oeffnet Monaco-Editor,
+  Folge-Save ruft `draftAktualisieren`) und "Draft loeschen"
+  (`window.confirm` + `CvmToastService`). Karma-Specs fuer
+  Service + Component ergaenzt.
+- **Persistente DRAFTs pro Umgebung ueber Sessions hinweg**
+  (neu in Iteration 64 erkannt). Aktuell kennt die UI nur DRAFTs,
+  die in derselben Session via `draftAnlegen` erzeugt wurden.
+  Benoetigt einen Service-/Controller-Endpunkt
+  "latestDraftFor(envId)" oder "listDraftsFor(envId)". Iteration 51
+  hat nur Update/Delete auf Profil-IDs, kein Listing.
 - OSV-Mirror fuer air-gapped-Installationen.
 - ~~PURL-Canonicalization~~ - erledigt in Iteration 58
   (`com.ahs.cvm.domain.purl.PurlCanonicalizer`, Integration in

@@ -79,4 +79,36 @@ describe('ProfilesService', () => {
     await expectAsync(promise).toBeRejected();
     expect(errorHandler.show).toHaveBeenCalled();
   });
+
+  it('draftAktualisieren: PUT /api/v1/profiles/{id} mit YAML und Autor', async () => {
+    const promise = service.draftAktualisieren('v1', 'y1', 't.tester@ahs.test');
+    const req = http.expectOne('http://api.test/api/v1/profiles/v1');
+    expect(req.request.method).toBe('PUT');
+    expect(req.request.body).toEqual({
+      yamlSource: 'y1',
+      proposedBy: 't.tester@ahs.test'
+    });
+    req.flush({
+      id: 'v1',
+      environmentId: 'e1',
+      versionNumber: 5,
+      state: 'DRAFT',
+      yamlSource: 'y1',
+      proposedBy: 't.tester@ahs.test',
+      approvedBy: null,
+      approvedAt: null,
+      validFrom: '2026-04-19T00:00:00Z'
+    });
+    const res = await promise;
+    expect(res.state).toBe('DRAFT');
+    expect(res.versionNumber).toBe(5);
+  });
+
+  it('loesche: DELETE /api/v1/profiles/{id}', async () => {
+    const promise = service.loesche('v1');
+    const req = http.expectOne('http://api.test/api/v1/profiles/v1');
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    await promise;
+  });
 });
