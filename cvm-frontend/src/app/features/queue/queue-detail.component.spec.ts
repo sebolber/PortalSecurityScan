@@ -1,6 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { provideRouter } from '@angular/router';
 import { QueueDetailComponent } from './queue-detail.component';
+import { QueueApiService } from './queue-api.service';
 import { QueueEntry } from './queue.types';
 import { AuthService } from '../../core/auth/auth.service';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
@@ -30,6 +32,13 @@ class FakeReach {
   async suggestion(): Promise<unknown> { return null; }
 }
 
+class FakeQueueApi {
+  history = jasmine.createSpy('history').and.returnValue(of([] as QueueEntry[]));
+  list = jasmine.createSpy('list').and.returnValue(of([]));
+  approve = jasmine.createSpy('approve').and.returnValue(of({}));
+  reject = jasmine.createSpy('reject').and.returnValue(of({}));
+}
+
 function entry(decidedBy: string | null): QueueEntry {
   return {
     id: 'a1',
@@ -54,7 +63,8 @@ describe('QueueDetailComponent - Iteration 86 Vier-Augen-Warnung', () => {
         provideRouter([]),
         { provide: AuthService, useClass: FakeAuth },
         { provide: CvmToastService, useClass: FakeToast },
-        { provide: ReachabilityQueryService, useClass: FakeReach }
+        { provide: ReachabilityQueryService, useClass: FakeReach },
+        { provide: QueueApiService, useClass: FakeQueueApi }
       ]
     });
   });
@@ -102,5 +112,30 @@ describe('QueueDetailComponent - Iteration 86 Vier-Augen-Warnung', () => {
     fixture.componentInstance.ngOnChanges();
     fixture.detectChanges();
     expect(fixture.componentInstance.selbstfreigabeKonflikt).toBeFalse();
+  });
+
+  it('Iteration 87: Oeffnen der Historie laedt via QueueApi.history', async () => {
+    const fixture = TestBed.createComponent(QueueDetailComponent);
+    const api = TestBed.inject(QueueApiService) as unknown as FakeQueueApi;
+    const hist: QueueEntry[] = [
+      {
+        ...entry('andere@ahs.test'),
+        id: 'a2',
+        version: 2,
+        status: 'APPROVED'
+      },
+      entry('system:rule')
+    ];
+    api.history.and.returnValue(of(hist));
+    fixture.componentInstance.entry = entry('andere@ahs.test');
+    fixture.componentInstance.ngOnChanges();
+    fixture.detectChanges();
+    fixture.componentInstance.onHistoryToggle({
+      target: { open: true }
+    } as unknown as Event);
+    await fixture.whenStable();
+    expect(api.history).toHaveBeenCalledWith('f1');
+    expect(fixture.componentInstance.history().length).toBe(2);
+    expect(fixture.componentInstance.historyCount()).toBe(2);
   });
 });

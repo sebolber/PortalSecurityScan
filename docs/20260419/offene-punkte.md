@@ -41,9 +41,12 @@ Iterationen 80+ implementieren die Befunde.
   in Iteration 86** (CVM-326). Rote Box, wenn
   `auth.username() === entry.decidedBy`; Approve-Button disabled
   mit alternativem Label.
-- **U-04b Assessment-Audit-Trail im Queue-Detail** -
-  Iteration 87. Neuer Backend-Endpoint
-  `GET /findings/{id}/assessments/history`, Reiter "Historie".
+- ~~U-04b Assessment-Audit-Trail im Queue-Detail~~ -
+  **Erledigt in Iteration 87** (CVM-327). Backend-Endpoint
+  `GET /findings/{id}/assessments/history` + Lazy-Load im
+  Queue-Detail-Panel (`<details>`-Collapsible). Keine
+  Schema-Aenderung noetig; `AssessmentRepository`-Methode
+  bestand bereits.
 - **U-05 Reachability-Detail + Start-Dialog aus Liste** -
   Iteration 88. Slide-In mit Rationale/Confidence; Finding-
   Autocomplete; Feature-Flag-Banner bei deaktiviertem Feature.

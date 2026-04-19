@@ -47,6 +47,20 @@ public class AssessmentQueueService {
         return assessmentRepository.findById(assessmentId).map(FindingQueueView::from);
     }
 
+    /**
+     * Iteration 87 (CVM-327): liefert die komplette Assessment-
+     * Historie fuer ein Finding (inkl. superseded Versionen). Wird
+     * im Queue-Detail als "Historie"-Reiter gezeigt.
+     */
+    @Transactional(readOnly = true)
+    public List<FindingQueueView> findHistorieByFinding(UUID findingId) {
+        return assessmentRepository
+                .findByFindingIdOrderByVersionAsc(findingId)
+                .stream()
+                .map(FindingQueueView::from)
+                .toList();
+    }
+
     public record QueueFilter(
             AssessmentStatus status,
             UUID environmentId,

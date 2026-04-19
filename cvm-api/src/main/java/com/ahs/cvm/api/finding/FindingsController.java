@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -21,6 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>{@code GET /api/v1/findings} listet offene Vorschlaege. Per Default
  * werden PROPOSED und NEEDS_REVIEW zurueckgegeben; mit
  * {@code ?status=PROPOSED} kann auf eine Stufe gefiltert werden.
+ *
+ * <p>Iteration 87 (CVM-327): zusaetzlich liefert
+ * {@code GET /api/v1/findings/{id}/assessments/history} die
+ * vollstaendige Audit-Trail-Kette fuer ein Finding.
  */
 @RestController
 @RequestMapping("/api/v1/findings")
@@ -42,6 +47,18 @@ public class FindingsController {
             @RequestParam(value = "source", required = false) ProposalSource source) {
         List<AssessmentResponse> response = queueService
                 .findeOffene(new QueueFilter(status, environmentId, productVersionId, source))
+                .stream()
+                .map(AssessmentResponse::from)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{findingId}/assessments/history")
+    @Operation(summary = "Assessment-Audit-Trail zu einem Finding")
+    public ResponseEntity<List<AssessmentResponse>> history(
+            @PathVariable UUID findingId) {
+        List<AssessmentResponse> response = queueService
+                .findHistorieByFinding(findingId)
                 .stream()
                 .map(AssessmentResponse::from)
                 .toList();

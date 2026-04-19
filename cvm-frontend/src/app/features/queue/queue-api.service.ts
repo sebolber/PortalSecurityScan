@@ -45,6 +45,17 @@ export class QueueApiService {
     );
   }
 
+  /**
+   * Iteration 87 (CVM-327): Audit-Trail eines Findings.
+   * `GET /api/v1/findings/{id}/assessments/history` liefert alle
+   * Assessment-Versionen in chronologischer Reihenfolge.
+   */
+  history(findingId: string): Observable<QueueEntry[]> {
+    return this.api.get<QueueEntry[]>(
+      `/api/v1/findings/${findingId}/assessments/history`
+    );
+  }
+
   private buildParams(filter: QueueFilter): HttpParams {
     let params = new HttpParams();
     if (filter.status) {

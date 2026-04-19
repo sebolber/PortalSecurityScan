@@ -53,6 +53,21 @@ class FindingsControllerWebTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
+    @Test
+    @DisplayName(
+            "GET /findings/{id}/assessments/history liefert Audit-Trail (Iteration 87)")
+    void historyLiefertAlleAssessments() throws Exception {
+        UUID findingId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+        given(queueService.findHistorieByFinding(findingId))
+                .willReturn(List.of(view(), view()));
+
+        mockMvc.perform(get(
+                        "/api/v1/findings/{id}/assessments/history", findingId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].cveKey").value("CVE-2017-18640"));
+    }
+
     private FindingQueueView view() {
         return new FindingQueueView(
                 UUID.randomUUID(),

@@ -258,3 +258,15 @@ interaktiv; Popover mit Mandanten-Liste und "Als Default"-
 Button fuer Admins. Drei neue Unit-Tests (Shell ohne
 DOM-Rendering aus Service-Tree-Gruenden). Karma 118.
 Naechstes: U-03 Waiver-Lifecycle im UI.
+[19:03] Iteration 85 abgeschlossen: U-03 Waiver-Extend /
+Revoke inkl. cvm-dialog, Vier-Augen-Pre-Check im Verlaengern-
+Dialog. Neuer waivers.service.spec + 3 neue Component-Cases.
+Karma 123.
+[19:08] Iteration 86 abgeschlossen: U-04a Vier-Augen-Warnung
+im Queue-Detail. Rote banner-critical-Box + disabled
+Approve-Button, wenn auth.username() === entry.decidedBy.
+Drei neue queue-detail-Cases. Karma 126.
+[19:16] Iteration 87 abgeschlossen: U-04b Assessment-Audit-Trail.
+Neuer Backend-Endpoint GET /findings/{id}/assessments/history
++ Lazy-Load im Queue-Detail-Panel via Details-Collapsible.
+Karma 127. Naechstes: U-05 Reachability-Detail.

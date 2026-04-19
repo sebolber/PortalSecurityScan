@@ -18,6 +18,8 @@ import {
   ReachabilityStartRequest,
   ReachabilitySuggestion
 } from '../../core/reachability/reachability.service';
+import { QueueApiService } from './queue-api.service';
+import { firstValueFrom } from 'rxjs';
 import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
@@ -256,6 +258,54 @@ function speichereReachability(state: ReachabilityFormState): void {
               ></textarea>
             </label>
           }
+
+          <!-- Iteration 87 (CVM-327): Assessment-Audit-Trail. -->
+          <details
+            class="rounded-lg border border-border"
+            data-testid="queue-detail-history"
+            (toggle)="onHistoryToggle($event)"
+          >
+            <summary class="flex items-center gap-2 p-3 cursor-pointer text-sm">
+              <cvm-icon name="history" [size]="16"></cvm-icon>
+              <span>Historie ({{ historyCount() }} Versionen)</span>
+            </summary>
+            <div class="p-3 border-t border-border">
+              @if (historyLaedt()) {
+                <div class="flex items-center gap-2 text-text-muted">
+                  <cvm-icon name="loader" [size]="14" class="animate-spin"></cvm-icon>
+                  <span>Laedt...</span>
+                </div>
+              } @else if (history().length === 0) {
+                <span class="text-text-muted">Keine Historie vorhanden.</span>
+              } @else {
+                <ul class="flex flex-col gap-2">
+                  @for (h of history(); track h.id) {
+                    <li class="flex items-start gap-3 text-xs">
+                      <span class="font-semibold text-text-muted w-10">
+                        v{{ h.version }}
+                      </span>
+                      <div class="flex flex-col grow min-w-0">
+                        <div class="flex items-center gap-2">
+                          <ahs-severity-badge
+                            [severity]="h.severity"
+                          ></ahs-severity-badge>
+                          <span class="font-medium">{{ h.status }}</span>
+                          <span class="text-text-muted">{{ h.source }}</span>
+                        </div>
+                        <span class="text-text-muted truncate">
+                          {{ h.rationale || '(kein Kommentar)' }}
+                        </span>
+                        <span class="text-text-muted">
+                          {{ h.decidedBy || 'system' }} -
+                          {{ h.createdAt }}
+                        </span>
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          </details>
         </div>
 
         <footer class="flex flex-wrap gap-2 border-t border-border p-4">
@@ -472,6 +522,13 @@ export class QueueDetailComponent implements OnChanges {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly reachabilityService = inject(ReachabilityQueryService);
+  private readonly queueApi = inject(QueueApiService);
+
+  // Iteration 87 (CVM-327): Audit-Trail-Lazy-Load.
+  readonly history = signal<readonly QueueEntry[]>([]);
+  readonly historyLaedt = signal(false);
+  readonly historyCount = signal(0);
+  private historyFindingId: string | null = null;
 
   @Input() entry: QueueEntry | null = null;
   @Input() pending = false;
@@ -525,7 +582,45 @@ export class QueueDetailComponent implements OnChanges {
       this.plannedFor = '';
       this.rejectKommentar = '';
       this.showRejectKommentar = false;
+      // Iteration 87 (CVM-327): Historie zuruecksetzen - sie wird
+      // lazy geladen, sobald das details-Element geoeffnet wird.
+      if (this.historyFindingId !== this.entry.findingId) {
+        this.history.set([]);
+        this.historyCount.set(0);
+        this.historyFindingId = null;
+      }
     }
+  }
+
+  /**
+   * Iteration 87 (CVM-327): Lazy-Load der Historie beim Oeffnen
+   * des details-Elements.
+   */
+  onHistoryToggle(event: Event): void {
+    const target = event.target as HTMLDetailsElement | null;
+    if (!target || !target.open) {
+      return;
+    }
+    if (!this.entry) {
+      return;
+    }
+    if (this.historyFindingId === this.entry.findingId) {
+      return;
+    }
+    const findingId = this.entry.findingId;
+    this.historyFindingId = findingId;
+    this.historyLaedt.set(true);
+    void firstValueFrom(this.queueApi.history(findingId))
+      .then((rows) => {
+        this.history.set(rows);
+        this.historyCount.set(rows.length);
+      })
+      .catch(() => {
+        this.history.set([]);
+        this.historyCount.set(0);
+        this.toast.error('Historie konnte nicht geladen werden.');
+      })
+      .finally(() => this.historyLaedt.set(false));
   }
 
   get zweitfreigabe(): boolean {
