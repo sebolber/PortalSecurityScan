@@ -40,7 +40,6 @@ export interface SystemParameterView {
   readonly validTo: string | null;
   readonly adminOnly: boolean;
   readonly createdAt: string;
-  readonly createdBy: string | null;
   readonly updatedAt: string;
   readonly updatedBy: string | null;
 }
