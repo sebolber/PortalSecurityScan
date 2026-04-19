@@ -34,7 +34,9 @@ public class RuleEngine {
 
     @Transactional(readOnly = true)
     public Optional<ProposedResult> evaluate(RuleEvaluationContext ctx) {
-        List<Rule> regeln = ruleRepository.findByStatusOrderByCreatedAtDesc(RuleStatus.ACTIVE);
+        // Iteration 50 (CVM-100): Soft-Delete herausfiltern.
+        List<Rule> regeln = ruleRepository
+                .findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(RuleStatus.ACTIVE);
         for (Rule rule : regeln) {
             ConditionNode condition = parser.parse(rule.getConditionJson());
             if (evaluator.evaluate(condition, ctx)) {

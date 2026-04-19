@@ -11,4 +11,16 @@ public interface RuleRepository extends JpaRepository<Rule, UUID> {
     List<Rule> findByStatusOrderByCreatedAtDesc(RuleStatus status);
 
     Optional<Rule> findByRuleKey(String ruleKey);
+
+    /**
+     * Iteration 50 (CVM-100): nur aktive (nicht soft-geloeschte) Regeln -
+     * Eingabe der Regel-Engine.
+     */
+    List<Rule> findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(RuleStatus status);
+
+    /**
+     * Iteration 50 (CVM-100): alle nicht soft-geloeschten Regeln fuer die
+     * Admin-Liste.
+     */
+    List<Rule> findByDeletedAtIsNullOrderByCreatedAtDesc();
 }

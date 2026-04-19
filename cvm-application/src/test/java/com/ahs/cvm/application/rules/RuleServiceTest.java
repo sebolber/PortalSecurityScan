@@ -127,4 +127,59 @@ class RuleServiceTest {
         assertThatThrownBy(() -> service.activate(id, "a.admin@ahs.test"))
                 .isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    @DisplayName("loesche: setzt deletedAt und speichert; unterscheidet sich von RETIRED")
+    void loescheHappyPath() {
+        UUID id = UUID.randomUUID();
+        Rule r = Rule.builder()
+                .id(id).ruleKey("k").name("n").status(RuleStatus.ACTIVE)
+                .proposedSeverity(AhsSeverity.LOW)
+                .conditionJson("{\"eq\":{\"path\":\"cve.kev\",\"value\":true}}")
+                .rationaleTemplate("r").createdBy("t.tester@ahs.test")
+                .origin(RuleOrigin.MANUAL).build();
+        given(ruleRepository.findById(id)).willReturn(Optional.of(r));
+        given(ruleRepository.save(any(Rule.class))).willAnswer(inv -> inv.getArgument(0));
+
+        service.loesche(id);
+
+        assertThat(r.getDeletedAt()).isNotNull();
+        assertThat(r.getRetiredAt()).isNull();
+        assertThat(r.getStatus()).isEqualTo(RuleStatus.ACTIVE);
+    }
+
+    @Test
+    @DisplayName("loesche: idempotent (doppelter Aufruf aendert deletedAt nicht)")
+    void loescheIdempotent() {
+        UUID id = UUID.randomUUID();
+        java.time.Instant vorher = java.time.Instant.parse("2026-01-01T00:00:00Z");
+        Rule r = Rule.builder()
+                .id(id).ruleKey("k").name("n").status(RuleStatus.ACTIVE)
+                .proposedSeverity(AhsSeverity.LOW)
+                .conditionJson("{\"eq\":{\"path\":\"cve.kev\",\"value\":true}}")
+                .rationaleTemplate("r").createdBy("t.tester@ahs.test")
+                .origin(RuleOrigin.MANUAL).deletedAt(vorher).build();
+        given(ruleRepository.findById(id)).willReturn(Optional.of(r));
+
+        service.loesche(id);
+
+        assertThat(r.getDeletedAt()).isEqualTo(vorher);
+    }
+
+    @Test
+    @DisplayName("loesche: unbekannte Id wirft RuleNotFoundException")
+    void loescheUnbekannt() {
+        UUID id = UUID.randomUUID();
+        given(ruleRepository.findById(id)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.loesche(id))
+                .isInstanceOf(RuleNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("loesche: null-Id -> IllegalArgumentException")
+    void loescheNullId() {
+        assertThatThrownBy(() -> service.loesche(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

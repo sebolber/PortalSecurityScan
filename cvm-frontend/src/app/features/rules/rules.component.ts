@@ -111,6 +111,11 @@ export class RulesComponent implements OnInit {
     );
   });
 
+  /** Iteration 50 (CVM-100): Soft-Delete nur fuer Admin. */
+  readonly canAdmin = computed(() =>
+    new Set(this.auth.userRoles()).has(CVM_ROLES.ADMIN)
+  );
+
   ngOnInit(): void {
     void this.laden();
   }
@@ -146,6 +151,30 @@ export class RulesComponent implements OnInit {
     try {
       await this.rulesService.activate(rule.id, approverId);
       this.snackBar.open(`Regel "${rule.ruleKey}" aktiviert.`, 'OK',
+        { duration: 3000 });
+      await this.laden();
+    } catch {
+      // ApiClient zeigt Snackbar.
+    } finally {
+      this.setPending(rule.id, false);
+    }
+  }
+
+  /** Iteration 50 (CVM-100): Soft-Delete. */
+  async loesche(rule: RuleResponse): Promise<void> {
+    const bestaetigt = window.confirm(
+      'Regel "' + rule.ruleKey + '" wirklich soft-loeschen?\n\n'
+        + 'Soft-Delete = technisch entfernt (Regel-Engine ignoriert sie).\n'
+        + 'Unterscheidet sich von RETIRED (fachlich abgeloest). '
+        + 'Historische Assessments behalten ihre Rationale.'
+    );
+    if (!bestaetigt) {
+      return;
+    }
+    this.setPending(rule.id, true);
+    try {
+      await this.rulesService.delete(rule.id);
+      this.snackBar.open('Regel "' + rule.ruleKey + '" entfernt.', 'OK',
         { duration: 3000 });
       await this.laden();
     } catch {

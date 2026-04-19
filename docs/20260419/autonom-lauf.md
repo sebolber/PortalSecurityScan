@@ -28,3 +28,6 @@ Umgebungen Soft-Delete.
 [09:58] Iteration 48 abgeschlossen: Umgebungen Soft-Delete
 (Flyway V0031, Service, Controller, Frontend-Button) (commit c5f6e4ae).
 Naechstes: Iteration 49 Produkt-Versionen Soft-Delete.
+[10:09] Iteration 49 abgeschlossen: Produkt-Versionen Soft-Delete
+(Flyway V0032) (commit 76f60705). Naechstes: Iteration 50 Regeln
+Soft-Delete.

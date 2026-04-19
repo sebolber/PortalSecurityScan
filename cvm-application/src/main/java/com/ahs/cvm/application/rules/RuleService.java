@@ -34,7 +34,32 @@ public class RuleService {
 
     @Transactional(readOnly = true)
     public List<RuleView> listAll() {
-        return ruleRepository.findAll().stream().map(RuleView::from).toList();
+        // Iteration 50 (CVM-100): Soft-Delete herausfiltern.
+        return ruleRepository.findByDeletedAtIsNullOrderByCreatedAtDesc().stream()
+                .map(RuleView::from)
+                .toList();
+    }
+
+    /**
+     * Soft-Delete (Iteration 50, CVM-100). Unterscheidet sich bewusst vom
+     * Status {@code RETIRED}: RETIRED kennzeichnet eine fachlich abgeloeste
+     * Regel (Supersede), {@code deleted_at} ist ein technischer Cleanup.
+     * Die Regel-Engine beruecksichtigt soft-geloeschte Regeln nicht mehr;
+     * historische Assessments, die auf die Regel verweisen, behalten
+     * Zugriff ueber {@code findById}.
+     */
+    @Transactional
+    public void loesche(UUID ruleId) {
+        if (ruleId == null) {
+            throw new IllegalArgumentException("ruleId darf nicht null sein.");
+        }
+        Rule rule = ruleRepository.findById(ruleId)
+                .orElseThrow(() -> new RuleNotFoundException(ruleId));
+        if (rule.getDeletedAt() == null) {
+            rule.setDeletedAt(Instant.now());
+            ruleRepository.save(rule);
+            log.info("Rule soft-geloescht: key={}", rule.getRuleKey());
+        }
     }
 
     @Transactional(readOnly = true)

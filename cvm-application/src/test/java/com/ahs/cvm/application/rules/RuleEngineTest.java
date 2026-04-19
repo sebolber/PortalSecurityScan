@@ -76,7 +76,7 @@ class RuleEngineTest {
                 .rationaleTemplate("kein KEV")
                 .build();
 
-        given(ruleRepository.findByStatusOrderByCreatedAtDesc(RuleStatus.ACTIVE))
+        given(ruleRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(RuleStatus.ACTIVE))
                 .willReturn(List.of(trefferRegel, andereRegel));
 
         Optional<ProposedResult> ergebnis = engine.evaluate(kontext());
@@ -92,7 +92,7 @@ class RuleEngineTest {
     @Test
     @DisplayName("RuleEngine: keine ACTIVE-Regeln, leerer Optional")
     void keineRegeln() throws Exception {
-        given(ruleRepository.findByStatusOrderByCreatedAtDesc(RuleStatus.ACTIVE))
+        given(ruleRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(RuleStatus.ACTIVE))
                 .willReturn(List.of());
 
         assertThat(engine.evaluate(kontext())).isEmpty();
@@ -109,7 +109,7 @@ class RuleEngineTest {
                 .conditionJson("{\"eq\": {\"path\": \"foo.bar\", \"value\": 1}}")
                 .rationaleTemplate("x")
                 .build();
-        given(ruleRepository.findByStatusOrderByCreatedAtDesc(RuleStatus.ACTIVE))
+        given(ruleRepository.findByStatusAndDeletedAtIsNullOrderByCreatedAtDesc(RuleStatus.ACTIVE))
                 .willReturn(List.of(defekt));
 
         assertThatThrownBy(() -> engine.evaluate(kontext()))

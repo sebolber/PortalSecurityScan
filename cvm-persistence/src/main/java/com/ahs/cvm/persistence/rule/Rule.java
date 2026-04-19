@@ -79,6 +79,19 @@ public class Rule {
     @Column(name = "retired_at")
     private Instant retiredAt;
 
+    /**
+     * Soft-Delete-Marker (Iteration 50, CVM-100). {@code null} = aktiv.
+     * Abgrenzung zu {@link #retiredAt}:
+     * <ul>
+     *   <li>{@link #retiredAt} = fachlich abgeloest (Supersede-Kette,
+     *       historische Audit-Pflicht);</li>
+     *   <li>{@code deletedAt} = technisch entfernt (Admin-Cleanup);
+     *       Regel-Engine beruecksichtigt sie nicht mehr.</li>
+     * </ul>
+     */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Column(name = "extracted_from_ai_suggestion_id")
     private UUID extractedFromAiSuggestionId;
 

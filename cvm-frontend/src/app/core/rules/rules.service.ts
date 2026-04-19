@@ -78,4 +78,11 @@ export class RulesService {
       {}
     ));
   }
+
+  /** Iteration 50 (CVM-100): Soft-Delete. */
+  delete(ruleId: string): Promise<void> {
+    return firstValueFrom(
+      this.api.delete<void>(`/api/v1/rules/${ruleId}`)
+    );
+  }
 }

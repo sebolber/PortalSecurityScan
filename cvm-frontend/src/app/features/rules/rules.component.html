@@ -263,6 +263,18 @@
                 Aktivieren
               </button>
             }
+            @if (canAdmin()) {
+              <button
+                mat-stroked-button
+                color="warn"
+                [disabled]="isPending(rule.id)"
+                (click)="loesche(rule)"
+                title="Soft-Delete (technisch entfernt, unterscheidet sich von RETIRED)"
+              >
+                <mat-icon>delete</mat-icon>
+                Soft-Delete
+              </button>
+            }
           </div>
 
           @if (dryRuns()[rule.id]; as r) {
