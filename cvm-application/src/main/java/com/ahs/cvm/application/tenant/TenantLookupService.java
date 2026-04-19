@@ -2,6 +2,8 @@ package com.ahs.cvm.application.tenant;
 
 import com.ahs.cvm.persistence.tenant.Tenant;
 import com.ahs.cvm.persistence.tenant.TenantRepository;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -40,5 +42,21 @@ public class TenantLookupService {
         return tenantRepository.findFirstByDefaultTenantTrue()
                 .filter(Tenant::isActive)
                 .map(Tenant::getId);
+    }
+
+    /**
+     * Iteration 56 (CVM-106): Lese-Liste aller Mandanten fuer die
+     * Admin-UI. Sortierung: Default-Tenant zuerst, dann alphabetisch
+     * nach Key.
+     */
+    @Transactional(readOnly = true)
+    public List<TenantView> listAll() {
+        return tenantRepository.findAll().stream()
+                .sorted(Comparator
+                        .comparing(Tenant::isDefaultTenant).reversed()
+                        .thenComparing(Tenant::getTenantKey,
+                                Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .map(TenantView::from)
+                .toList();
     }
 }

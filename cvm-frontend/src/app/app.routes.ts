@@ -149,6 +149,15 @@ export const APP_ROUTES: Routes = [
             .then((m) => m.AdminParametersComponent)
       },
       {
+        // Iteration 56 (CVM-106): Mandanten-Liste (read-only).
+        path: 'admin/tenants',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/admin-tenants/admin-tenants.component')
+            .then((m) => m.AdminTenantsComponent)
+      },
+      {
         path: 'scans/upload',
         canActivate: [authGuard],
         data: {

@@ -94,6 +94,16 @@ const ADMIN_PARAMETERS_ENTRY: MenuEntry = {
   requiredRoles: [CVM_ROLES.ADMIN]
 };
 
+/** Iteration 56 (CVM-106): Admin-Mandanten-Liste. */
+const ADMIN_TENANTS_ENTRY: MenuEntry = {
+  id: 'admin-tenants',
+  label: 'Mandanten',
+  path: '/admin/tenants',
+  icon: 'group',
+  section: 'einstellungen',
+  requiredRoles: [CVM_ROLES.ADMIN]
+};
+
 const SETTINGS_ENTRY: MenuEntry = {
   id: 'settings',
   label: 'Einstellungen',
@@ -120,7 +130,8 @@ const SETTINGS_ENTRY: MenuEntry = {
     ADMIN_ENVIRONMENTS_ENTRY,
     ADMIN_THEME_ENTRY,
     ADMIN_LLM_ENTRY,
-    ADMIN_PARAMETERS_ENTRY
+    ADMIN_PARAMETERS_ENTRY,
+    ADMIN_TENANTS_ENTRY
   ]
 };
 

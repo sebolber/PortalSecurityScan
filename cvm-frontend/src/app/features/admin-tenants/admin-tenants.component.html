@@ -1,0 +1,79 @@
+<section class="cvm-admin-tenants">
+  <header class="cvm-admin-tenants__header">
+    <div>
+      <h1 class="text-title-lg">Mandanten</h1>
+      <p class="text-body">
+        Read-only-Uebersicht aller Mandanten. Anlage und Aktivierung
+        erfolgen per Admin-SQL bzw. Keycloak-Mapping und werden in
+        einer Folge-Iteration UI-seitig ergaenzt.
+      </p>
+    </div>
+    <button
+      type="button"
+      mat-stroked-button
+      (click)="laden()"
+      [disabled]="loading()"
+    >
+      <mat-icon>refresh</mat-icon>
+      Neu laden
+    </button>
+  </header>
+
+  @if (error()) {
+    <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
+  }
+
+  @if (loading()) {
+    <mat-spinner diameter="36"></mat-spinner>
+  } @else if (rows().length === 0) {
+    <ahs-empty-state
+      icon="group"
+      title="Keine Mandanten"
+      hint="Pflege Mandanten via Admin-SQL oder Keycloak-Realm-Setup."
+    ></ahs-empty-state>
+  } @else {
+    <table
+      mat-table
+      [dataSource]="rows()"
+      [trackBy]="trackId"
+      class="cvm-admin-tenants__table"
+    >
+      <ng-container matColumnDef="tenantKey">
+        <th mat-header-cell *matHeaderCellDef>Key</th>
+        <td mat-cell *matCellDef="let t" class="text-code">
+          {{ t.tenantKey }}
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>Name</th>
+        <td mat-cell *matCellDef="let t">{{ t.name }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="active">
+        <th mat-header-cell *matHeaderCellDef>Aktiv</th>
+        <td mat-cell *matCellDef="let t">
+          <mat-chip *ngIf="t.active" highlighted>aktiv</mat-chip>
+          <mat-chip *ngIf="!t.active" color="warn" highlighted>inaktiv</mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="default">
+        <th mat-header-cell *matHeaderCellDef>Default</th>
+        <td mat-cell *matCellDef="let t">
+          <mat-chip *ngIf="t.defaultTenant" color="primary" highlighted>default</mat-chip>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef>Angelegt</th>
+        <td mat-cell *matCellDef="let t">
+          {{ t.createdAt | date: 'yyyy-MM-dd HH:mm' }}
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+</section>

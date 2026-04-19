@@ -139,7 +139,9 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
 - ~~Rules-Editor im Frontend~~ - Update-Form erledigt in Iteration 53.
 - ~~Profil-YAML-Editor (Monaco) im Frontend~~ - Editor eingebunden
   in Iteration 54. Side-by-Side Monaco-Diff folgt bei Bedarf.
-- Tenant-Verwaltungs-UI (Multi-Tenant-Admin-Seite).
+- Tenant-Verwaltungs-UI: Read-only-Liste in Iteration 56 erledigt
+  (`/admin/tenants`). CRUD (Anlage/Aktivierung) bleibt als
+  Folge-Iteration (Multi-Tenant-Flows + Keycloak-Mapping).
 - ~~KPI-UI (ECharts, Burn-Down, SLA-Ampel)~~ - Severity-Saeulen und
   SLA-Ampel ergaenzt in Iteration 55; Burn-Down war bereits vorhanden.
 - JGit-Adapter fuer Reachability (aktuell `NoopGitCheckoutAdapter`),
