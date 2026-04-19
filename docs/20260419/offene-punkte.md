@@ -138,7 +138,8 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   (2.13 MB -> 1.10 MB, ECharts und LoginCallback lazy).
 - ~~Rules-Editor im Frontend~~ - Update-Form erledigt in Iteration 53.
 - ~~Profil-YAML-Editor (Monaco) im Frontend~~ - Editor eingebunden
-  in Iteration 54. Side-by-Side Monaco-Diff folgt bei Bedarf.
+  in Iteration 54. Side-by-Side Monaco-Diff erledigt in
+  Iteration 57.
 - Tenant-Verwaltungs-UI: Read-only-Liste in Iteration 56 erledigt
   (`/admin/tenants`). CRUD (Anlage/Aktivierung) bleibt als
   Folge-Iteration (Multi-Tenant-Flows + Keycloak-Mapping).

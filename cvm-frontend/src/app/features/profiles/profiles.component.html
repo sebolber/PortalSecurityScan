@@ -117,6 +117,35 @@
           }
         </div>
 
+        <!-- Iteration 57 (CVM-107): Monaco Side-by-Side Diff aktiv vs. Draft/Editor. -->
+        @if (row.profile) {
+          <div class="cvm-profiles__diff-actions">
+            <button
+              type="button"
+              mat-stroked-button
+              (click)="diffUmschalten(row)"
+            >
+              <mat-icon>{{ row.diffOffen ? 'compare_arrows' : 'difference' }}</mat-icon>
+              {{ row.diffOffen ? 'Diff ausblenden' : 'Diff aktiv vs. Draft' }}
+            </button>
+          </div>
+          @if (row.diffOffen) {
+            <div class="cvm-profiles__monaco">
+              <ngx-monaco-diff-editor
+                [options]="{
+                  language: 'yaml',
+                  theme: 'vs',
+                  automaticLayout: true,
+                  renderSideBySide: true,
+                  readOnly: true
+                }"
+                [originalModel]="{ code: diffOriginal(row), language: 'yaml' }"
+                [modifiedModel]="{ code: diffModified(row), language: 'yaml' }"
+              ></ngx-monaco-diff-editor>
+            </div>
+          }
+        }
+
         @if (row.editorOffen) {
           <div class="cvm-profiles__editor">
             <!--

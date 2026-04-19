@@ -50,3 +50,6 @@ Naechstes: Iteration 55 KPI-UI.
 [10:48] Iteration 55 abgeschlossen: KPI-UI Severity-Saeulen +
 SLA-Ampel (commit 6a02c16f). Block C (ohne Tenant-UI) damit
 abgearbeitet.
+[10:57] Iteration 56 abgeschlossen: Tenant-Liste read-only
+(Backend + Frontend-Route + Menueintrag) (commit adb25529).
+Naechstes: Iteration 57 OsvComponentLookup callsite-migration.

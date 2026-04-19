@@ -37,6 +37,8 @@ interface ProfileRow {
   approving: boolean;
   meldung: string | null;
   fehler: string | null;
+  // Iteration 57 (CVM-107): Side-by-Side-Diff (Monaco) anzeigen.
+  diffOffen: boolean;
 }
 
 const DEFAULT_YAML = `schemaVersion: 1
@@ -132,7 +134,8 @@ export class ProfilesComponent implements OnInit {
           saving: false,
           approving: false,
           meldung: null,
-          fehler: null
+          fehler: null,
+          diffOffen: false
         });
       }
       this.rows.set(rows);
@@ -236,6 +239,26 @@ export class ProfilesComponent implements OnInit {
       fehler: null,
       meldung: null
     });
+  }
+
+  /** Iteration 57 (CVM-107): Monaco Side-by-Side Diff auf-/zuklappen. */
+  diffUmschalten(row: ProfileRow): void {
+    this.patchRow(row, { diffOffen: !row.diffOffen });
+  }
+
+  /**
+   * Originaltext fuer den Diff (aktive YAML-Version) - left-side.
+   */
+  diffOriginal(row: ProfileRow): string {
+    return row.profile?.yamlSource ?? '';
+  }
+
+  /**
+   * Modifizierter Text fuer den Diff - right-side. Nutzt den
+   * Draft-YAML, falls vorhanden, sonst den aktuellen Editor-Buffer.
+   */
+  diffModified(row: ProfileRow): string {
+    return row.draft?.yamlSource ?? row.editorYaml ?? '';
   }
 
   private patchRow(row: ProfileRow, patch: Partial<ProfileRow>): void {

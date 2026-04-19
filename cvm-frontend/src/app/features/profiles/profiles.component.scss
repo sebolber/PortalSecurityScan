@@ -185,3 +185,16 @@
   height: 100%;
   display: block;
 }
+
+/* Iteration 57 (CVM-107): Side-by-Side Diff-Editor-Actions. */
+.cvm-profiles__diff-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--space-2) 0;
+}
+.cvm-profiles__monaco ngx-monaco-diff-editor,
+.cvm-profiles__monaco .monaco-diff-editor {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
