@@ -27,7 +27,6 @@ public record SystemParameterView(
         Instant validTo,
         boolean adminOnly,
         Instant createdAt,
-        String createdBy,
         Instant updatedAt,
         String updatedBy
 ) {
@@ -59,7 +58,6 @@ public record SystemParameterView(
                 entity.getValidTo(),
                 entity.isAdminOnly(),
                 entity.getCreatedAt(),
-                entity.getCreatedBy(),
                 entity.getUpdatedAt(),
                 entity.getUpdatedBy()
         );

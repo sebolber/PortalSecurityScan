@@ -1,7 +1,6 @@
 package com.ahs.cvm.application.parameter;
 
 import com.ahs.cvm.application.tenant.TenantContext;
-import com.ahs.cvm.application.tenant.TenantLookupService;
 import com.ahs.cvm.persistence.parameter.SystemParameter;
 import com.ahs.cvm.persistence.parameter.SystemParameterAuditLog;
 import com.ahs.cvm.persistence.parameter.SystemParameterAuditLogRepository;
@@ -24,7 +23,6 @@ public class SystemParameterService {
     private final SystemParameterRepository parameterRepository;
     private final SystemParameterAuditLogRepository auditLogRepository;
     private final SystemParameterValidator validator;
-    private final TenantLookupService tenantLookupService;
 
     public List<SystemParameterView> list(String category) {
         UUID tenantId = currentTenant();
@@ -65,7 +63,6 @@ public class SystemParameterService {
                 .validTo(cmd.validTo())
                 .adminOnly(cmd.adminOnly())
                 .tenantId(tenantId)
-                .createdBy(actor)
                 .updatedBy(actor)
                 .build();
 
@@ -176,6 +173,6 @@ public class SystemParameterService {
     }
 
     private UUID currentTenant() {
-        return TenantContext.current().orElseGet(tenantLookupService::resolveCurrentTenantId);
+        return TenantContext.requireCurrent();
     }
 }
