@@ -116,6 +116,7 @@ public class ComponentCveMatchingOnScanIngestedListener {
                 }
                 Cve cve = upsertCve(cveId);
                 findingRepository.save(Finding.builder()
+                        .tenantId(occ.getScan().getTenantId())
                         .scan(occ.getScan())
                         .componentOccurrence(occ)
                         .cve(cve)

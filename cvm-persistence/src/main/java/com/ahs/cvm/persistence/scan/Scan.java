@@ -36,6 +36,10 @@ public class Scan {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    /** Iteration 62C (CVM-62): Mandanten-Zuordnung des Scans. */
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "product_version_id", nullable = false)
     private ProductVersion productVersion;

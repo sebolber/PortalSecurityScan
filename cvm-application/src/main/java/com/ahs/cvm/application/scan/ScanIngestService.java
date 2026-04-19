@@ -112,8 +112,25 @@ public class ScanIngestService {
             throw new ScanAlreadyIngestedException(vorhanden.get().getId());
         }
 
+        // Iteration 62C (CVM-62): Scan erbt Mandanten-Zuordnung vom Produkt.
+        // Quer-Mandanten-Scans lehnen wir ab: wenn das Produkt zu einem
+        // anderen Tenant gehoert als der aktuelle Kontext, hat der Aufrufer
+        // dort nichts zu suchen.
+        UUID tenantId = produktVersion.getTenantId();
+        com.ahs.cvm.application.tenant.TenantContext.current().ifPresent(current -> {
+            if (!current.equals(tenantId)) {
+                throw new IllegalArgumentException(
+                        "Produkt gehoert zu einem anderen Mandanten.");
+            }
+        });
+        if (umgebung != null && !tenantId.equals(umgebung.getTenantId())) {
+            throw new IllegalArgumentException(
+                    "Umgebung gehoert zu einem anderen Mandanten als das Produkt.");
+        }
+
         Scan reservierterScan = scanRepository.save(
                 Scan.builder()
+                        .tenantId(tenantId)
                         .productVersion(produktVersion)
                         .environment(umgebung)
                         .sbomFormat("CycloneDX")
@@ -209,6 +226,7 @@ public class ScanIngestService {
             if (occ == null) {
                 occ = occurrenceRepository.save(
                         ComponentOccurrence.builder()
+                                .tenantId(scan.getTenantId())
                                 .scan(scan)
                                 .component(component)
                                 .direct(Boolean.TRUE)
@@ -242,6 +260,7 @@ public class ScanIngestService {
                 if (occ == null) continue;
                 findingRepository.save(
                         Finding.builder()
+                                .tenantId(scan.getTenantId())
                                 .scan(scan)
                                 .componentOccurrence(occ)
                                 .cve(cve)

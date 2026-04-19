@@ -31,6 +31,10 @@ public class ComponentOccurrence {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    /** Iteration 62C (CVM-62): erbt Mandanten-Zuordnung vom Scan. */
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "scan_id", nullable = false)
     private Scan scan;
