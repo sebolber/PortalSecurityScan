@@ -76,7 +76,7 @@ public class OpenFixWatchdog {
     @Scheduled(cron = "${cvm.ai.fix-verification.watchdog-cron:0 0 4 * * *}")
     @Transactional
     public void scheduledRun() {
-        if (!config.enabled() || !schedulerEnabled) {
+        if (!config.enabledEffective() || !schedulerEnabled) {
             return;
         }
         runOnce(Map.of());

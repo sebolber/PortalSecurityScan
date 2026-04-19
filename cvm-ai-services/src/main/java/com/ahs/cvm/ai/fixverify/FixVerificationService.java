@@ -101,7 +101,7 @@ public class FixVerificationService {
 
     @Transactional
     public FixVerificationResult verify(FixVerificationRequest request) {
-        if (!config.enabled()) {
+        if (!config.enabledEffective()) {
             return unavailable(request.mitigationId(),
                     "Fix-Verifikation deaktiviert.");
         }
@@ -139,7 +139,7 @@ public class FixVerificationService {
         List<Verdict> rest = verdicts.stream()
                 .filter(v -> !v.suspicious()).toList();
 
-        boolean messagesOnly = commits.size() > config.fullTextCommitCap();
+        boolean messagesOnly = commits.size() > config.fullTextCommitCapEffective();
 
         LlmResponse response;
         try {
@@ -248,7 +248,7 @@ public class FixVerificationService {
         CachedProviderResponse cached = cache.get(key);
         Instant now = Instant.now();
         if (cached != null && Duration.between(cached.fetchedAt, now)
-                .toMinutes() < config.cacheTtlMinutes()) {
+                .toMinutes() < config.cacheTtlMinutesEffective()) {
             return cached;
         }
         ReleaseNotes notes = gitProvider.releaseNotes(repoUrl, toVersion).orElse(null);
@@ -265,7 +265,7 @@ public class FixVerificationService {
      * unbegrenzt waechst.
      */
     public int purgeExpiredCache() {
-        long grenzeMin = config.cacheTtlMinutes() * 2L;
+        long grenzeMin = config.cacheTtlMinutesEffective() * 2L;
         Instant now = Instant.now();
         int vorher = cache.size();
         cache.entrySet().removeIf(e -> Duration.between(

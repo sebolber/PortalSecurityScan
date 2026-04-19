@@ -35,7 +35,7 @@ public class AlertBannerService {
     @Transactional(readOnly = true)
     public BannerStatus aktuellerStatus() {
         Instant jetzt = Instant.now(clock);
-        Duration t2 = config.t2();
+        Duration t2 = config.t2Effective();
         List<FindingQueueView> offen = queueService.findeOffene(
                 new QueueFilter(null, null, null, null));
         long ueberfaellig = offen.stream()

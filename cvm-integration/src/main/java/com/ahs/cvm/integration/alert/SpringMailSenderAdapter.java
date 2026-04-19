@@ -44,7 +44,7 @@ public class SpringMailSenderAdapter implements MailSenderPort {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(config.fromAddress());
+            helper.setFrom(config.fromAddressEffective());
             helper.setTo(recipients.toArray(String[]::new));
             helper.setSubject(subject);
             helper.setText(renderer.toPlainText(html), html);

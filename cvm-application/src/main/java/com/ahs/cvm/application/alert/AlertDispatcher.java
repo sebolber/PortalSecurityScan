@@ -50,7 +50,7 @@ public class AlertDispatcher {
         String html = renderer.render(rule.getTemplateName(), daten);
         String subject = buildSubject(rule, context);
         Instant jetzt = Instant.now(clock);
-        if (config.dryRun()) {
+        if (config.dryRunEffective()) {
             log.info("Alert dry-run: rule={}, key={}, subject='{}'",
                     rule.getName(), context.triggerKey(), subject);
             persistiere(rule, context, subject, html, jetzt, true, null);

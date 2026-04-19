@@ -117,7 +117,7 @@ public class AlertsController {
         return ResponseEntity.ok(new TestResponse(
                 outcome.gefeuert(),
                 outcome.unterdrueckt(),
-                config.dryRun()));
+                config.dryRunEffective()));
     }
 
     @GetMapping("/banner")

@@ -46,7 +46,7 @@ public class AnomalyCheckJob {
     @Scheduled(cron = "${cvm.ai.anomaly.cron:0 0 * * * *}")
     @Transactional
     public void scheduledRun() {
-        if (!config.enabled() || !schedulerEnabled) {
+        if (!config.enabledEffective() || !schedulerEnabled) {
             return;
         }
         runOnce();

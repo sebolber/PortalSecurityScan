@@ -16,6 +16,12 @@ import org.springframework.context.annotation.Configuration;
  *   <li>{@code cvm.llm.rate-limit.global-per-minute} /
  *       {@code cvm.llm.rate-limit.tenant-per-minute} &mdash; Buckets.</li>
  * </ul>
+ *
+ * <p><b>Hinweis:</b> Das LLM-Gateway liegt unterhalb von {@code application}
+ * und darf den {@code SystemParameterResolver} nicht importieren (ArchUnit).
+ * Die Werte hier sind daher boot-gebunden. Runtime-Override (via Parameter-
+ * Dialog) ist in der Callsite-Migration-Follow-up-Iteration vorgesehen,
+ * die das Gateway ueber einen Lazy-Bean-Rebuild anbindet.
  */
 @Configuration
 public class LlmGatewayConfig {

@@ -56,7 +56,7 @@ public class RuleOverrideTracker {
             }
             geprueft++;
             int overrides = zaehleOverrides(rule, since);
-            if (overrides >= config.overrideReviewThreshold()) {
+            if (overrides >= config.overrideReviewThresholdEffective()) {
                 rule.setStatus(RuleStatus.DRAFT);
                 rule.setRetiredAt(null);
                 ruleRepository.save(rule);

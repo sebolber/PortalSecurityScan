@@ -93,7 +93,7 @@ public class ReachabilityAgent {
 
     @Transactional
     public ReachabilityResult analyze(ReachabilityRequest request) {
-        if (!config.enabled()) {
+        if (!config.enabledEffective()) {
             return unavailable(request.findingId(), null,
                     "Reachability-Feature deaktiviert.");
         }
@@ -106,12 +106,12 @@ public class ReachabilityAgent {
         Path promptFile = schreibePromptFile(workdir, request, finding);
 
         List<String> command = List.of(
-                config.binary(), "code",
+                config.binaryEffective(), "code",
                 "--read-only",
                 "--prompt-file", promptFile.toAbsolutePath().toString(),
                 "--output", "json");
         SubprocessRequest sub = new SubprocessRequest(
-                command, workdir, promptFile, config.timeout(),
+                command, workdir, promptFile, config.timeoutEffective(),
                 Map.of("CVM_USECASE", "REACHABILITY"), true);
 
         // Audit PENDING vor Subprozess-Aufruf.

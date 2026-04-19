@@ -336,7 +336,7 @@ public class AssessmentWriteService {
 
     private Instant standardValidUntil(Instant basis) {
         return ZonedDateTime.ofInstant(basis, ZoneOffset.UTC)
-                .plusMonths(config.defaultValidMonths())
+                .plusMonths(config.defaultValidMonthsEffective())
                 .toInstant();
     }
 

@@ -78,7 +78,7 @@ public class ProfileAssistantService {
 
     @Transactional
     public StartResult start(UUID environmentId, String startedBy) {
-        if (!config.enabled()) {
+        if (!config.enabledEffective()) {
             throw new IllegalStateException("Profile-Assistant deaktiviert.");
         }
         if (startedBy == null || startedBy.isBlank()) {
@@ -151,7 +151,7 @@ public class ProfileAssistantService {
     }
 
     private String naechsteFrage(Environment env, ProfileAssistSession session) {
-        if (!config.enabled()) {
+        if (!config.enabledEffective()) {
             return null;
         }
         Map<String, Object> vars = new HashMap<>();

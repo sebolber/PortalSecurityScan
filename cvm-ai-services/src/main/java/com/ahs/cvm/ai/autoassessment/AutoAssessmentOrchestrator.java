@@ -100,7 +100,7 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
     @Override
     @Transactional
     public Optional<CascadeOutcome> suggest(CascadeInput input) {
-        if (!config.enabled()) {
+        if (!config.enabledEffective()) {
             return Optional.empty();
         }
         RuleEvaluationContext ctx = input.evaluationContext();
@@ -115,7 +115,7 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
         List<RagHit> hits = retrievalService.similar(
                 IndexingService.TYPE_ASSESSMENT,
                 ctx.cve().cveId() + " " + ctx.component().name(),
-                config.topK());
+                config.topKEffective());
 
         AhsSeverity originalSeverity = mapeCvss(ctx.cve());
         Map<String, Object> vars = baueTemplateVariablen(ctx, finding, hits, advisory, originalSeverity);
@@ -162,7 +162,7 @@ public class AutoAssessmentOrchestrator implements AiAssessmentSuggesterPort {
                 ? out.get("proposedFixVersion").asText() : null;
 
         boolean konservativerDefaultGreift =
-                hits.stream().noneMatch(h -> h.score() >= config.minRagScore())
+                hits.stream().noneMatch(h -> h.score() >= config.minRagScoreEffective())
                         && (usedFields.isEmpty());
         if (konservativerDefaultGreift && proposed != originalSeverity) {
             log.debug("AutoAssessment: konservativer Default - Severity bleibt {}",

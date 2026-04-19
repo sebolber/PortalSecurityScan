@@ -60,7 +60,7 @@ public class AnomalyDetectionService {
 
     @Transactional
     public List<AnomalyEvent> check(Instant since) {
-        if (!config.enabled()) {
+        if (!config.enabledEffective()) {
             return List.of();
         }
         List<Assessment> kandidaten = assessmentRepository.findAll().stream()
@@ -97,7 +97,7 @@ public class AnomalyDetectionService {
         boolean kev = Boolean.TRUE.equals(a.getCve().getKevListed());
         BigDecimal epss = Optional.ofNullable(a.getCve().getEpssScore())
                 .orElse(BigDecimal.ZERO);
-        if (kev && epss.doubleValue() > config.kevEpssThreshold()) {
+        if (kev && epss.doubleValue() > config.kevEpssThresholdEffective()) {
             return Optional.of(eventFor(a, PATTERN_KEV_NA, "WARNING",
                     "KEV-gelistet + EPSS=" + epss + " aber NOT_APPLICABLE eingestuft.",
                     List.of("cve.kevListed=true", "cve.epssScore=" + epss)));
@@ -111,7 +111,7 @@ public class AnomalyDetectionService {
             return Optional.empty();
         }
         int count = waiverCount.getOrDefault(a.getDecidedBy(), 0);
-        if (count < config.manyAcceptRiskThreshold()) {
+        if (count < config.manyAcceptRiskThresholdEffective()) {
             return Optional.empty();
         }
         List<MitigationPlan> plans = mitigationRepository.findByAssessmentId(a.getId());
@@ -137,7 +137,7 @@ public class AnomalyDetectionService {
                 continue;
             }
             double sim = jaccard(text, normalize(r.getRationale()));
-            if (sim >= config.similarRejectionThreshold()) {
+            if (sim >= config.similarRejectionThresholdEffective()) {
                 return Optional.of(eventFor(a, PATTERN_SIMILAR_REJ, "INFO",
                         "Rationale sehr aehnlich zu einem bereits abgelehnten "
                                 + "Vorschlag (Jaccard " + String.format("%.2f", sim) + ").",

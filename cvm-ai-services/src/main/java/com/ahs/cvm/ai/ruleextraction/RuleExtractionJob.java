@@ -49,7 +49,7 @@ public class RuleExtractionJob {
     @Scheduled(cron = "${cvm.ai.rule-extraction.cron:0 30 2 * * *}")
     @Transactional
     public void scheduledRun() {
-        if (!config.enabled() || !schedulerEnabled) {
+        if (!config.enabledEffective() || !schedulerEnabled) {
             return;
         }
         runOnce();
@@ -58,7 +58,7 @@ public class RuleExtractionJob {
     /** Manueller Trigger fuer Tests / Admin-Endpoint. */
     @Transactional
     public JobReport runOnce() {
-        Instant grenze = Instant.now().minus(Duration.ofDays(config.windowDays()));
+        Instant grenze = Instant.now().minus(Duration.ofDays(config.windowDaysEffective()));
         List<Assessment> historie = new ArrayList<>();
         for (Assessment a : assessmentRepository.findAll()) {
             if (a.getStatus() == AssessmentStatus.APPROVED
@@ -77,7 +77,7 @@ public class RuleExtractionJob {
         int erzeugt = 0;
         int deferred = 0;
         for (AssessmentCluster c : cluster) {
-            if (processed >= config.clusterCap()) {
+            if (processed >= config.clusterCapEffective()) {
                 deferred++;
                 continue;
             }

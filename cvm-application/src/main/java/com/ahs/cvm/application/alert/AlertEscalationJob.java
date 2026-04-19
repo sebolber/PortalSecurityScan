@@ -49,8 +49,8 @@ public class AlertEscalationJob {
     /** Ein einzelner Lauf, fuer Tests direkt aufrufbar. */
     public int runOnce() {
         Instant jetzt = Instant.now(clock);
-        Duration t1 = config.t1();
-        Duration t2 = config.t2();
+        Duration t1 = config.t1Effective();
+        Duration t2 = config.t2Effective();
         List<FindingQueueView> offen = queueService.findeOffene(
                 new QueueFilter(null, null, null, null));
         int getriggert = 0;
