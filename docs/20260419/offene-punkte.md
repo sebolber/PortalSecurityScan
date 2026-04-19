@@ -19,10 +19,10 @@
     Iteration 41 (Bootstrap `SystemParameterCatalogBootstrap` +
     statischer Katalog `SystemParameterCatalog`). Defaults sind 1:1
     mit den `@Value`-Fallbacks abgeglichen.
-  - **Katalog-Befuellung Block A.2**: ENRICHMENT (OSV/NVD/GHSA/KEV/
-    EPSS ohne base-url/api-key), RATE_LIMIT, PIPELINE_GATE, MAIL
-    (ohne `spring.mail.*`), SCAN, SCHEDULER-Crons, SECURITY-Flags -
-    offen, Iteration 42.
+  - **Katalog-Befuellung Block A.2** (ENRICHMENT, PIPELINE_GATE,
+    MAIL/Alerts, SCAN, SCHEDULER, SECURITY) - erledigt in
+    Iteration 42. Secrets bleiben weiterhin ausgespart bis
+    Iteration 45.
   - **Zugriffs-Wrapper** (`getEffective(...)`) in den bestehenden
     `*Config`-Beans: ReachabilityConfig, OsvProperties, Feed*Config,
     AutoAssessmentConfig, FixVerificationConfig, AnomalyConfig,

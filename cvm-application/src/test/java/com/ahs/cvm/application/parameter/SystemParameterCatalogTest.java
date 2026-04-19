@@ -133,6 +133,157 @@ class SystemParameterCatalogTest {
                 SystemParameterCatalog.CATEGORY_COPILOT);
     }
 
+    @Test
+    @DisplayName("Block A.2: ENRICHMENT, PIPELINE_GATE, MAIL, SCAN, SCHEDULER, SECURITY sind vollstaendig")
+    void block_a2_vollstaendig() {
+        Set<String> keys = paramKeys();
+        assertThat(keys).contains(
+                // ENRICHMENT
+                "cvm.enrichment.osv.enabled",
+                "cvm.enrichment.osv.batch-size",
+                "cvm.enrichment.osv.timeout-ms",
+                "cvm.enrichment.osv.retry-on-429",
+                "cvm.enrichment.osv.max-retry-after-seconds",
+                "cvm.feed.nvd.enabled",
+                "cvm.feed.nvd.requests-per-window",
+                "cvm.feed.nvd.window-seconds",
+                "cvm.feed.ghsa.enabled",
+                "cvm.feed.ghsa.requests-per-window",
+                "cvm.feed.ghsa.window-seconds",
+                "cvm.feed.kev.enabled",
+                "cvm.feed.kev.requests-per-window",
+                "cvm.feed.kev.window-seconds",
+                "cvm.feed.epss.enabled",
+                "cvm.feed.epss.requests-per-window",
+                "cvm.feed.epss.window-seconds",
+                // PIPELINE_GATE
+                "cvm.pipeline.gate.per-minute",
+                "cvm.pipeline.gate.post-mr-comment",
+                // MAIL (Alerts)
+                "cvm.alerts.mode",
+                "cvm.alerts.from",
+                "cvm.alerts.eskalation.t1-minutes",
+                "cvm.alerts.eskalation.t2-minutes",
+                // SCAN (Assessment + AI-Workloads)
+                "cvm.assessment.default-valid-months",
+                "cvm.ai.summary.min-delta",
+                "cvm.ai.nl-query.result-limit",
+                "cvm.ai.rule-extraction.enabled",
+                "cvm.ai.rule-extraction.window-days",
+                "cvm.ai.rule-extraction.cluster-cap",
+                "cvm.ai.rule-extraction.override-review-threshold",
+                "cvm.ai.fix-verification.enabled",
+                "cvm.ai.fix-verification.full-text-commit-cap",
+                "cvm.ai.fix-verification.cache-ttl-minutes",
+                "cvm.ai.profile-assistant.enabled",
+                "cvm.ai.profile-assistant.session-ttl-hours",
+                "cvm.ai.profile-assist.cleanup-days",
+                // SCHEDULER
+                "cvm.scheduler.enabled",
+                "cvm.assessment.expiry-cron",
+                "cvm.ai.fix-verification.watchdog-cron",
+                "cvm.ai.profile-assist.cleanup-cron",
+                "cvm.ai.rule-extraction.cron",
+                // SECURITY
+                "cvm.security.cors.allowed-origins");
+    }
+
+    @Test
+    @DisplayName("Block A.2 Defaults stimmen mit den @Value-Fallbacks und @ConfigurationProperties-Defaults ueberein")
+    void block_a2_defaults_spiegeln_fallbacks() {
+        // OSV (OsvProperties)
+        assertThat(findEntry("cvm.enrichment.osv.enabled").defaultValue()).isEqualTo("false");
+        assertThat(findEntry("cvm.enrichment.osv.batch-size").defaultValue()).isEqualTo("500");
+        assertThat(findEntry("cvm.enrichment.osv.timeout-ms").defaultValue()).isEqualTo("15000");
+        assertThat(findEntry("cvm.enrichment.osv.retry-on-429").defaultValue()).isEqualTo("true");
+        assertThat(findEntry("cvm.enrichment.osv.max-retry-after-seconds").defaultValue()).isEqualTo("30");
+
+        // Feeds (FeedProperties)
+        assertThat(findEntry("cvm.feed.nvd.enabled").defaultValue()).isEqualTo("true");
+        assertThat(findEntry("cvm.feed.nvd.requests-per-window").defaultValue()).isEqualTo("50");
+        assertThat(findEntry("cvm.feed.nvd.window-seconds").defaultValue()).isEqualTo("30");
+        assertThat(findEntry("cvm.feed.ghsa.enabled").defaultValue()).isEqualTo("false");
+        assertThat(findEntry("cvm.feed.kev.enabled").defaultValue()).isEqualTo("true");
+        assertThat(findEntry("cvm.feed.epss.enabled").defaultValue()).isEqualTo("true");
+
+        // Pipeline-Gate
+        assertThat(findEntry("cvm.pipeline.gate.per-minute").defaultValue()).isEqualTo("20");
+        assertThat(findEntry("cvm.pipeline.gate.post-mr-comment").defaultValue()).isEqualTo("false");
+
+        // Alerts
+        assertThat(findEntry("cvm.alerts.mode").defaultValue()).isEqualTo("dry-run");
+        assertThat(findEntry("cvm.alerts.from").defaultValue()).isEqualTo("cvm-alerts@ahs.local");
+        assertThat(findEntry("cvm.alerts.eskalation.t1-minutes").defaultValue()).isEqualTo("120");
+        assertThat(findEntry("cvm.alerts.eskalation.t2-minutes").defaultValue()).isEqualTo("360");
+
+        // SCAN
+        assertThat(findEntry("cvm.assessment.default-valid-months").defaultValue()).isEqualTo("12");
+        assertThat(findEntry("cvm.ai.summary.min-delta").defaultValue()).isEqualTo("1");
+        assertThat(findEntry("cvm.ai.nl-query.result-limit").defaultValue()).isEqualTo("100");
+        assertThat(findEntry("cvm.ai.rule-extraction.window-days").defaultValue()).isEqualTo("180");
+        assertThat(findEntry("cvm.ai.rule-extraction.cluster-cap").defaultValue()).isEqualTo("10");
+        assertThat(findEntry("cvm.ai.rule-extraction.override-review-threshold").defaultValue()).isEqualTo("4");
+        assertThat(findEntry("cvm.ai.fix-verification.full-text-commit-cap").defaultValue()).isEqualTo("50");
+        assertThat(findEntry("cvm.ai.fix-verification.cache-ttl-minutes").defaultValue()).isEqualTo("1440");
+        assertThat(findEntry("cvm.ai.profile-assistant.session-ttl-hours").defaultValue()).isEqualTo("24");
+        assertThat(findEntry("cvm.ai.profile-assist.cleanup-days").defaultValue()).isEqualTo("7");
+
+        // Scheduler-Crons
+        assertThat(findEntry("cvm.scheduler.enabled").defaultValue()).isEqualTo("true");
+        assertThat(findEntry("cvm.assessment.expiry-cron").defaultValue()).isEqualTo("0 0 3 * * *");
+        assertThat(findEntry("cvm.ai.fix-verification.watchdog-cron").defaultValue()).isEqualTo("0 0 4 * * *");
+        assertThat(findEntry("cvm.ai.profile-assist.cleanup-cron").defaultValue()).isEqualTo("0 15 2 * * *");
+        assertThat(findEntry("cvm.ai.rule-extraction.cron").defaultValue()).isEqualTo("0 30 2 * * *");
+
+        // Security
+        assertThat(findEntry("cvm.security.cors.allowed-origins").defaultValue())
+                .isEqualTo("http://localhost:4200");
+    }
+
+    @Test
+    @DisplayName("Block A.2 Typen: Alerts-Mode ist SELECT mit drei Optionen, Cron ist STRING, EMAIL ist EMAIL")
+    void block_a2_typen() {
+        SystemParameterCatalogEntry mode = findEntry("cvm.alerts.mode");
+        assertThat(mode.type()).isEqualTo(SystemParameterType.SELECT);
+        assertThat(mode.options()).isEqualTo("dry-run,log,live");
+
+        assertThat(findEntry("cvm.alerts.from").type()).isEqualTo(SystemParameterType.EMAIL);
+        assertThat(findEntry("cvm.assessment.expiry-cron").type()).isEqualTo(SystemParameterType.STRING);
+        assertThat(findEntry("cvm.scheduler.enabled").type()).isEqualTo(SystemParameterType.BOOLEAN);
+        assertThat(findEntry("cvm.enrichment.osv.retry-on-429").type()).isEqualTo(SystemParameterType.BOOLEAN);
+        assertThat(findEntry("cvm.pipeline.gate.per-minute").type()).isEqualTo(SystemParameterType.INTEGER);
+    }
+
+    @Test
+    @DisplayName("Block A.2 Kategorien sind vollstaendig")
+    void block_a2_kategorien() {
+        Set<String> cats = SystemParameterCatalog.entries().stream()
+                .map(SystemParameterCatalogEntry::category)
+                .collect(Collectors.toSet());
+        assertThat(cats).contains(
+                SystemParameterCatalog.CATEGORY_ENRICHMENT,
+                SystemParameterCatalog.CATEGORY_PIPELINE_GATE,
+                SystemParameterCatalog.CATEGORY_MAIL,
+                SystemParameterCatalog.CATEGORY_SCAN,
+                SystemParameterCatalog.CATEGORY_SCHEDULER,
+                SystemParameterCatalog.CATEGORY_SECURITY);
+    }
+
+    @Test
+    @DisplayName("Keine Block-A.2-Keys werden fuer nicht-migrierbare Prefixes eingebunden")
+    void nicht_migrieren_liste_respektiert() {
+        Set<String> keys = paramKeys();
+        // Spring-Infrastruktur bleibt in application.yaml.
+        assertThat(keys).noneMatch(k -> k.startsWith("spring.")
+                || k.startsWith("server.")
+                || k.startsWith("management.")
+                || k.startsWith("logging."));
+        // Pricing und base-urls bleiben ebenfalls in application.yaml.
+        assertThat(keys).noneMatch(k -> k.startsWith("cvm.llm.pricing."));
+        assertThat(keys).doesNotContain("cvm.enrichment.osv.base-url");
+        assertThat(keys).noneMatch(k -> k.matches("cvm\\.feed\\.[a-z]+\\.base-url"));
+    }
+
     private SystemParameterCatalogEntry findEntry(String key) {
         return SystemParameterCatalog.entries().stream()
                 .filter(e -> e.paramKey().equals(key))

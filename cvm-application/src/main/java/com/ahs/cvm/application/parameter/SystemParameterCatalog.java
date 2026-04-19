@@ -29,6 +29,12 @@ public final class SystemParameterCatalog {
     public static final String CATEGORY_RAG = "RAG";
     public static final String CATEGORY_ANOMALY = "ANOMALY";
     public static final String CATEGORY_COPILOT = "COPILOT";
+    public static final String CATEGORY_ENRICHMENT = "ENRICHMENT";
+    public static final String CATEGORY_PIPELINE_GATE = "PIPELINE_GATE";
+    public static final String CATEGORY_MAIL = "MAIL";
+    public static final String CATEGORY_SCAN = "SCAN";
+    public static final String CATEGORY_SCHEDULER = "SCHEDULER";
+    public static final String CATEGORY_SECURITY = "SECURITY";
 
     private static final List<SystemParameterCatalogEntry> ENTRIES = buildEntries();
 
@@ -45,6 +51,12 @@ public final class SystemParameterCatalog {
         addRag(list);
         addAnomaly(list);
         addCopilot(list);
+        addEnrichment(list);
+        addPipelineGate(list);
+        addMail(list);
+        addScan(list);
+        addScheduler(list);
+        addSecurity(list);
         ensureUnique(list);
         return Collections.unmodifiableList(list);
     }
@@ -252,6 +264,270 @@ public final class SystemParameterCatalog {
                 null,
                 CATEGORY_COPILOT, "chat",
                 SystemParameterType.STRING, "standard", true, null, null, null, false, true, true));
+    }
+
+    private static void addEnrichment(List<SystemParameterCatalogEntry> list) {
+        // OSV (base-url bleibt in application.yaml, siehe Nicht-migrieren-Liste)
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.enabled",
+                "OSV-Anreicherung aktiv",
+                "Feature-Flag fuer die OSV-Anreicherung beim Scan-Ingest (Iteration 33).",
+                "Bei false erzeugt der Adapter keinen Outbound-Traffic.",
+                CATEGORY_ENRICHMENT, "osv",
+                SystemParameterType.BOOLEAN, "false", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.batch-size",
+                "OSV-Batch-Groesse",
+                "Anzahl Komponenten pro OSV-Batch-Request (max. 1000).",
+                null,
+                CATEGORY_ENRICHMENT, "osv",
+                SystemParameterType.INTEGER, "500", true, null, null, "Komponenten", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.timeout-ms",
+                "OSV-HTTP-Timeout",
+                "Maximale Wartezeit pro OSV-Aufruf.",
+                null,
+                CATEGORY_ENRICHMENT, "osv",
+                SystemParameterType.INTEGER, "15000", true, null, null, "Millisekunden", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.retry-on-429",
+                "OSV-Retry bei HTTP 429",
+                "Wenn true, wird bei einer 429-Antwort einmalig nach Retry-After gewartet und wiederholt.",
+                null,
+                CATEGORY_ENRICHMENT, "osv",
+                SystemParameterType.BOOLEAN, "true", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.enrichment.osv.max-retry-after-seconds",
+                "OSV-Retry-After-Obergrenze",
+                "Obergrenze fuer die im Retry-After-Header angegebene Wartezeit.",
+                null,
+                CATEGORY_ENRICHMENT, "osv",
+                SystemParameterType.INTEGER, "30", true, null, null, "Sekunden", false, true, true));
+
+        addFeed(list, "nvd", "NVD", "true", "50", "30");
+        addFeed(list, "ghsa", "GHSA", "false", "30", "60");
+        addFeed(list, "kev", "KEV", "true", "60", "60");
+        addFeed(list, "epss", "EPSS", "true", "60", "60");
+    }
+
+    private static void addFeed(
+            List<SystemParameterCatalogEntry> list,
+            String slug,
+            String anzeigeName,
+            String enabledDefault,
+            String requestsDefault,
+            String windowDefault) {
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.feed." + slug + ".enabled",
+                anzeigeName + "-Feed aktiv",
+                "Feature-Flag fuer den " + anzeigeName + "-Feed (CVE-Anreicherung).",
+                null,
+                CATEGORY_ENRICHMENT, slug,
+                SystemParameterType.BOOLEAN, enabledDefault, true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.feed." + slug + ".requests-per-window",
+                anzeigeName + "-Requests pro Fenster",
+                "Maximale Anzahl Requests innerhalb des Rate-Limit-Fensters.",
+                null,
+                CATEGORY_ENRICHMENT, slug,
+                SystemParameterType.INTEGER, requestsDefault, true, null, null, "Requests", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.feed." + slug + ".window-seconds",
+                anzeigeName + "-Fenster",
+                "Groesse des Rate-Limit-Fensters.",
+                null,
+                CATEGORY_ENRICHMENT, slug,
+                SystemParameterType.INTEGER, windowDefault, true, null, null, "Sekunden", false, true, true));
+    }
+
+    private static void addPipelineGate(List<SystemParameterCatalogEntry> list) {
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.pipeline.gate.per-minute",
+                "Pipeline-Gate Rate-Limit",
+                "Maximale Anzahl Gate-Checks pro Minute (Bucket4j).",
+                null,
+                CATEGORY_PIPELINE_GATE, "rate-limit",
+                SystemParameterType.INTEGER, "20", true, null, null, "calls/min", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.pipeline.gate.post-mr-comment",
+                "Pipeline-Gate MR-Kommentar",
+                "Wenn true, postet der Pipeline-Gate nach einer Bewertung einen MR-Kommentar.",
+                null,
+                CATEGORY_PIPELINE_GATE, "git",
+                SystemParameterType.BOOLEAN, "false", true, null, null, null, false, true, true));
+    }
+
+    private static void addMail(List<SystemParameterCatalogEntry> list) {
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.alerts.mode",
+                "Alert-Modus",
+                "Betriebsart des Alert-Versands: dry-run, log, live.",
+                "dry-run verschickt keine Mails. log schreibt ins Audit-Log. live versendet tatsaechlich.",
+                CATEGORY_MAIL, "alerts",
+                SystemParameterType.SELECT, "dry-run", true, null, "dry-run,log,live", null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.alerts.from",
+                "Alert-From-Adresse",
+                "Absender-Adresse fuer Alert-Mails.",
+                null,
+                CATEGORY_MAIL, "alerts",
+                SystemParameterType.EMAIL, "cvm-alerts@ahs.local", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.alerts.eskalation.t1-minutes",
+                "Eskalationsstufe T1",
+                "Wartezeit bis zur ersten Eskalation.",
+                null,
+                CATEGORY_MAIL, "eskalation",
+                SystemParameterType.INTEGER, "120", true, null, null, "Minuten", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.alerts.eskalation.t2-minutes",
+                "Eskalationsstufe T2",
+                "Wartezeit bis zur zweiten Eskalation.",
+                null,
+                CATEGORY_MAIL, "eskalation",
+                SystemParameterType.INTEGER, "360", true, null, null, "Minuten", false, true, true));
+    }
+
+    private static void addScan(List<SystemParameterCatalogEntry> list) {
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.assessment.default-valid-months",
+                "Assessment-Standardlaufzeit",
+                "Default-Lebenszeit fuer ein Assessment in Monaten.",
+                null,
+                CATEGORY_SCAN, "assessment",
+                SystemParameterType.INTEGER, "12", true, null, null, "Monate", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.summary.min-delta",
+                "Delta-Summary Mindestanzahl",
+                "Minimale Anzahl geaenderter Findings, bevor eine Delta-Summary erzeugt wird.",
+                null,
+                CATEGORY_SCAN, "summary",
+                SystemParameterType.INTEGER, "1", true, null, null, "Findings", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.nl-query.result-limit",
+                "NL-Query Ergebnis-Limit",
+                "Maximale Anzahl Zeilen, die eine natuerlich-sprachliche Query zurueckliefert.",
+                null,
+                CATEGORY_SCAN, "nl-query",
+                SystemParameterType.INTEGER, "100", true, null, null, "Zeilen", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.rule-extraction.enabled",
+                "Regel-Extraktion aktiv",
+                "Feature-Flag fuer die KI-gestuetzte Regel-Extraktion (Iteration 17).",
+                null,
+                CATEGORY_SCAN, "rule-extraction",
+                SystemParameterType.BOOLEAN, "false", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.rule-extraction.window-days",
+                "Regel-Extraktion Fenster",
+                "Zeitfenster fuer die Analyse historischer Assessments.",
+                null,
+                CATEGORY_SCAN, "rule-extraction",
+                SystemParameterType.INTEGER, "180", true, null, null, "Tage", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.rule-extraction.cluster-cap",
+                "Regel-Extraktion Cluster-Cap",
+                "Maximale Anzahl Regel-Kandidaten pro Lauf.",
+                null,
+                CATEGORY_SCAN, "rule-extraction",
+                SystemParameterType.INTEGER, "10", true, null, null, "Kandidaten", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.rule-extraction.override-review-threshold",
+                "Regel-Extraktion Review-Schwelle",
+                "Minimale Override-Anzahl, ab der ein Kandidat ein Review ausloest.",
+                null,
+                CATEGORY_SCAN, "rule-extraction",
+                SystemParameterType.INTEGER, "4", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.fix-verification.enabled",
+                "Fix-Verifikation aktiv",
+                "Feature-Flag fuer die Fix-Verifikation (Iteration 16).",
+                null,
+                CATEGORY_SCAN, "fix-verification",
+                SystemParameterType.BOOLEAN, "false", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.fix-verification.full-text-commit-cap",
+                "Fix-Verifikation Commit-Cap",
+                "Maximale Anzahl Commits, die im Volltext abgefragt werden.",
+                null,
+                CATEGORY_SCAN, "fix-verification",
+                SystemParameterType.INTEGER, "50", true, null, null, "Commits", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.fix-verification.cache-ttl-minutes",
+                "Fix-Verifikation Cache-TTL",
+                "Gueltigkeitsdauer des Ergebnis-Caches.",
+                null,
+                CATEGORY_SCAN, "fix-verification",
+                SystemParameterType.INTEGER, "1440", true, null, null, "Minuten", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.profile-assistant.enabled",
+                "Profil-Assistent aktiv",
+                "Feature-Flag fuer den Profil-Assistenten (Iteration 18).",
+                null,
+                CATEGORY_SCAN, "profile-assistant",
+                SystemParameterType.BOOLEAN, "false", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.profile-assistant.session-ttl-hours",
+                "Profil-Assistent Session-TTL",
+                "Gueltigkeitsdauer einer Assistenten-Session.",
+                null,
+                CATEGORY_SCAN, "profile-assistant",
+                SystemParameterType.INTEGER, "24", true, null, null, "Stunden", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.profile-assist.cleanup-days",
+                "Profil-Assistent Cleanup-Alter",
+                "Alter ab dem abgeschlossene Assistenten-Sessions geloescht werden.",
+                null,
+                CATEGORY_SCAN, "profile-assistant",
+                SystemParameterType.INTEGER, "7", true, null, null, "Tage", false, true, true));
+    }
+
+    private static void addScheduler(List<SystemParameterCatalogEntry> list) {
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.scheduler.enabled",
+                "Scheduler global aktiv",
+                "Globaler Schalter fuer alle Hintergrund-Jobs (Cron).",
+                "Testprofile setzen den Wert auf false; Produktion laesst ihn auf true.",
+                CATEGORY_SCHEDULER, "global",
+                SystemParameterType.BOOLEAN, "true", true, null, null, null, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.assessment.expiry-cron",
+                "Cron: Assessment-Ablauf",
+                "Cron-Ausdruck fuer den AssessmentExpiryJob.",
+                "Spring-Cron-Format: sek min std tag mon dow.",
+                CATEGORY_SCHEDULER, "cron",
+                SystemParameterType.STRING, "0 0 3 * * *", true, null, null, null, false, false, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.fix-verification.watchdog-cron",
+                "Cron: Fix-Verifikation Watchdog",
+                "Cron-Ausdruck fuer den OpenFixWatchdog.",
+                null,
+                CATEGORY_SCHEDULER, "cron",
+                SystemParameterType.STRING, "0 0 4 * * *", true, null, null, null, false, false, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.profile-assist.cleanup-cron",
+                "Cron: Profil-Assistent Cleanup",
+                "Cron-Ausdruck fuer den ProfileAssistSessionCleanupJob.",
+                null,
+                CATEGORY_SCHEDULER, "cron",
+                SystemParameterType.STRING, "0 15 2 * * *", true, null, null, null, false, false, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.rule-extraction.cron",
+                "Cron: Regel-Extraktion",
+                "Cron-Ausdruck fuer den RuleExtractionJob.",
+                null,
+                CATEGORY_SCHEDULER, "cron",
+                SystemParameterType.STRING, "0 30 2 * * *", true, null, null, null, false, false, true));
+    }
+
+    private static void addSecurity(List<SystemParameterCatalogEntry> list) {
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.security.cors.allowed-origins",
+                "CORS Allowed Origins",
+                "Komma-separierte Liste erlaubter CORS-Origins.",
+                "Wirkt nur beim Boot - Aenderung erfordert Neustart.",
+                CATEGORY_SECURITY, "cors",
+                SystemParameterType.STRING, "http://localhost:4200", true, null, null, null, false, false, true));
     }
 
     private static void ensureUnique(List<SystemParameterCatalogEntry> list) {
