@@ -214,11 +214,16 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   und Keycloak-Realm-Mapping bleiben Admin-SQL bzw. Realm-Setup.
 - ~~KPI-UI (ECharts, Burn-Down, SLA-Ampel)~~ - Severity-Saeulen und
   SLA-Ampel ergaenzt in Iteration 55; Burn-Down war bereits vorhanden.
-- JGit-Adapter fuer Reachability (aktuell `NoopGitCheckoutAdapter`),
-  SSH-Key aus Vault, Network-Sandboxing fuer den Subprocess.
-  Bleibt offen; zusaetzlich folgt daraus der Ersatz des
-  `NoopReachabilityAutoTriggerAdapter` durch einen echten
-  Adapter, der `ReachabilityAgent.analyze(...)` aufruft.
+- ~~JGit-Adapter fuer Reachability (aktuell
+  `NoopGitCheckoutAdapter`)~~ - **Teil erledigt in Iteration 71**
+  (CVM-308). `JGitGitCheckoutAdapter` klont pro Commit in ein
+  Cache-Verzeichnis, `@Scheduled`-Cleanup-Job entfernt abgelaufene
+  Eintraege. HTTPS-Auth optional per
+  `cvm.ai.reachability.git.https-token`. SSH-Credentials aus
+  Vault/ssh-agent und Network-Sandboxing fuer den Subprocess
+  bleiben offen. Ebenfalls offen: der
+  `ReachabilityAutoTriggerPort`-Adapter, der
+  `ReachabilityAgent.analyze(...)` mit dem JGit-Workdir aufruft.
 - ~~Auto-Trigger der Reachability, wenn AI-Vorschlag-Confidence
   unter Schwelle~~ - **Teil erledigt in Iteration 70**
   (CVM-307). Neuer Event `LowConfidenceAiSuggestionEvent`, Port

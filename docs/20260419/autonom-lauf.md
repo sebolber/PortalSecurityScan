@@ -144,3 +144,11 @@ AutoAssessmentOrchestrator publiziert den Event, wenn
 Publisher und ReachabilityConfig vorhanden sind. 7 neue
 Service-Tests. Naechstes: Iteration 71 JGit-Adapter fuer
 Reachability (Sandbox-abhaengig, ggf. skip-in-CI-Vermerk).
+[16:47] Iteration 71 abgeschlossen: JGitGitCheckoutAdapter
+(Bean-Name jgitGitCheckoutAdapter) implementiert. Cache pro
+(URL, Commit) im tmpdir-Unterordner, @Scheduled-Cleanup-Job
+gemaess cvm.ai.reachability.git.cache-ttl-hours (Default 72).
+Optionales HTTPS-Token aus dem Parameter-Store. SSH bleibt
+offen. Drei neue Katalog-Eintraege, JGit-Maven-Dependency.
+Fuenf neue Tests mit lokalem Bare-Repo ueber file://.
+Naechstes: Iteration 72 OSV-Mirror fuer air-gapped.

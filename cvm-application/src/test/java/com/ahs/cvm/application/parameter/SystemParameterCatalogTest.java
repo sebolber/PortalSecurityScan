@@ -97,8 +97,9 @@ class SystemParameterCatalogTest {
         long sensitiveCount = SystemParameterCatalog.entries().stream()
                 .filter(SystemParameterCatalogEntry::sensitive)
                 .count();
-        // Vier Secrets (Iteration 45).
-        assertThat(sensitiveCount).isEqualTo(4);
+        // Iteration 45: vier initiale Secrets.
+        // Iteration 71 (CVM-308): zusaetzlich cvm.ai.reachability.git.https-token.
+        assertThat(sensitiveCount).isEqualTo(5);
     }
 
     @Test

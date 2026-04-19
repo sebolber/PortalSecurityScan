@@ -216,6 +216,29 @@ public final class SystemParameterCatalog {
                 "In-Memory-Rate-Limit. Kein Neustart noetig.",
                 CATEGORY_AI_REACHABILITY, "auto-trigger",
                 SystemParameterType.INTEGER, "60", true, null, null, "Minuten", false, true, true));
+        // Iteration 71 (CVM-308): JGit-Adapter.
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.reachability.git.cache-dir",
+                "Git-Checkout Cache-Verzeichnis",
+                "Pfad, unter dem geklonte Repos pro Commit gecached werden.",
+                "Wird beim Boot vom JGitGitCheckoutAdapter angelegt. Aenderung erfordert Neustart.",
+                CATEGORY_AI_REACHABILITY, "git",
+                SystemParameterType.STRING, null, false, null, null, null, false, false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.reachability.git.cache-ttl-hours",
+                "Git-Checkout Cache-TTL",
+                "Lebensdauer eines Cache-Eintrags, nach der er vom Cleanup-Job entfernt wird.",
+                "Wird pro Cleanup-Lauf gelesen. Kein Neustart noetig.",
+                CATEGORY_AI_REACHABILITY, "git",
+                SystemParameterType.INTEGER, "72", true, null, null, "Stunden", false, true, true));
+        list.add(new SystemParameterCatalogEntry(
+                "cvm.ai.reachability.git.https-token",
+                "Git HTTPS-Token",
+                "Personal Access Token fuer Git-Server, die HTTPS-Auth "
+                        + "erwarten (optional, leer = anonym).",
+                "Wird AES-GCM-verschluesselt gespeichert und pro Clone gelesen.",
+                CATEGORY_AI_REACHABILITY, "git",
+                SystemParameterType.PASSWORD, null, false, null, null, null, true, true, true, false));
     }
 
     private static void addRag(List<SystemParameterCatalogEntry> list) {
