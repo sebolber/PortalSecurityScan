@@ -47,9 +47,14 @@ Iterationen 80+ implementieren die Befunde.
   Queue-Detail-Panel (`<details>`-Collapsible). Keine
   Schema-Aenderung noetig; `AssessmentRepository`-Methode
   bestand bereits.
-- **U-05 Reachability-Detail + Start-Dialog aus Liste** -
-  Iteration 88. Slide-In mit Rationale/Confidence; Finding-
-  Autocomplete; Feature-Flag-Banner bei deaktiviertem Feature.
+- ~~U-05 Reachability-Detail + Start-Dialog aus Liste~~ -
+  **Teilweise erledigt in Iteration 88** (CVM-328). Zeilen-
+  Klick oeffnet ein Slide-In mit Rationale, Confidence,
+  Status, Severity, Finding-ID, Zeit. Deep-Link
+  `/reachability?findingId=<uuid>` belegt `neueFindingId` vor.
+  Offen bleibt das Finding-Autocomplete (braucht
+  Finding-Search-Endpoint) und der Feature-Flag-Banner (braucht
+  Reachability-Config-GET-Endpoint).
 - **U-06 Einheitliches Admin-Aktions-Menue** - Iteration 89-90.
   Dreipunkt-Menue in Rules/Products/Environments/Profiles,
   `window.prompt` -> `cvm-dialog`.

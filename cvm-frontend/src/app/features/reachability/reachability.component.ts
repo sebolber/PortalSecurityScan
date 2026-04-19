@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import {
   ReachabilityQueryService,
   ReachabilityResult,
@@ -44,6 +44,7 @@ export class ReachabilityComponent implements OnInit {
   private readonly api = inject(ReachabilityQueryService);
   private readonly auth = inject(AuthService);
   private readonly toast = inject(CvmToastService);
+  private readonly route = inject(ActivatedRoute);
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -54,8 +55,24 @@ export class ReachabilityComponent implements OnInit {
   readonly startDialogData = signal<ReachabilityStartDialogInput | null>(null);
   readonly neueFindingId = signal<string>('');
 
+  // Iteration 88 (CVM-328): Slide-In-Detail-Panel.
+  readonly selected = signal<ReachabilitySummaryView | null>(null);
+
   ngOnInit(): void {
+    // Iteration 88 (CVM-328): findingId aus queryParams vorbefuellen.
+    const findingId = this.route.snapshot.queryParamMap.get('findingId');
+    if (findingId) {
+      this.neueFindingId.set(findingId);
+    }
     void this.laden();
+  }
+
+  auswaehlen(row: ReachabilitySummaryView): void {
+    this.selected.set(row);
+  }
+
+  schliessen(): void {
+    this.selected.set(null);
   }
 
   async laden(): Promise<void> {

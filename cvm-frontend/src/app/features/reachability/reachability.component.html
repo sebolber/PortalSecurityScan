@@ -89,7 +89,12 @@
         </thead>
         <tbody>
           @for (r of rows(); track trackId($index, r)) {
-            <tr>
+            <tr
+              class="cursor-pointer hover:bg-surface-muted"
+              [class.bg-primary-muted]="selected()?.id === r.id"
+              [attr.data-testid]="'reach-row-' + r.id"
+              (click)="auswaehlen(r)"
+            >
               <td>{{ r.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
               <td>
                 @if (r.severity) {
@@ -109,6 +114,61 @@
         </tbody>
       </table>
     </section>
+  }
+
+  <!-- Iteration 88 (CVM-328): Slide-In-Detail-Panel. -->
+  @if (selected(); as s) {
+    <aside
+      class="fixed right-0 top-0 h-full w-full max-w-md border-l border-border bg-surface shadow-card z-40 overflow-y-auto"
+      role="dialog"
+      aria-label="Reachability-Detail"
+      data-testid="reachability-detail-panel"
+    >
+      <header class="flex items-center justify-between gap-2 border-b border-border p-4">
+        <h2 class="text-title-sm">Reachability-Analyse</h2>
+        <button
+          type="button"
+          class="btn-icon"
+          data-testid="reachability-detail-close"
+          aria-label="Schliessen"
+          (click)="schliessen()"
+        >
+          <cvm-icon name="close" [size]="20"></cvm-icon>
+        </button>
+      </header>
+      <div class="p-4 flex flex-col gap-3 text-sm">
+        <div class="form-group">
+          <span class="form-label">Zeit</span>
+          <span>{{ s.createdAt | date: 'yyyy-MM-dd HH:mm:ss' }}</span>
+        </div>
+        <div class="form-group">
+          <span class="form-label">Status</span>
+          <span class="font-medium">{{ s.status }}</span>
+        </div>
+        <div class="form-group">
+          <span class="form-label">Severity</span>
+          @if (s.severity) {
+            <span class="severity-chip" [attr.data-sev]="s.severity">
+              {{ s.severity }}
+            </span>
+          } @else {
+            <span class="text-text-muted">-</span>
+          }
+        </div>
+        <div class="form-group">
+          <span class="form-label">Confidence</span>
+          <span>{{ s.confidence ? (s.confidence | number: '1.2-2') : '-' }}</span>
+        </div>
+        <div class="form-group">
+          <span class="form-label">Finding</span>
+          <span class="text-code break-all">{{ s.findingId || '-' }}</span>
+        </div>
+        <div class="form-group">
+          <span class="form-label">Begruendung</span>
+          <p class="whitespace-pre-wrap">{{ s.rationale || '(keine Begruendung)' }}</p>
+        </div>
+      </div>
+    </aside>
   }
 
   <cvm-reachability-start-dialog
