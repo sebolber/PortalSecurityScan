@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
@@ -7,8 +8,11 @@ import {
   Severity,
   SeverityBadgeComponent
 } from '../../shared/components/severity-badge.component';
+import { AuthService } from '../../core/auth/auth.service';
+import { CVM_ROLES } from '../../core/auth/cvm-roles';
 import { LocaleService } from '../../core/i18n/locale.service';
 import { ChartThemeService } from '../../core/theme/chart-theme.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
 interface SeverityCount {
   readonly severity: Severity;
@@ -32,8 +36,10 @@ interface SeverityCount {
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     SeverityBadgeComponent,
-    NgxEchartsDirective
+    NgxEchartsDirective,
+    CvmIconComponent
   ],
   // Iteration 52 (CVM-102): ECharts lazy in den Dashboard-Chunk.
   providers: [echartsRouteProviders()],
@@ -43,8 +49,33 @@ interface SeverityCount {
 export class DashboardComponent {
   private readonly locale = inject(LocaleService);
   private readonly chartTheme = inject(ChartThemeService);
+  private readonly auth = inject(AuthService);
 
   readonly texte = this.locale.messages.dashboard;
+
+  // Iteration 80 (CVM-320): Rollen-gefilterte Handlungskarten
+  // oberhalb der KPIs. Jede Karte ist ein Deep-Link in den
+  // naechsten Workflow-Schritt.
+  readonly darfScan = computed(
+    () =>
+      this.auth.hasRole(CVM_ROLES.ADMIN) ||
+      this.auth.hasRole(CVM_ROLES.ASSESSOR)
+  );
+  readonly darfQueue = computed(
+    () =>
+      this.auth.hasRole(CVM_ROLES.ADMIN) ||
+      this.auth.hasRole(CVM_ROLES.ASSESSOR) ||
+      this.auth.hasRole(CVM_ROLES.REVIEWER) ||
+      this.auth.hasRole(CVM_ROLES.APPROVER)
+  );
+  readonly darfWaiver = computed(
+    () =>
+      this.auth.hasRole(CVM_ROLES.ADMIN) ||
+      this.auth.hasRole(CVM_ROLES.VIEWER) ||
+      this.auth.hasRole(CVM_ROLES.ASSESSOR) ||
+      this.auth.hasRole(CVM_ROLES.REVIEWER) ||
+      this.auth.hasRole(CVM_ROLES.APPROVER)
+  );
 
   readonly offene = 0;
 

@@ -3,6 +3,46 @@
 > Historie vor 2026-04-19 siehe `docs/20260418/offene-punkte.md`.
 > Neue Eintraege werden oben ergaenzt.
 
+## Stand 2026-04-19 abends - UX-Verbesserungsplan (laufend)
+
+Quelle: Senior-UX-Review (siehe Chat-Verlauf 2026-04-19). Die
+Iterationen 80+ implementieren die Befunde.
+
+- ~~U-01a Workflow-CTAs Scan/Queue/Dashboard~~ - **Erledigt in
+  Iteration 80** (CVM-320). Scan-Upload->Queue-Deep-Link,
+  Queue-Empty-State, Dashboard-Handlungskarten.
+- **U-01b Workflow-CTAs Reachability/FixVerif/Anomaly/Waiver**
+  - Iteration 81. Ziel: Reachability-CTA "zurueck zur Queue",
+  FixVerif "Waiver anlegen", Anomaly "Zum Finding",
+  Waiver-Detail "Bericht erzeugen".
+- **U-02a Queue-Status-Filter + URL-Persistenz** - Iteration 82.
+  Status-Chips (ALLE/OFFEN/APPROVED/REJECTED/NEEDS_VERIFICATION),
+  Filter-State via `ActivatedRoute.queryParams`.
+- **U-02b CVE/KPI/FixVerif-Filter-URL + KPI-Presets** -
+  Iteration 83.
+- **U-02c Tenant-Badge im Shell + Default-Switch** -
+  Iteration 84.
+- **U-03 Waiver-Extend/Revoke-Aktionen + Expiry-Banner** -
+  Iteration 85. Backend existiert; UI fehlt.
+- **U-04a Vier-Augen-Warnung im Queue-Detail** - Iteration 86.
+  Rote Box + Approve-Disabled, wenn Autor == Approver.
+- **U-04b Assessment-Audit-Trail im Queue-Detail** -
+  Iteration 87. Neuer Backend-Endpoint
+  `GET /findings/{id}/assessments/history`, Reiter "Historie".
+- **U-05 Reachability-Detail + Start-Dialog aus Liste** -
+  Iteration 88. Slide-In mit Rationale/Confidence; Finding-
+  Autocomplete; Feature-Flag-Banner bei deaktiviertem Feature.
+- **U-06 Einheitliches Admin-Aktions-Menue** - Iteration 89-90.
+  Dreipunkt-Menue in Rules/Products/Environments/Profiles,
+  `window.prompt` -> `cvm-dialog`.
+- **U-07a Breadcrumbs + globale Shortcut-Sheet** - Iteration 91.
+- **U-07b Globale Suche + Bell-Notifications** - Iteration 92.
+- **U-08 Dashboard-Handlungszentrale + Report-Listing** -
+  Iteration 93-94. Benoetigt kleinen Backend-Endpoint
+  `GET /reports`.
+- **U-09 Secrets-Show/Hide-Toggle + Rotation** - Iteration 95.
+- **U-10 Erstnutzer-Wizard** - Iteration 96.
+
 ## Stand 2026-04-19 - UI-Harmonisierung (Iteration 61) - laeuft
 
 - **Komplettumbau auf reines Tailwind-Design-System** (CVM-62).

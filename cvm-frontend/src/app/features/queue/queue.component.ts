@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { interval } from 'rxjs';
 import { QueueStore } from './queue-store';
 import { QueueShortcutsDirective } from './queue-shortcuts.directive';
@@ -20,7 +21,12 @@ import { QueueHelpOverlayComponent } from './queue-help-overlay.component';
 import { AuthService } from '../../core/auth/auth.service';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { Severity } from '../../shared/components/severity-badge.component';
-import { QueueEntry, RejectCommand, ApproveCommand } from './queue.types';
+import {
+  AssessmentStatus as QueueFilterStatus,
+  QueueEntry,
+  RejectCommand,
+  ApproveCommand
+} from './queue.types';
 
 /**
  * Queue-Seite. Koordiniert {@link QueueStore}, Polling,
@@ -34,6 +40,7 @@ import { QueueEntry, RejectCommand, ApproveCommand } from './queue.types';
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     CvmIconComponent,
     QueueShortcutsDirective,
     QueueFilterBarComponent,
@@ -48,6 +55,7 @@ export class QueueComponent implements OnInit {
   private readonly store = inject(QueueStore);
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly route = inject(ActivatedRoute);
 
   readonly entries = this.store.entries;
   readonly selected = this.store.selected;
@@ -89,6 +97,27 @@ export class QueueComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Iteration 80 (CVM-320): queryParams in Store-Filter uebersetzen,
+    // damit Deep-Links wie /queue?productVersionId=... aus Scan-
+    // Upload-CTAs direkt filtern.
+    this.route.queryParamMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const productVersionId = params.get('productVersionId') ?? undefined;
+        const environmentId = params.get('environmentId') ?? undefined;
+        const status = params.get('status') ?? undefined;
+        const current = this.store.filter();
+        if (productVersionId !== current.productVersionId
+            || environmentId !== current.environmentId
+            || status !== current.status) {
+          this.store.setFilter({
+            productVersionId,
+            environmentId,
+            status: status as QueueFilterStatus | undefined
+          });
+        }
+      });
+
     // Polling alle 60 s.
     interval(60_000)
       .pipe(takeUntilDestroyed(this.destroyRef))

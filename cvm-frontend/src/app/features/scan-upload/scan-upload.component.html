@@ -134,13 +134,36 @@
       }
 
       @if (summary(); as s) {
-        <section class="card-padded flex flex-col gap-2" data-testid="scan-upload-summary">
+        <section class="card-padded flex flex-col gap-3" data-testid="scan-upload-summary">
           <h3 class="text-base font-semibold">Ergebnis</h3>
           <p class="text-sm">Scan-ID: <code class="text-code">{{ s.scanId }}</code></p>
           <p class="text-sm">Scanner: {{ s.scanner }}</p>
           <p class="text-sm break-all">SHA-256: <code class="text-code">{{ s.contentSha256 }}</code></p>
           <p class="text-sm">Komponenten: {{ s.componentCount }}</p>
           <p class="text-sm">Findings: {{ s.findingCount }}</p>
+
+          <!-- Iteration 80 (CVM-320): Workflow-Fortsetzung. -->
+          <div class="flex flex-wrap gap-3 pt-2">
+            @if (queueLinkParams(); as params) {
+              <a
+                class="btn btn-primary"
+                data-testid="scan-upload-to-queue"
+                [routerLink]="['/queue']"
+                [queryParams]="params"
+              >
+                <cvm-icon name="rule" [size]="16"></cvm-icon>
+                Findings fuer diese Version pruefen
+              </a>
+            }
+            <a
+              class="btn btn-secondary"
+              data-testid="scan-upload-to-dashboard"
+              routerLink="/dashboard"
+            >
+              <cvm-icon name="home" [size]="16"></cvm-icon>
+              Dashboard
+            </a>
+          </div>
         </section>
       }
     </div>

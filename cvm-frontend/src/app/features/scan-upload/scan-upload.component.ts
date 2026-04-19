@@ -1,6 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import {
@@ -35,6 +36,7 @@ type UploadState = 'idle' | 'uploading' | 'polling' | 'done' | 'error';
   imports: [
     CommonModule,
     FormsModule,
+    RouterLink,
     CvmIconComponent
   ],
   templateUrl: './scan-upload.component.html',
@@ -57,6 +59,26 @@ export class ScanUploadComponent implements OnInit {
   readonly state = signal<UploadState>('idle');
   readonly fehler = signal<string | null>(null);
   readonly summary = signal<ScanSummary | null>(null);
+
+  /**
+   * Iteration 80 (CVM-320): Deep-Link in die Bewertungs-Queue,
+   * gefiltert auf die Produkt-Version + Umgebung des gerade
+   * hochgeladenen Scans.
+   */
+  readonly queueLinkParams = computed(() => {
+    const versionId = this.selectedVersionId();
+    const environmentId = this.selectedEnvironmentId();
+    if (!versionId) {
+      return null;
+    }
+    const params: Record<string, string> = {
+      productVersionId: versionId
+    };
+    if (environmentId) {
+      params['environmentId'] = environmentId;
+    }
+    return params;
+  });
 
   async ngOnInit(): Promise<void> {
     try {

@@ -76,14 +76,47 @@
 
   <div class="flex flex-1 overflow-hidden p-6 gap-4">
     <main class="flex-1 overflow-auto">
-      <cvm-queue-table
-        [entries]="entries()"
-        [checkedIds]="checkedIds()"
-        [pendingIds]="pendingIds()"
-        [selectedId]="selectedId()"
-        (select)="onSelect($event)"
-        (toggle)="onToggle($event)"
-      ></cvm-queue-table>
+      @if (!loading() && !error() && entries().length === 0) {
+        <!-- Iteration 80 (CVM-320): Empty-State mit Workflow-CTAs. -->
+        <div
+          class="card card-padded flex flex-col items-center gap-3 text-center"
+          data-testid="queue-empty-state"
+        >
+          <cvm-icon name="check-circle" [size]="48" class="text-text-muted"></cvm-icon>
+          <h2 class="text-title-sm">Keine offenen Bewertungen</h2>
+          <p class="text-body max-w-[60ch] text-text-muted">
+            Die Queue ist leer. Lade einen neuen Scan hoch oder erzeuge
+            einen Hardening-Bericht fuer die bereits abgeschlossenen
+            Bewertungen.
+          </p>
+          <div class="flex flex-wrap gap-3 justify-center">
+            <a class="btn btn-primary" routerLink="/scans/upload"
+               data-testid="queue-empty-cta-scan">
+              <cvm-icon name="upload" [size]="16"></cvm-icon>
+              Neuer Scan
+            </a>
+            <a class="btn btn-secondary" routerLink="/reports"
+               data-testid="queue-empty-cta-reports">
+              <cvm-icon name="file-text" [size]="16"></cvm-icon>
+              Zum Bericht
+            </a>
+            <a class="btn btn-secondary" routerLink="/dashboard"
+               data-testid="queue-empty-cta-dashboard">
+              <cvm-icon name="home" [size]="16"></cvm-icon>
+              Dashboard
+            </a>
+          </div>
+        </div>
+      } @else {
+        <cvm-queue-table
+          [entries]="entries()"
+          [checkedIds]="checkedIds()"
+          [pendingIds]="pendingIds()"
+          [selectedId]="selectedId()"
+          (select)="onSelect($event)"
+          (toggle)="onToggle($event)"
+        ></cvm-queue-table>
+      }
     </main>
 
     @if (selected(); as s) {

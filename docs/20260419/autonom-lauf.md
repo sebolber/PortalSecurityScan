@@ -225,3 +225,19 @@ Store-Callsite-Migration + Deployment-Doku) komplett, Block C
 Endpunkt/UI und Versionsfilter) komplett. Zusaetzlich
 persistente DRAFTs, Product.repoUrl inkl. Edit-UI, echter
 ReachabilityAutoTriggerAdapter und OSV semver-Range-MVP.
+
+---
+
+## UX-Verbesserungs-Session 2026-04-19 abends
+
+Start: 18:05. Zeitbox 10 h -> Stop 04:05.
+Basis: UX-Review mit 15 Iterationen (U-01 .. U-10).
+
+[18:17] Iteration 80 abgeschlossen: U-01a Workflow-CTAs.
+Scan-Upload Summary -> "Zur Queue mit productVersionId"-Deep-
+Link + Dashboard-CTA. Queue liest queryParams (productVersionId,
+environmentId, status) und uebersetzt sie in den Store-Filter.
+Queue-Empty-State mit drei CTAs (Neuer Scan/Berichte/Dashboard).
+Dashboard-Handlungskarten (Scan/Queue/Waiver) oberhalb der KPIs,
+rollen-gefiltert. 7 neue Karma-Cases (insgesamt 101 Tests).
+Naechstes: U-01b weitere Workflow-CTAs.

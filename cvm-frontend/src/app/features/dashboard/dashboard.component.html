@@ -6,6 +6,64 @@
     </div>
   </header>
 
+  <!-- Iteration 80 (CVM-320): Handlungskarten oberhalb der KPIs. -->
+  <section
+    class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+    data-testid="dashboard-actions"
+  >
+    @if (darfScan()) {
+      <a
+        class="card card-padded hover:border-primary transition-colors flex items-start gap-3 no-underline"
+        routerLink="/scans/upload"
+        data-testid="dashboard-action-scan"
+      >
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary-muted text-primary">
+          <cvm-icon name="upload" [size]="20"></cvm-icon>
+        </span>
+        <div class="flex flex-col gap-1 min-w-0">
+          <h2 class="card-title">Neuer Scan</h2>
+          <p class="text-caption">
+            CycloneDX-SBOM fuer eine Produkt-Version hochladen.
+          </p>
+        </div>
+      </a>
+    }
+    @if (darfQueue()) {
+      <a
+        class="card card-padded hover:border-primary transition-colors flex items-start gap-3 no-underline"
+        routerLink="/queue"
+        data-testid="dashboard-action-queue"
+      >
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary-muted text-primary">
+          <cvm-icon name="rule" [size]="20"></cvm-icon>
+        </span>
+        <div class="flex flex-col gap-1 min-w-0">
+          <h2 class="card-title">Bewertungen pruefen</h2>
+          <p class="text-caption">
+            Offene Vorschlaege in der Bewertungs-Queue abarbeiten.
+          </p>
+        </div>
+      </a>
+    }
+    @if (darfWaiver()) {
+      <a
+        class="card card-padded hover:border-primary transition-colors flex items-start gap-3 no-underline"
+        routerLink="/waivers"
+        data-testid="dashboard-action-waivers"
+      >
+        <span class="inline-flex h-10 w-10 items-center justify-center rounded-md bg-primary-muted text-primary">
+          <cvm-icon name="rule_folder" [size]="20"></cvm-icon>
+        </span>
+        <div class="flex flex-col gap-1 min-w-0">
+          <h2 class="card-title">Waiver-Verwaltung</h2>
+          <p class="text-caption">
+            Ausnahmen ueberpruefen, verlaengern oder zurueckziehen.
+          </p>
+        </div>
+      </a>
+    }
+  </section>
+
   <section class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
     <section class="card">
       <header class="card-header">
