@@ -27,6 +27,17 @@ public interface LlmClient {
      */
     String modelId();
 
+    /**
+     * Provider-Schluessel, passend zu {@code LlmConfiguration.provider}
+     * (z.B. {@code anthropic}, {@code ollama}). Default
+     * {@code unknown}; Adapter, die ueber
+     * {@link TenantLlmSettings} Mandanten-Overrides erhalten sollen,
+     * ueberschreiben die Methode.
+     */
+    default String provider() {
+        return "unknown";
+    }
+
     /** Ein einzelner Nachrichten-Eintrag im Gespraechsverlauf. */
     record Message(Role role, String content) {
         public enum Role { USER, ASSISTANT }

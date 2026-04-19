@@ -1,17 +1,23 @@
 package com.ahs.cvm.llm.adapter;
 
 import com.ahs.cvm.llm.LlmClient;
+import com.ahs.cvm.llm.TenantLlmSettings;
+import com.ahs.cvm.llm.TenantLlmSettingsProvider;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -24,17 +30,24 @@ import org.springframework.web.client.RestClient;
 @ConditionalOnProperty(prefix = "cvm.llm", name = "enabled", havingValue = "true")
 public class OllamaClient implements LlmClient {
 
+    private static final Logger log = LoggerFactory.getLogger(OllamaClient.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    static final String PROVIDER = "ollama";
 
-    private final RestClient restClient;
-    private final String model;
+    private final RestClient defaultRestClient;
+    private final String defaultBaseUrl;
+    private final String defaultModel;
+    private final Optional<TenantLlmSettingsProvider> settingsProvider;
 
     @Autowired
     public OllamaClient(
             @Value("${cvm.llm.ollama.base-url:http://ollama:11434}") String baseUrl,
-            @Value("${cvm.llm.ollama.model:llama3.1:8b-instruct}") String model) {
-        this.model = model;
-        this.restClient = RestClient.builder()
+            @Value("${cvm.llm.ollama.model:llama3.1:8b-instruct}") String model,
+            Optional<TenantLlmSettingsProvider> settingsProvider) {
+        this.defaultModel = model;
+        this.defaultBaseUrl = baseUrl;
+        this.settingsProvider = settingsProvider;
+        this.defaultRestClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -42,19 +55,43 @@ public class OllamaClient implements LlmClient {
 
     /** Test-Konstruktor fuer WireMock. */
     public OllamaClient(RestClient restClient, String model) {
-        this.restClient = restClient;
-        this.model = model;
+        this(restClient, model, Optional.empty());
+    }
+
+    /** Test-Konstruktor mit Tenant-Provider. */
+    public OllamaClient(
+            RestClient restClient, String model,
+            Optional<TenantLlmSettingsProvider> settingsProvider) {
+        this.defaultRestClient = restClient;
+        this.defaultBaseUrl = null;
+        this.defaultModel = model;
+        this.settingsProvider = settingsProvider == null
+                ? Optional.empty()
+                : settingsProvider;
+    }
+
+    @Override
+    public String provider() {
+        return PROVIDER;
     }
 
     @Override
     public String modelId() {
-        return model;
+        return defaultModel;
     }
 
     @Override
     public LlmResponse complete(LlmRequest request) {
+        Optional<TenantLlmSettings> tenant = resolveTenantOverride();
+        RestClient client = tenant
+                .filter(TenantLlmSettings::hasBaseUrl)
+                .map(this::buildTenantRestClient)
+                .orElse(defaultRestClient);
+        String effectiveModel = tenant.map(TenantLlmSettings::model)
+                .orElse(defaultModel);
+
         ObjectNode body = MAPPER.createObjectNode();
-        body.put("model", model);
+        body.put("model", effectiveModel);
         body.put("stream", false);
         body.put("format", "json");
         ObjectNode options = body.putObject("options");
@@ -70,7 +107,7 @@ public class OllamaClient implements LlmClient {
             msg.put("content", m.content());
         }
         Instant start = Instant.now();
-        JsonNode response = restClient.post()
+        JsonNode response = client.post()
                 .uri("/api/chat")
                 .body(body)
                 .retrieve()
@@ -98,7 +135,28 @@ public class OllamaClient implements LlmClient {
                         response.hasNonNull("eval_count")
                                 ? response.get("eval_count").asInt() : null),
                 latency,
-                model);
+                effectiveModel);
+    }
+
+    private Optional<TenantLlmSettings> resolveTenantOverride() {
+        return settingsProvider
+                .flatMap(TenantLlmSettingsProvider::resolveCurrent)
+                .filter(s -> PROVIDER.equals(s.provider()));
+    }
+
+    private RestClient buildTenantRestClient(TenantLlmSettings settings) {
+        try {
+            return RestClient.builder()
+                    .baseUrl(settings.baseUrl())
+                    .requestFactory(new SimpleClientHttpRequestFactory())
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .build();
+        } catch (RuntimeException ex) {
+            log.warn(
+                    "Fallback auf Default-Ollama-Endpoint, Tenant-baseUrl ungueltig: {}",
+                    settings.baseUrl());
+            return defaultRestClient;
+        }
     }
 
     /** HTTP-/Parsing-Fehler. */

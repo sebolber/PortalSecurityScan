@@ -1,12 +1,27 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 34b - offen
+## Stand 2026-04-19 nach Iteration 34c - offen
 
-- **LlmGateway-Anbindung an LlmConfiguration** (Iteration 34c). Die
-  bestehenden Adapter (Claude, Ollama) waehlen heute noch via
-  Spring-Profile. Sie sollen zur Laufzeit die aktive Konfig pro
-  Mandant ziehen, dabei das Secret ueber
-  `LlmConfigurationService.resolveSecret(id)` entschluesseln.
+- **OSV-Rate-Limit / Retry-After** (Iteration 35). OSV-Client
+  feuert heute ohne Throttle; 429 + Retry-After fehlt.
+- **OSV-Mirror** fuer air-gapped-Installationen.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+- **OpenAI-/Azure-/Adesso-Adapter**: fehlen, sobald ein Mandant
+  diese Provider aktiv setzt, greift der Fallback auf den
+  EnvironmentModelResolver (Log-Warnung).
+- **Bundle-Budget-Reduktion** als eigene Iteration (aktuell
+  maximumError auf 2.5mb hochgesetzt).
+
+> Iteration 34c am 2026-04-19 hat den LlmGateway an die neue
+> `LlmConfiguration` angebunden: TenantLlmSettings +
+> TenantLlmSettingsProvider, ClaudeApiClient und OllamaClient mit
+> Laufzeit-Override, LlmClientSelector mit Provider-Match, Bridge
+> `LlmConfigurationTenantSettingsProvider` in `cvm-ai-services`.
+> Details: `docs/20260419/iteration-34c-fortschritt.md`.
+
+## Stand 2026-04-19 nach Iteration 34b - offen (vorher)
+
+- ~~**LlmGateway-Anbindung an LlmConfiguration**~~ erledigt in 34c.
 - **Bundle-Budget-Reduktion** als eigene Iteration. In 34b wurde der
   `maximumError`-Schwellwert von 2mb auf 2.5mb angehoben, weil das
   Baseline-Bundle nach Material-Icons-Self-Hosting bereits 2.13MB

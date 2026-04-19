@@ -28,7 +28,8 @@ class LlmClientSelectorTest {
                 List.of(claude, ollama),
                 Optional.of((env, uc) -> envId.equals(env)
                         ? "llama3.1:8b-instruct" : "claude-sonnet-4-6"),
-                config);
+                config,
+                Optional.empty());
 
         assertThat(selector.select(envId, "auto-assessment").modelId())
                 .isEqualTo("llama3.1:8b-instruct");
@@ -43,7 +44,8 @@ class LlmClientSelectorTest {
         LlmClientSelector selector = new LlmClientSelector(
                 List.of(claude),
                 Optional.of((env, uc) -> "mistral-medium"),
-                config);
+                config,
+                Optional.empty());
 
         assertThatThrownBy(() -> selector.select(null, "x"))
                 .isInstanceOf(NoLlmClientForModelException.class);
@@ -54,8 +56,45 @@ class LlmClientSelectorTest {
     void defaultResolver() {
         LlmClient claude = fakeClient("claude-sonnet-4-6");
         LlmClientSelector selector = new LlmClientSelector(
-                List.of(claude), Optional.empty(), config);
+                List.of(claude), Optional.empty(), config, Optional.empty());
         assertThat(selector.select(null, "x").modelId()).isEqualTo("claude-sonnet-4-6");
+    }
+
+    @Test
+    @DisplayName("Selector: aktive Tenant-Konfig zieht Client per Provider, unabhaengig vom Resolver")
+    void tenantProviderGewinnt() {
+        LlmClient claude = fakeClientMitProvider(
+                "claude-sonnet-4-6", "anthropic");
+        LlmClient ollama = fakeClientMitProvider(
+                "llama3.1:8b-instruct", "ollama");
+        TenantLlmSettingsProvider tenant = () -> Optional.of(
+                new TenantLlmSettings("ollama", "llama3", null, null));
+        LlmClientSelector selector = new LlmClientSelector(
+                List.of(claude, ollama),
+                // Resolver wuerde claude vorschlagen, Tenant-Override gewinnt.
+                Optional.of((env, uc) -> "claude-sonnet-4-6"),
+                config,
+                Optional.of(tenant));
+
+        assertThat(selector.select(null, "auto-assessment").provider())
+                .isEqualTo("ollama");
+    }
+
+    @Test
+    @DisplayName("Selector: unbekannter Tenant-Provider faellt zurueck auf Resolver")
+    void tenantProviderUnbekanntFallback() {
+        LlmClient claude = fakeClientMitProvider(
+                "claude-sonnet-4-6", "anthropic");
+        TenantLlmSettingsProvider tenant = () -> Optional.of(
+                new TenantLlmSettings("openai", "gpt-4o", null, null));
+        LlmClientSelector selector = new LlmClientSelector(
+                List.of(claude),
+                Optional.of((env, uc) -> "claude-sonnet-4-6"),
+                config,
+                Optional.of(tenant));
+
+        assertThat(selector.select(null, "auto-assessment").provider())
+                .isEqualTo("anthropic");
     }
 
     private LlmClient fakeClient(String modelId) {
@@ -68,6 +107,25 @@ class LlmClientSelectorTest {
             @Override
             public String modelId() {
                 return modelId;
+            }
+        };
+    }
+
+    private LlmClient fakeClientMitProvider(String modelId, String provider) {
+        return new LlmClient() {
+            @Override
+            public LlmResponse complete(LlmRequest request) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public String modelId() {
+                return modelId;
+            }
+
+            @Override
+            public String provider() {
+                return provider;
             }
         };
     }

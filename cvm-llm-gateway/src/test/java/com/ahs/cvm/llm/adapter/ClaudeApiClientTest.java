@@ -11,11 +11,14 @@ import com.ahs.cvm.llm.LlmClient;
 import com.ahs.cvm.llm.LlmClient.LlmRequest;
 import com.ahs.cvm.llm.LlmClient.LlmResponse;
 import com.ahs.cvm.llm.LlmClient.Message;
+import com.ahs.cvm.llm.TenantLlmSettings;
+import com.ahs.cvm.llm.TenantLlmSettingsProvider;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -112,6 +115,58 @@ class ClaudeApiClientTest {
 
         assertThatThrownBy(() -> client.complete(request()))
                 .isInstanceOf(RestClientException.class);
+    }
+
+    @Test
+    @DisplayName("ClaudeApi: Tenant-Override zieht Modell und API-Key aus TenantLlmSettings")
+    void tenantOverride() {
+        WireMockServer tenantWiremock = new WireMockServer(
+                WireMockConfiguration.options().dynamicPort());
+        tenantWiremock.start();
+        try {
+            tenantWiremock.stubFor(post(urlEqualTo("/v1/messages"))
+                    .willReturn(aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody("""
+                                    {
+                                      "id": "msg-2",
+                                      "model": "claude-opus-4-7",
+                                      "content": [
+                                        {"type":"text","text":"{\\"severity\\":\\"HIGH\\"}"}
+                                      ],
+                                      "usage": {"input_tokens": 10, "output_tokens": 5}
+                                    }""")));
+
+            TenantLlmSettingsProvider provider = () -> Optional.of(
+                    new TenantLlmSettings(
+                            "anthropic",
+                            "claude-opus-4-7",
+                            tenantWiremock.baseUrl(),
+                            "tenant-key-xyz"));
+            RestClient rest = RestClient.builder()
+                    .baseUrl(wiremock.baseUrl())
+                    .requestFactory(new SimpleClientHttpRequestFactory())
+                    .defaultHeader("anthropic-version", "2023-06-01")
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .build();
+            ClaudeApiClient tenantAware = new ClaudeApiClient(
+                    rest, "default-key", "claude-sonnet-4-6", Optional.of(provider));
+
+            LlmResponse resp = tenantAware.complete(request());
+
+            // Antwort kam vom Tenant-Server, nicht vom Default.
+            assertThat(resp.modelId()).isEqualTo("claude-opus-4-7");
+            assertThat(tenantWiremock.findAll(
+                    WireMock.postRequestedFor(urlEqualTo("/v1/messages"))))
+                    .hasSize(1);
+            assertThat(tenantWiremock.findAll(
+                            WireMock.postRequestedFor(urlEqualTo("/v1/messages")))
+                    .get(0).getHeader("x-api-key"))
+                    .isEqualTo("tenant-key-xyz");
+        } finally {
+            tenantWiremock.stop();
+        }
     }
 
     @Test
