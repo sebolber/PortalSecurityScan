@@ -41,7 +41,7 @@
             <tr>
               <td>{{ a.dispatchedAt | date: 'yyyy-MM-dd HH:mm' }}</td>
               <td>{{ a.subject }}</td>
-              <td class="text-caption">{{ a.recipients?.join(', ') || '-' }}</td>
+              <td class="text-caption">{{ a.recipients.join(', ') || '-' }}</td>
               <td class="text-code">{{ a.triggerKey }}</td>
               <td>
                 @if (a.error) {
