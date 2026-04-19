@@ -204,8 +204,9 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
   `OsvJsonlMirrorLookup` (`@Primary`, `@ConditionalOnProperty`).
   JSONL-Datei wird beim Boot einmal in den Speicher gelesen.
   Reload-Endpunkt `POST /api/v1/admin/osv-mirror/reload` in
-  Iteration 73 (CVM-310) ergaenzt. Follow-up:
-  Versionsbereich-Matching und UI-Button.
+  Iteration 73 (CVM-310) ergaenzt. Reload-Button im Admin-UI
+  (an `/admin/cve-import`) in Iteration 75 (CVM-312) ergaenzt.
+  Follow-up: Versionsbereich-Matching.
 - ~~PURL-Canonicalization~~ - erledigt in Iteration 58
   (`com.ahs.cvm.domain.purl.PurlCanonicalizer`, Integration in
   `ComponentCveMatchingOnScanIngestedListener`).

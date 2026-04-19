@@ -172,3 +172,7 @@ GET /api/v1/environments/{id}/profile/draft. Frontend
 ProfilesComponent.laden() laedt DRAFT mit Diff nach. Vier
 neue Tests (2 Web + 2 Karma). Naechstes: offene-punkte.md
 erneut pruefen.
+[17:13] Iteration 75 abgeschlossen: OSV-Mirror Reload-Button
+im Admin-UI (Seite /admin/cve-import) inklusive
+OsvMirrorService-Wrapper und 503-Handling. Zwei neue Karma-
+Tests.
