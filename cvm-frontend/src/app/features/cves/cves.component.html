@@ -1,145 +1,144 @@
-<div class="cvm-cves-page">
-  <div class="cvm-cves-head">
-    <h1 class="cvm-cves-title text-title-lg">CVE-Inventar</h1>
-    <button mat-stroked-button (click)="resetFilter()" [disabled]="loading()">
-      <mat-icon>clear</mat-icon>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">CVE-Inventar</h1>
+      <p class="page-subtitle">Alle bekannten Schwachstellen im aktuellen Mandanten-Scope.</p>
+    </div>
+    <button type="button" class="btn btn-secondary" (click)="resetFilter()" [disabled]="loading()">
+      <cvm-icon name="clear" [size]="16"></cvm-icon>
       Filter zuruecksetzen
     </button>
-  </div>
+  </header>
 
-  <mat-card class="cvm-filter-card">
-    <mat-card-content class="cvm-filter-row">
-      <mat-form-field appearance="outline" class="cvm-search-field">
-        <mat-label>CVE-Schluessel oder Summary</mat-label>
-        <input
-          matInput
-          [(ngModel)]="searchText"
-          (keyup.enter)="sucheAusloesen()"
-          placeholder="z.B. CVE-2025 oder spring"
-        >
-        <mat-icon matSuffix>search</mat-icon>
-      </mat-form-field>
+  <section class="card p-4">
+    <div class="filter-bar">
+      <div class="form-group grow min-w-[220px]">
+        <label class="form-label" for="cve-search">Suche</label>
+        <div class="relative">
+          <cvm-icon name="search" [size]="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"></cvm-icon>
+          <input
+            id="cve-search"
+            type="text"
+            class="input-field pl-9"
+            [(ngModel)]="searchText"
+            (keyup.enter)="sucheAusloesen()"
+            placeholder="z.B. CVE-2025 oder spring"
+          />
+        </div>
+      </div>
 
-      <!--
-        UI-Fix LOW-4 (UI-Exploration 20260418): data-sev-Attribut, damit
-        jeder Toggle einen dezenten Farbrand in Severity-Farbe bekommt.
-      -->
-      <mat-button-toggle-group
-        [(ngModel)]="severityFilter"
-        (change)="sucheAusloesen()"
-        class="cvm-sev-toggle"
-      >
-        <mat-button-toggle [value]="null">Alle</mat-button-toggle>
-        @for (s of severities; track s) {
-          <mat-button-toggle [value]="s" [attr.data-sev]="s">
-            {{ s }}
-          </mat-button-toggle>
-        }
-      </mat-button-toggle-group>
+      <div class="form-group">
+        <span class="form-label">Severity</span>
+        <div class="inline-flex rounded-lg border border-border bg-surface overflow-hidden h-10">
+          <button
+            type="button"
+            class="px-3 text-sm border-r border-border last:border-r-0"
+            [class.bg-primary-muted]="severityFilter === null"
+            [class.text-primary]="severityFilter === null"
+            (click)="setSeverity(null)"
+          >Alle</button>
+          @for (s of severities; track s) {
+            <button
+              type="button"
+              class="px-3 text-sm border-r border-border last:border-r-0 uppercase tracking-wide text-xs font-semibold"
+              [class.bg-primary-muted]="severityFilter === s"
+              [class.text-primary]="severityFilter === s"
+              [attr.data-sev]="s"
+              (click)="setSeverity(s)"
+            >{{ s }}</button>
+          }
+        </div>
+      </div>
 
-      <mat-slide-toggle
-        [(ngModel)]="onlyKev"
-        (change)="sucheAusloesen()"
-      >
-        Nur KEV
-      </mat-slide-toggle>
+      <label class="form-group">
+        <span class="form-label">KEV</span>
+        <span class="inline-flex items-center h-10 gap-2">
+          <input type="checkbox" class="form-checkbox rounded border-border" [(ngModel)]="onlyKev" (change)="sucheAusloesen()" />
+          <span class="text-sm">Nur KEV-Listed</span>
+        </span>
+      </label>
 
-      <button mat-raised-button color="primary" (click)="sucheAusloesen()">
-        <mat-icon>search</mat-icon>
-        Suchen
-      </button>
-    </mat-card-content>
-  </mat-card>
+      <div class="form-group">
+        <span class="form-label">&nbsp;</span>
+        <button type="button" class="btn btn-primary" (click)="sucheAusloesen()" [disabled]="loading()">
+          <cvm-icon name="search" [size]="16"></cvm-icon>
+          Suchen
+        </button>
+      </div>
+    </div>
+  </section>
 
   @if (loading()) {
-    <div class="cvm-cves-muted">
-      <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
       <span>Laedt...</span>
     </div>
   }
+
   @if (error()) {
-    <p class="cvm-cves-error">{{ error() }}</p>
+    <div class="banner banner-critical">
+      <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+      <span>{{ error() }}</span>
+    </div>
   }
 
   @if (!loading() && !error() && page()) {
-    <mat-card class="cvm-table-card">
-      <mat-card-content>
-        <table mat-table [dataSource]="page()!.items" class="cvm-cves-table">
-          <ng-container matColumnDef="cveId">
-            <th mat-header-cell *matHeaderCellDef>CVE</th>
-            <td mat-cell *matCellDef="let row">
-              <a class="cvm-cell-key cvm-cell-link"
-                 [routerLink]="['/cves', row.cveId]">{{ row.cveId }}</a>
-            </td>
-          </ng-container>
+    <section class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>CVE</th>
+            <th>Severity</th>
+            <th>CVSS</th>
+            <th>KEV</th>
+            <th>EPSS</th>
+            <th>Veroeffentlicht</th>
+            <th>Summary</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of page()!.items; track trackCve($index, row)) {
+            <tr>
+              <td>
+                <a class="text-primary font-mono text-sm" [routerLink]="['/cves', row.cveId]">{{ row.cveId }}</a>
+              </td>
+              <td>
+                <ahs-severity-badge [severity]="schwereVonCvss(row.cvssBaseScore)"></ahs-severity-badge>
+              </td>
+              <td>{{ row.cvssBaseScore === null ? '-' : (row.cvssBaseScore | number:'1.1-1') }}</td>
+              <td>
+                @if (row.kevListed) {
+                  <cvm-icon name="alert-triangle" [size]="18" class="text-severity-high" aria-label="CISA KEV"></cvm-icon>
+                } @else {
+                  <span class="text-text-muted">-</span>
+                }
+              </td>
+              <td>{{ row.epssScore === null ? '-' : (row.epssScore * 100 | number:'1.1-1') + '%' }}</td>
+              <td>{{ row.publishedAt ? (row.publishedAt | date:'yyyy-MM-dd') : '-' }}</td>
+              <td class="max-w-xl truncate">{{ row.summary || '-' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
 
-          <ng-container matColumnDef="severity">
-            <th mat-header-cell *matHeaderCellDef>Severity</th>
-            <td mat-cell *matCellDef="let row">
-              <span
-                class="cvm-sev-chip"
-                [attr.data-sev]="schwereVonCvss(row.cvssBaseScore)"
-              >{{ schwereVonCvss(row.cvssBaseScore) }}</span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="cvss">
-            <th mat-header-cell *matHeaderCellDef>CVSS</th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.cvssBaseScore === null ? '-' : (row.cvssBaseScore | number:'1.1-1') }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="kev">
-            <th mat-header-cell *matHeaderCellDef>KEV</th>
-            <td mat-cell *matCellDef="let row">
-              @if (row.kevListed) {
-                <mat-icon class="cvm-kev-icon" matTooltip="CISA KEV">
-                  warning
-                </mat-icon>
-              } @else {
-                <span class="cvm-cves-muted-inline">-</span>
-              }
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="epss">
-            <th mat-header-cell *matHeaderCellDef>EPSS</th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.epssScore === null ? '-' : (row.epssScore * 100 | number:'1.1-1') + '%' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="publishedAt">
-            <th mat-header-cell *matHeaderCellDef>Veroeffentlicht</th>
-            <td mat-cell *matCellDef="let row">
-              {{ row.publishedAt ? (row.publishedAt | date:'yyyy-MM-dd') : '-' }}
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="summary">
-            <th mat-header-cell *matHeaderCellDef>Summary</th>
-            <td mat-cell *matCellDef="let row" class="cvm-cell-summary">
-              {{ row.summary || '-' }}
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="columns"></tr>
-          <tr mat-row *matRowDef="let r; columns: columns; trackBy: trackCve"></tr>
-        </table>
-
-        @if (page()!.items.length === 0) {
-          <p class="cvm-cves-muted">Keine CVEs gefunden.</p>
-        }
-
-        <mat-paginator
-          [length]="page()!.totalElements"
-          [pageSize]="page()!.size"
-          [pageIndex]="page()!.page"
-          [pageSizeOptions]="[10, 25, 50]"
-          (page)="onPage($event)"
-        ></mat-paginator>
-      </mat-card-content>
-    </mat-card>
+      @if (page()!.items.length === 0) {
+        <ahs-empty-state icon="inbox" title="Keine CVEs gefunden." hint="Passe die Filter an oder setze sie zurueck."></ahs-empty-state>
+      } @else {
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-t border-border text-sm">
+          <span class="text-text-muted">
+            {{ pageIndex * pageSize + 1 }}-{{ (pageIndex + 1) * pageSize > page()!.totalElements ? page()!.totalElements : (pageIndex + 1) * pageSize }}
+            von {{ page()!.totalElements }}
+          </span>
+          <div class="flex items-center gap-1">
+            <button type="button" class="btn-icon" (click)="prevPage()" [disabled]="pageIndex === 0" aria-label="Vorherige Seite">
+              <cvm-icon name="chevron-left" [size]="18"></cvm-icon>
+            </button>
+            <button type="button" class="btn-icon" (click)="nextPage()" [disabled]="(pageIndex + 1) * pageSize >= page()!.totalElements" aria-label="Naechste Seite">
+              <cvm-icon name="chevron-right" [size]="18"></cvm-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </section>
   }
 </div>

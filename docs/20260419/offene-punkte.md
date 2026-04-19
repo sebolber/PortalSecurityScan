@@ -3,7 +3,27 @@
 > Historie vor 2026-04-19 siehe `docs/20260418/offene-punkte.md`.
 > Neue Eintraege werden oben ergaenzt.
 
-## Stand 2026-04-19 - Post-Session-Nacharbeit (offen)
+## Stand 2026-04-19 - UI-Harmonisierung (Iteration 61) - laeuft
+
+- **Komplettumbau auf reines Tailwind-Design-System** (CVM-62).
+  Angular Material + CDK + material-icons werden entfernt, ersetzt
+  durch Tailwind-`@layer components`, Lucide-Icons und Fira Sans
+  Condensed. Siehe `docs/20260419/iteration-61-plan.md`.
+  Umsetzung laeuft in den Unter-Iterationen **61A-61H**.
+- Folgende bisherige Eintraege werden durch Iteration 61
+  **obsolet** und gelten als geschlossen oder aufgehoben:
+  - ~~Feature-Bereichs-Migration auf `Ahs*`-Komponenten~~
+    (aufgehoben - `Ahs*`-Primitive werden durch `Cvm*`-Tailwind-
+    Primitive ersetzt).
+  - ~~Stylelint-Guard gegen Material-Hex-Farben~~ (aufgehoben -
+    Material verschwindet komplett, Guard wird durch ESLint-Regel
+    `no-restricted-imports` fuer `@angular/material|cdk` ersetzt).
+  - ~~FontAwesome-Thin-Umstellung~~ (aufgehoben - Icon-System ist
+    Lucide).
+  - ~~Einzelseiten-Redesign (Queue/Dashboard/Profile/Regel-Editor)~~
+    (uebernommen in Iteration 61D/E/F).
+  - ~~Iteration 27 Token-Layer Feinarbeit~~ (aufgehoben - Token-Layer
+    wird in 61A konsolidiert, Legacy-`--cvm-*`-Aliase entfernt).
 
 ### Konfigurationsverwaltung
 

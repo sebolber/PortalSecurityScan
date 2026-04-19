@@ -1,35 +1,28 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
 
 /**
- * adesso-Variante einer Material-Card. Trennt Titel/Subtitle vom
- * Inhalt und sorgt fuer einheitliches Padding/Hover-Verhalten.
+ * Iteration 61A (CVM-62): Pure Tailwind. `MatCard` entfaellt.
  */
 @Component({
   selector: 'ahs-card',
   standalone: true,
-  imports: [CommonModule, MatCardModule],
+  imports: [CommonModule],
   template: `
-    <mat-card class="ahs-card">
-      <mat-card-header>
-        <mat-card-title>{{ title }}</mat-card-title>
-        @if (subtitle) {
-          <mat-card-subtitle>{{ subtitle }}</mat-card-subtitle>
-        }
-      </mat-card-header>
-      <mat-card-content>
+    <section class="card">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">{{ title }}</h2>
+          @if (subtitle) {
+            <p class="text-caption">{{ subtitle }}</p>
+          }
+        </div>
+      </header>
+      <div class="card-body">
         <ng-content></ng-content>
-      </mat-card-content>
-    </mat-card>
-  `,
-  styles: [
-    `
-      :host { display: block; }
-      .ahs-card { transition: box-shadow 200ms ease; }
-      .ahs-card:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
-    `
-  ]
+      </div>
+    </section>
+  `
 })
 export class AhsCardComponent {
   @Input({ required: true }) title!: string;

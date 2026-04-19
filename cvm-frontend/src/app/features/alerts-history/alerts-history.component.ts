@@ -1,20 +1,16 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import {
   AlertHistoryView,
   AlertsHistoryService
 } from '../../core/alerts/alerts-history.service';
 
 /**
- * Alert-Historie (Iteration 27c, CVM-63). Ersetzt den Placeholder
- * aus 27b durch eine Server-gespeiste Tabelle der letzten
- * Mail-Dispatches.
+ * Alert-Historie (Iteration 27c, CVM-63). Iteration 61 (CVM-62):
+ * Migration von Angular Material auf pure Tailwind-Komponenten.
  */
 @Component({
   selector: 'cvm-alerts-history',
@@ -22,26 +18,15 @@ import {
   imports: [
     CommonModule,
     DatePipe,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
     AhsBannerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    CvmIconComponent
   ],
   templateUrl: './alerts-history.component.html',
   styleUrls: ['./alerts-history.component.scss']
 })
 export class AlertsHistoryComponent implements OnInit {
   private readonly history = inject(AlertsHistoryService);
-
-  readonly columns = [
-    'dispatchedAt',
-    'subject',
-    'recipients',
-    'triggerKey',
-    'state'
-  ] as const;
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);

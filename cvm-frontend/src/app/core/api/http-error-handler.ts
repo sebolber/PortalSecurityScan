@@ -1,22 +1,17 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 
 /**
  * Zentraler Mapping-Layer fuer HTTP-Fehler. Zeigt eine deutschsprachige
- * Snackbar an. Gemeinsam genutzt vom {@link ApiClient} und ad-hoc-
- * Aufrufen aus Feature-Services.
+ * Toast-Meldung. Ersetzt `MatSnackBar` (Iteration 61A, CVM-62).
  */
 @Injectable({ providedIn: 'root' })
 export class HttpErrorHandler {
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   show(context: string, error: HttpErrorResponse): void {
-    const meldung = this.format(context, error);
-    this.snackBar.open(meldung, 'Schliessen', {
-      duration: 6000,
-      panelClass: ['cvm-snack-error']
-    });
+    this.toast.error(this.format(context, error));
   }
 
   format(context: string, error: HttpErrorResponse): string {

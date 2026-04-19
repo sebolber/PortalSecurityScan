@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
-import { AhsCardComponent } from '../../shared/components/ahs-card.component';
 import {
   Severity,
   SeverityBadgeComponent
@@ -25,15 +24,14 @@ interface SeverityCount {
  *   <li>Ampel "Weiterbetrieb moeglich?".</li>
  * </ol>
  *
- * Daten sind statisch; Iteration 08 verbindet die Cards mit der
- * Bewertungs-Queue-API.
+ * Iteration 61 (CVM-62): Material entfernt, reines Tailwind via
+ * `.card`, `.card-header`, `.card-body`, `.page`, `.page-title`.
  */
 @Component({
   selector: 'cvm-dashboard',
   standalone: true,
   imports: [
     CommonModule,
-    AhsCardComponent,
     SeverityBadgeComponent,
     NgxEchartsDirective
   ],

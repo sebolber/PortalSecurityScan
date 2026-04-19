@@ -1,14 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import {
   EnvironmentView,
   EnvironmentsService
@@ -31,6 +25,9 @@ type UploadState = 'idle' | 'uploading' | 'polling' | 'done' | 'error';
  * Upload einer CycloneDX-SBOM fuer eine konkrete Produktversion.
  * Die UI zeigt Produkt- und Versionsauswahl, eine Dropzone und pollt
  * nach erfolgreichem Upload den Scan-Status.
+ *
+ * Iteration 61 (CVM-62): Migration von Angular Material auf pure
+ * Tailwind-Komponenten, MatSnackBar ersetzt durch CvmToastService.
  */
 @Component({
   selector: 'cvm-scan-upload',
@@ -38,13 +35,7 @@ type UploadState = 'idle' | 'uploading' | 'polling' | 'done' | 'error';
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressBarModule,
-    MatSelectModule
+    CvmIconComponent
   ],
   templateUrl: './scan-upload.component.html',
   styleUrls: ['./scan-upload.component.scss']
@@ -53,7 +44,7 @@ export class ScanUploadComponent implements OnInit {
   private readonly products = inject(ProductsService);
   private readonly envService = inject(EnvironmentsService);
   private readonly scans = inject(ScansService);
-  private readonly snack = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly produkte = signal<readonly ProductView[]>([]);
   readonly versionen = signal<readonly ProductVersionView[]>([]);
@@ -91,8 +82,7 @@ export class ScanUploadComponent implements OnInit {
       const versions = await this.products.versions(productId);
       this.versionen.set(versions);
     } catch {
-      this.snack.open('Versionen konnten nicht geladen werden.', 'OK',
-        { duration: 3000 });
+      this.toast.error('Versionen konnten nicht geladen werden.');
     }
   }
 
@@ -132,16 +122,16 @@ export class ScanUploadComponent implements OnInit {
 
   private setzeDatei(file: File): void {
     if (file.size > MAX_SIZE_BYTES) {
-      this.snack.open(
-        `Datei zu gross (${(file.size / 1024 / 1024).toFixed(1)} MB, max 30 MB).`,
-        'OK', { duration: 4000 });
+      this.toast.error(
+        `Datei zu gross (${(file.size / 1024 / 1024).toFixed(1)} MB, max 30 MB).`
+      );
       return;
     }
     const name = file.name.toLowerCase();
     if (!name.endsWith('.json') && file.type !== 'application/json') {
-      this.snack.open(
-        'Nur CycloneDX-JSON-Dateien (.json) werden unterstuetzt.',
-        'OK', { duration: 4000 });
+      this.toast.error(
+        'Nur CycloneDX-JSON-Dateien (.json) werden unterstuetzt.'
+      );
       return;
     }
     this.selectedFile.set(file);
@@ -154,8 +144,7 @@ export class ScanUploadComponent implements OnInit {
     const versionId = this.selectedVersionId();
     const file = this.selectedFile();
     if (!versionId || !file) {
-      this.snack.open('Bitte Version und Datei auswaehlen.', 'OK',
-        { duration: 3000 });
+      this.toast.warning('Bitte Version und Datei auswaehlen.');
       return;
     }
     this.state.set('uploading');
@@ -185,7 +174,7 @@ export class ScanUploadComponent implements OnInit {
         this.summary.set(summary);
         if (summary.componentCount > 0 || summary.findingCount > 0) {
           this.state.set('done');
-          this.snack.open('Scan verarbeitet.', 'OK', { duration: 3000 });
+          this.toast.success('Scan verarbeitet.', 3000);
           return;
         }
       } catch {
@@ -194,9 +183,10 @@ export class ScanUploadComponent implements OnInit {
       await new Promise((r) => setTimeout(r, 2000));
     }
     this.state.set('done');
-    this.snack.open(
+    this.toast.info(
       'Scan wurde akzeptiert. Details werden asynchron verarbeitet.',
-      'OK', { duration: 4000 });
+      4000
+    );
   }
 
   private formatError(err: unknown): string {

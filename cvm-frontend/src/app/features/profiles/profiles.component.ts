@@ -2,15 +2,6 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MonacoEditorModule } from 'ngx-monaco-editor-v2';
 import { monacoRouteProviders } from '../../shared/editor/monaco-providers';
 import { AuthService } from '../../core/auth/auth.service';
@@ -25,6 +16,8 @@ import {
   ProfilesService
 } from '../../core/profiles/profiles.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 
 interface ProfileRow {
   env: EnvironmentView;
@@ -62,9 +55,7 @@ compliance:
  *
  * <p>Pro Umgebung: aktives Profil anzeigen, neuen Draft in einer
  * Textarea bearbeiten, gegen die aktive Version diffen, Draft im
- * Vier-Augen-Prinzip aktivieren. Monaco-Editor ist als Folge-
- * Iteration vorgesehen (angular.json-Asset-Setup noetig), bis
- * dahin reicht eine Textarea mit Mono-Font.
+ * Vier-Augen-Prinzip aktivieren.
  */
 @Component({
   selector: 'cvm-profiles',
@@ -73,16 +64,9 @@ compliance:
     CommonModule,
     FormsModule,
     RouterLink,
-    MatButtonModule,
-    MatCardModule,
-    MatChipsModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
     MonacoEditorModule,
-    AhsBannerComponent
+    AhsBannerComponent,
+    CvmIconComponent
   ],
   // Iteration 54 (CVM-104): Monaco lazy in den Profiles-Chunk.
   providers: [monacoRouteProviders()],
@@ -93,7 +77,7 @@ export class ProfilesComponent implements OnInit {
   private readonly envService = inject(EnvironmentsService);
   private readonly profileService = inject(ProfilesService);
   private readonly auth = inject(AuthService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly rows = signal<ProfileRow[]>([]);
   readonly loading = signal<boolean>(false);
@@ -186,7 +170,7 @@ export class ProfilesComponent implements OnInit {
           draft.versionNumber +
           ' gespeichert. Freigabe durch anderen User noetig.'
       });
-      this.snackBar.open('Draft angelegt', 'OK', { duration: 4000 });
+      this.toast.success('Draft angelegt', 4000);
     } catch (err) {
       this.patchRow(row, {
         saving: false,
@@ -221,7 +205,7 @@ export class ProfilesComponent implements OnInit {
         editorYaml: aktiv.yamlSource,
         meldung: 'Profil-Version ' + aktiv.versionNumber + ' aktiv.'
       });
-      this.snackBar.open('Profil aktiviert', 'OK', { duration: 4000 });
+      this.toast.success('Profil aktiviert', 4000);
     } catch (err) {
       this.patchRow(row, {
         approving: false,

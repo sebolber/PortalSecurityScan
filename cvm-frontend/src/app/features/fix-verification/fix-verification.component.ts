@@ -1,11 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import {
   FixVerificationQueryHttpService,
   FixVerificationSummaryView,
@@ -13,6 +8,7 @@ import {
 } from '../../core/fix-verification/fix-verification.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
 const GRADES: readonly (VerificationGrade | 'ALL')[] = [
   'ALL',
@@ -23,9 +19,8 @@ const GRADES: readonly (VerificationGrade | 'ALL')[] = [
 ];
 
 /**
- * Fix-Verifikations-Uebersicht (Iteration 27e, CVM-65). Ersetzt den
- * Platzhalter aus 27d durch eine Server-gespeiste Liste der letzten
- * Mitigation-Plaene mit ihrem Quality-Grade A/B/C/UNKNOWN.
+ * Fix-Verifikations-Uebersicht (Iteration 27e, CVM-65). Iteration 61
+ * (CVM-62): Migration von Angular Material auf pure Tailwind-Komponenten.
  */
 @Component({
   selector: 'cvm-fix-verification',
@@ -34,13 +29,9 @@ const GRADES: readonly (VerificationGrade | 'ALL')[] = [
     CommonModule,
     FormsModule,
     DatePipe,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
     AhsBannerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    CvmIconComponent
   ],
   templateUrl: './fix-verification.component.html',
   styleUrls: ['./fix-verification.component.scss']
@@ -49,14 +40,6 @@ export class FixVerificationComponent implements OnInit {
   private readonly api = inject(FixVerificationQueryHttpService);
 
   readonly grades = GRADES;
-  readonly columns = [
-    'createdAt',
-    'strategy',
-    'status',
-    'target',
-    'grade',
-    'verifiedAt'
-  ] as const;
 
   grade = signal<VerificationGrade | 'ALL'>('ALL');
   readonly loading = signal(false);

@@ -1,19 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatOptionModule } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
-import { MatTabsModule } from '@angular/material/tabs';
 import {
   SystemParameterAuditLogView,
   SystemParameterCreateRequest,
@@ -22,6 +9,8 @@ import {
   SystemParameterUpdateRequest,
   SystemParameterView
 } from '../../core/parameters/system-parameter.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 const PARAM_TYPES: readonly SystemParameterType[] = [
@@ -96,18 +85,7 @@ function leeresFormular(): FormState {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatOptionModule,
-    MatSelectModule,
-    MatSlideToggleModule,
-    MatTableModule,
-    MatTabsModule,
+    CvmIconComponent,
     EmptyStateComponent
   ],
   templateUrl: './admin-parameters.component.html',
@@ -115,28 +93,9 @@ function leeresFormular(): FormState {
 })
 export class AdminParametersComponent implements OnInit {
   private readonly service = inject(SystemParameterService);
-  private readonly snack = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly typen = PARAM_TYPES;
-
-  readonly spalten = [
-    'paramKey',
-    'label',
-    'category',
-    'type',
-    'value',
-    'flags',
-    'aktion'
-  ];
-
-  readonly auditSpalten = [
-    'changedAt',
-    'paramKey',
-    'oldValue',
-    'newValue',
-    'changedBy',
-    'reason'
-  ];
 
   readonly parameter = signal<readonly SystemParameterView[]>([]);
   readonly auditLog = signal<readonly SystemParameterAuditLogView[]>([]);
@@ -146,6 +105,7 @@ export class AdminParametersComponent implements OnInit {
   readonly bearbeiteId = signal<string | null>(null);
   readonly formular = signal<FormState>(leeresFormular());
   readonly kategorieFilter = signal<string>('');
+  readonly aktiverTab = signal<'parameter' | 'audit'>('parameter');
 
   readonly kategorien = computed<readonly string[]>(() => {
     const set = new Set<string>();
@@ -196,6 +156,13 @@ export class AdminParametersComponent implements OnInit {
           ? err.message
           : 'Audit-Log konnte nicht geladen werden.'
       );
+    }
+  }
+
+  zeigeTab(tab: 'parameter' | 'audit'): void {
+    this.aktiverTab.set(tab);
+    if (tab === 'audit') {
+      void this.ladeAuditLog();
     }
   }
 
@@ -258,11 +225,7 @@ export class AdminParametersComponent implements OnInit {
           adminOnly: aktuell.adminOnly
         };
         const saved = await this.service.update(id, update);
-        this.snack.open(
-          'Parameter "' + saved.paramKey + '" gespeichert.',
-          'OK',
-          { duration: 4000 }
-        );
+        this.toast.success('Parameter "' + saved.paramKey + '" gespeichert.', 4000);
       } else {
         const create: SystemParameterCreateRequest = {
           paramKey: aktuell.paramKey,
@@ -283,11 +246,7 @@ export class AdminParametersComponent implements OnInit {
           adminOnly: aktuell.adminOnly
         };
         const saved = await this.service.create(create);
-        this.snack.open(
-          'Parameter "' + saved.paramKey + '" angelegt.',
-          'OK',
-          { duration: 4000 }
-        );
+        this.toast.success('Parameter "' + saved.paramKey + '" angelegt.', 4000);
       }
       this.neuerEintrag();
       await this.ladeParameter();
@@ -313,11 +272,7 @@ export class AdminParametersComponent implements OnInit {
     const grund = window.prompt('Aenderungsgrund (optional):', '') ?? '';
     try {
       await this.service.changeValue(eintrag.id, { value: neu, reason: grund || null });
-      this.snack.open(
-        'Wert von "' + eintrag.paramKey + '" geaendert.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('Wert von "' + eintrag.paramKey + '" geaendert.', 4000);
       await this.ladeParameter();
     } catch (err) {
       this.fehler.set(
@@ -337,11 +292,7 @@ export class AdminParametersComponent implements OnInit {
     }
     try {
       await this.service.reset(eintrag.id);
-      this.snack.open(
-        '"' + eintrag.paramKey + '" zurueckgesetzt.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('"' + eintrag.paramKey + '" zurueckgesetzt.', 4000);
       await this.ladeParameter();
     } catch (err) {
       this.fehler.set(
@@ -361,11 +312,7 @@ export class AdminParametersComponent implements OnInit {
     }
     try {
       await this.service.delete(eintrag.id);
-      this.snack.open(
-        'Parameter "' + eintrag.paramKey + '" geloescht.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('Parameter "' + eintrag.paramKey + '" geloescht.', 4000);
       if (this.bearbeiteId() === eintrag.id) {
         this.neuerEintrag();
       }

@@ -29,12 +29,12 @@ describe('AhsBannerComponent', () => {
     expect(text).toContain('Kostencap erreicht');
   });
 
-  it('setzt data-kind-Attribut anhand des Input-Props', () => {
-    const banner = fixture.nativeElement.querySelector('[data-kind]');
-    expect(banner.getAttribute('data-kind')).toBe('warn');
+  it('setzt banner-Klasse anhand des Input-Props (Iteration 61A)', () => {
+    const banner = fixture.nativeElement.querySelector('.banner');
+    expect(banner.classList.contains('banner-warning')).toBeTrue();
 
     fixture.componentInstance.kind = 'critical';
     fixture.detectChanges();
-    expect(banner.getAttribute('data-kind')).toBe('critical');
+    expect(banner.classList.contains('banner-critical')).toBeTrue();
   });
 });

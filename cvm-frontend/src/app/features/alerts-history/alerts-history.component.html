@@ -1,10 +1,12 @@
-<section class="cvm-alerts-history">
-  <header class="cvm-alerts-history__header">
-    <h1 class="text-title-lg">Alert-Historie</h1>
-    <p class="text-body">
-      Letzte 50 ausgeloeste Mail-Dispatches mit Empfaengern, Zeitstempel
-      und Dry-Run-Kennzeichnung.
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Alert-Historie</h1>
+      <p class="page-subtitle">
+        Letzte 50 ausgeloeste Mail-Dispatches mit Empfaengern, Zeitstempel
+        und Dry-Run-Kennzeichnung.
+      </p>
+    </div>
   </header>
 
   @if (error()) {
@@ -12,67 +14,48 @@
   }
 
   @if (loading()) {
-    <mat-spinner diameter="36"></mat-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+      <span>Laedt...</span>
+    </div>
   } @else if (rows().length === 0) {
     <ahs-empty-state
-      icon="history"
+      icon="inbox"
       title="Keine Alert-Events"
       hint="Es wurden bisher keine Alerts verschickt."
     ></ahs-empty-state>
   } @else {
-    <table
-      mat-table
-      [dataSource]="rows()"
-      [trackBy]="trackId"
-      class="cvm-alerts-history__table"
-    >
-      <ng-container matColumnDef="dispatchedAt">
-        <th mat-header-cell *matHeaderCellDef>Zeit</th>
-        <td mat-cell *matCellDef="let a">
-          {{ a.dispatchedAt | date: 'yyyy-MM-dd HH:mm' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="subject">
-        <th mat-header-cell *matHeaderCellDef>Betreff</th>
-        <td mat-cell *matCellDef="let a">{{ a.subject }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="recipients">
-        <th mat-header-cell *matHeaderCellDef>Empfaenger</th>
-        <td mat-cell *matCellDef="let a" class="text-caption">
-          {{ a.recipients?.join(', ') || '–' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="triggerKey">
-        <th mat-header-cell *matHeaderCellDef>Trigger</th>
-        <td mat-cell *matCellDef="let a" class="text-code">
-          {{ a.triggerKey }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="state">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let a">
-          @if (a.error) {
-            <span class="cvm-alerts-history__state" data-state="ERROR">
-              FEHLER
-            </span>
-          } @else if (a.dryRun) {
-            <span class="cvm-alerts-history__state" data-state="DRY">
-              DRY-RUN
-            </span>
-          } @else {
-            <span class="cvm-alerts-history__state" data-state="SENT">
-              GESENDET
-            </span>
+    <section class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Zeit</th>
+            <th>Betreff</th>
+            <th>Empfaenger</th>
+            <th>Trigger</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of rows(); track trackId($index, a)) {
+            <tr>
+              <td>{{ a.dispatchedAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+              <td>{{ a.subject }}</td>
+              <td class="text-caption">{{ a.recipients?.join(', ') || '-' }}</td>
+              <td class="text-code">{{ a.triggerKey }}</td>
+              <td>
+                @if (a.error) {
+                  <span class="badge badge-danger">FEHLER</span>
+                } @else if (a.dryRun) {
+                  <span class="badge badge-info">DRY-RUN</span>
+                } @else {
+                  <span class="badge badge-success">GESENDET</span>
+                }
+              </td>
+            </tr>
           }
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
-    </table>
+        </tbody>
+      </table>
+    </section>
   }
-</section>
+</div>

@@ -1,20 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatOptionModule } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   LlmConfigurationCreateRequest,
   LlmConfigurationService,
@@ -24,6 +10,8 @@ import {
   LlmConfigurationView,
   LlmProviderInfo
 } from '../../core/llm-config/llm-configuration.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { UuidChipComponent } from '../../shared/components/uuid-chip.component';
 
@@ -69,19 +57,7 @@ function leeresFormular(): FormState {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatCheckboxModule,
-    MatChipsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatOptionModule,
-    MatSelectModule,
-    MatSlideToggleModule,
-    MatTableModule,
-    MatTooltipModule,
+    CvmIconComponent,
     EmptyStateComponent,
     UuidChipComponent
   ],
@@ -90,19 +66,7 @@ function leeresFormular(): FormState {
 })
 export class AdminLlmConfigurationsComponent implements OnInit {
   private readonly service = inject(LlmConfigurationService);
-  private readonly snack = inject(MatSnackBar);
-  private readonly dialog = inject(MatDialog);
-
-  readonly spalten = [
-    'name',
-    'provider',
-    'model',
-    'baseUrl',
-    'secret',
-    'active',
-    'uuid',
-    'aktion'
-  ];
+  private readonly toast = inject(CvmToastService);
 
   readonly konfigurationen = signal<readonly LlmConfigurationView[]>([]);
   readonly provider = signal<readonly LlmProviderInfo[]>([]);
@@ -210,11 +174,7 @@ export class AdminLlmConfigurationsComponent implements OnInit {
           active: aktuell.active
         };
         const saved = await this.service.update(id, update);
-        this.snack.open(
-          'Konfiguration "' + saved.name + '" gespeichert.',
-          'OK',
-          { duration: 4000 }
-        );
+        this.toast.success('Konfiguration "' + saved.name + '" gespeichert.', 4000);
       } else {
         const create: LlmConfigurationCreateRequest = {
           name: aktuell.name,
@@ -228,11 +188,7 @@ export class AdminLlmConfigurationsComponent implements OnInit {
           active: aktuell.active
         };
         const saved = await this.service.create(create);
-        this.snack.open(
-          'Konfiguration "' + saved.name + '" angelegt.',
-          'OK',
-          { duration: 4000 }
-        );
+        this.toast.success('Konfiguration "' + saved.name + '" angelegt.', 4000);
       }
       this.neuerEintrag();
       await this.ladeKonfigurationen();
@@ -256,11 +212,7 @@ export class AdminLlmConfigurationsComponent implements OnInit {
     }
     try {
       await this.service.delete(eintrag.id);
-      this.snack.open(
-        'Konfiguration "' + eintrag.name + '" geloescht.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('Konfiguration "' + eintrag.name + '" geloescht.', 4000);
       if (this.bearbeiteId() === eintrag.id) {
         this.neuerEintrag();
       }
@@ -301,12 +253,11 @@ export class AdminLlmConfigurationsComponent implements OnInit {
         ? await this.service.testSaved(id, payload)
         : await this.service.testAdhoc(payload);
       this.testErgebnis.set(ergebnis);
-      this.snack.open(
-        (ergebnis.success ? 'Test erfolgreich: ' : 'Test fehlgeschlagen: ')
-          + ergebnis.message,
-        'OK',
-        { duration: ergebnis.success ? 4000 : 8000 }
-      );
+      if (ergebnis.success) {
+        this.toast.success('Test erfolgreich: ' + ergebnis.message, 4000);
+      } else {
+        this.toast.error('Test fehlgeschlagen: ' + ergebnis.message);
+      }
     } catch (err) {
       this.fehler.set(
         err instanceof Error && err.message
@@ -328,12 +279,11 @@ export class AdminLlmConfigurationsComponent implements OnInit {
     this.fehler.set(null);
     try {
       const ergebnis = await this.service.testSaved(eintrag.id);
-      this.snack.open(
-        (ergebnis.success ? 'Test erfolgreich: ' : 'Test fehlgeschlagen: ')
-          + ergebnis.message,
-        'OK',
-        { duration: ergebnis.success ? 4000 : 8000 }
-      );
+      if (ergebnis.success) {
+        this.toast.success('Test erfolgreich: ' + ergebnis.message, 4000);
+      } else {
+        this.toast.error('Test fehlgeschlagen: ' + ergebnis.message);
+      }
     } catch (err) {
       this.fehler.set(
         err instanceof Error && err.message
@@ -351,11 +301,7 @@ export class AdminLlmConfigurationsComponent implements OnInit {
     }
     try {
       await this.service.update(eintrag.id, { active: true });
-      this.snack.open(
-        '"' + eintrag.name + '" ist jetzt aktiv.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('"' + eintrag.name + '" ist jetzt aktiv.', 4000);
       await this.ladeKonfigurationen();
     } catch (err) {
       this.fehler.set(

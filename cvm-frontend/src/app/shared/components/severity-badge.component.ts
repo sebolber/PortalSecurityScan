@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type Severity =
@@ -9,15 +9,6 @@ export type Severity =
   | 'INFORMATIONAL'
   | 'NOT_APPLICABLE';
 
-const FARBKLASSEN: Record<Severity, string> = {
-  CRITICAL: 'bg-red-700 text-white',
-  HIGH: 'bg-orange-600 text-white',
-  MEDIUM: 'bg-amber-500 text-black',
-  LOW: 'bg-yellow-300 text-black',
-  INFORMATIONAL: 'bg-sky-200 text-black',
-  NOT_APPLICABLE: 'bg-zinc-400 text-white'
-};
-
 const LABELS: Record<Severity, string> = {
   CRITICAL: 'Kritisch',
   HIGH: 'Hoch',
@@ -27,27 +18,31 @@ const LABELS: Record<Severity, string> = {
   NOT_APPLICABLE: 'Nicht zutreffend'
 };
 
+/**
+ * Severity-Badge. Iteration 61A: Pure Tailwind. Mapping auf
+ * `.severity-chip[data-sev]` in `styles.scss`.
+ */
 @Component({
   selector: 'ahs-severity-badge',
   standalone: true,
   imports: [CommonModule],
   template: `
-    <span
-      class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide"
-      [ngClass]="cssKlasse"
-    >
-      {{ anzeige }}
+    <span class="severity-chip" [attr.data-sev]="severitySig()">
+      {{ label() }}
     </span>
   `
 })
 export class SeverityBadgeComponent {
-  @Input({ required: true }) severity!: Severity;
+  private readonly _severity = signal<Severity>('INFORMATIONAL');
 
-  get cssKlasse(): string {
-    return FARBKLASSEN[this.severity] ?? 'bg-zinc-300 text-black';
+  @Input({ required: true })
+  set severity(v: Severity) {
+    this._severity.set(v);
+  }
+  get severity(): Severity {
+    return this._severity();
   }
 
-  get anzeige(): string {
-    return LABELS[this.severity] ?? this.severity;
-  }
+  readonly severitySig = this._severity.asReadonly();
+  readonly label = computed(() => LABELS[this._severity()] ?? this._severity());
 }

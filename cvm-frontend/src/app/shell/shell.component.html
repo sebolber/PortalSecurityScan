@@ -1,172 +1,162 @@
 <cvm-alert-banner></cvm-alert-banner>
-<mat-toolbar color="primary" class="cvm-header">
-  <span class="cvm-title">{{ brandingTitle() }}</span>
 
-  <!--
-    UI-Fix HIGH-neu-1 (UI-Review 2): `mat-form-field appearance="outline"`
-    hat seine Floating-Label-Notch ueber die Toolbar-Oberkante
-    gezogen - auf jedem Screenshot sichtbar als
-    "Produkt / Umgebung waehlen"-Text ueber dem Header. Der
-    Produkt-Switcher ist jetzt ein Menue-Trigger-Button mit
-    klarer Chevron-Anzeige und ohne Floating-Label.
-  -->
-  <button
-    type="button"
-    mat-button
-    class="cvm-product-switcher"
-    [matMenuTriggerFor]="productMenu"
-    [attr.aria-label]="texte.shell.productSelector"
-  >
-    <mat-icon class="cvm-product-switcher__icon">layers</mat-icon>
-    <span class="cvm-product-switcher__label">{{ selectedProductLabel() }}</span>
-    <mat-icon class="cvm-product-switcher__chevron">arrow_drop_down</mat-icon>
-  </button>
-  <mat-menu #productMenu="matMenu">
+<header class="cvm-topbar">
+  <a routerLink="/dashboard" class="cvm-brand" [attr.aria-label]="brandingLogoAlt()">
+    @if (brandingLogoUrl()) {
+      <img class="cvm-brand__logo" [src]="brandingLogoUrl()" [alt]="brandingLogoAlt()" />
+    } @else {
+      <cvm-icon name="shield" [size]="22" class="text-primary"></cvm-icon>
+    }
+    <span class="cvm-brand__name">{{ brandingTitle() }}</span>
+  </a>
+
+  <div class="relative">
     <button
-      mat-menu-item
-      *ngFor="let p of produkte; trackBy: trackProduct"
-      (click)="selectedProduct = p.key"
-      [class.cvm-product-switcher__active]="p.key === selectedProduct"
+      type="button"
+      class="btn btn-ghost gap-2"
+      (click)="toggleProductMenu()"
+      [attr.aria-expanded]="productMenuOpen()"
+      [attr.aria-label]="texte.shell.productSelector"
     >
-      <mat-icon>{{ p.key === selectedProduct ? 'check' : 'radio_button_unchecked' }}</mat-icon>
-      <span>{{ p.label }}</span>
+      <cvm-icon name="layers" [size]="18"></cvm-icon>
+      <span class="hidden md:inline">{{ selectedProductLabel() }}</span>
+      <cvm-icon name="chevron-down" [size]="16"></cvm-icon>
     </button>
-  </mat-menu>
+    @if (productMenuOpen()) {
+      <div class="cvm-menu" role="menu">
+        @for (p of produkte; track trackProduct($index, p)) {
+          <button
+            type="button"
+            role="menuitem"
+            class="cvm-menu__item"
+            [class.cvm-menu__item--active]="p.key === selectedProduct"
+            (click)="pickProduct(p.key)"
+          >
+            <cvm-icon [name]="p.key === selectedProduct ? 'check' : 'circle'" [size]="14"></cvm-icon>
+            <span>{{ p.label }}</span>
+          </button>
+        }
+      </div>
+    }
+  </div>
 
-  <span class="flex-1"></span>
+  <div class="grow"></div>
 
   <button
-    mat-icon-button
     type="button"
+    class="btn-icon"
     (click)="toggleTheme()"
     [attr.aria-label]="themeMode() === 'dark' ? 'Zum Light-Mode wechseln' : 'Zum Dark-Mode wechseln'"
-    matTooltip="{{ themeMode() === 'dark' ? 'Light-Mode' : 'Dark-Mode' }}"
+    [attr.title]="themeMode() === 'dark' ? 'Light-Mode' : 'Dark-Mode'"
   >
-    <mat-icon>{{ themeMode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
+    <cvm-icon [name]="themeMode() === 'dark' ? 'sun' : 'moon'" [size]="18"></cvm-icon>
   </button>
 
   @if (loggedIn()) {
-    <div class="cvm-user-panel">
-      <div class="cvm-user-info">
-        <span class="cvm-user-name">{{ username() || 'Benutzer' }}</span>
+    <div class="relative flex items-center gap-3">
+      <div class="hidden md:flex flex-col items-end leading-tight">
+        <span class="text-sm font-medium">{{ username() || 'Benutzer' }}</span>
         @if (rollenChips().length > 0) {
-          <span
-            class="cvm-role-summary"
-            [matTooltip]="rollenTooltip()"
-            matTooltipPosition="below"
-          >
+          <span class="text-xs text-text-muted" [attr.title]="rollenTooltip()">
             {{ rollenChips().length }} Rollen
           </span>
         }
       </div>
       <button
-        mat-icon-button
-        [matMenuTriggerFor]="userMenu"
+        type="button"
+        class="btn-icon"
+        (click)="toggleUserMenu()"
+        [attr.aria-expanded]="userMenuOpen()"
         aria-label="Benutzer-Menue"
       >
-        <mat-icon>account_circle</mat-icon>
+        <cvm-icon name="account-circle" [size]="22"></cvm-icon>
       </button>
-      <mat-menu #userMenu="matMenu" class="cvm-user-menu">
-        @if (rollenChips().length > 0) {
-          <div class="cvm-user-menu__roles" (click)="$event.stopPropagation()">
-            <p class="cvm-user-menu__roles-label">Meine Rollen</p>
-            <div class="cvm-role-chips">
-              @for (r of rollenChips(); track r.key) {
-                <span class="cvm-role-chip">{{ r.label }}</span>
-              }
+      @if (userMenuOpen()) {
+        <div class="cvm-menu cvm-menu--right" role="menu">
+          @if (rollenChips().length > 0) {
+            <div class="cvm-menu__section">
+              <p class="cvm-menu__label">Meine Rollen</p>
+              <div class="flex flex-wrap gap-1 mt-2">
+                @for (r of rollenChips(); track r.key) {
+                  <span class="badge badge-info">{{ r.label }}</span>
+                }
+              </div>
             </div>
-          </div>
-          <mat-divider></mat-divider>
-        }
-        <button mat-menu-item (click)="logout()">
-          <mat-icon>logout</mat-icon>
-          <span>{{ texte.app.logout }}</span>
-        </button>
-      </mat-menu>
+            <hr class="border-border" />
+          }
+          <button type="button" role="menuitem" class="cvm-menu__item" (click)="logout()">
+            <cvm-icon name="logout" [size]="16"></cvm-icon>
+            <span>{{ texte.app.logout }}</span>
+          </button>
+        </div>
+      }
     </div>
   } @else {
-    <button mat-button (click)="login()">
-      <mat-icon>login</mat-icon>
+    <button type="button" class="btn btn-primary" (click)="login()">
+      <cvm-icon name="login" [size]="16"></cvm-icon>
       <span>{{ texte.app.login }}</span>
     </button>
   }
+</header>
 
-  <a routerLink="/dashboard" class="cvm-logo" [attr.aria-label]="brandingLogoAlt()">
-    @if (brandingLogoUrl()) {
-      <img
-        class="cvm-logo-image"
-        [src]="brandingLogoUrl()"
-        [alt]="brandingLogoAlt()"
-      />
-    } @else {
-      <mat-icon>shield</mat-icon>
-      <span>CVM</span>
-    }
-  </a>
-</mat-toolbar>
-
-<mat-sidenav-container class="cvm-container">
-  <mat-sidenav mode="side" opened>
+<div class="cvm-shell">
+  <aside class="cvm-sidebar">
     @if (menuGruppen().length === 0) {
-      <p class="cvm-no-menu">{{ texte.app.notLoggedIn }}</p>
+      <p class="cvm-sidebar__empty">{{ texte.app.notLoggedIn }}</p>
     }
     @for (gruppe of menuGruppen(); track gruppe.section) {
-      <div class="cvm-menu-group">
-        <h2 class="cvm-menu-group__label">{{ gruppe.label }}</h2>
+      <div class="cvm-sidebar__group">
+        <h2 class="cvm-sidebar__label">{{ gruppe.label }}</h2>
         @if (gruppe.section !== 'einstellungen') {
-          <mat-nav-list>
+          <nav class="flex flex-col gap-0.5">
             @for (entry of gruppe.entries; track entry.id) {
               <a
-                mat-list-item
                 [routerLink]="entry.path"
-                routerLinkActive="active"
+                routerLinkActive="cvm-nav-item--active"
+                class="cvm-nav-item"
               >
-                <mat-icon matListItemIcon>{{ entry.icon }}</mat-icon>
-                <span matListItemTitle>{{ entry.label }}</span>
+                <cvm-icon [name]="entry.icon" [size]="18"></cvm-icon>
+                <span>{{ entry.label }}</span>
               </a>
             }
-          </mat-nav-list>
+          </nav>
         } @else {
-          @for (entry of gruppe.entries; track entry.id) {
-            <mat-accordion>
-              <mat-expansion-panel
-                class="cvm-menu-expand"
-                [expanded]="true"
-              >
-                <mat-expansion-panel-header class="cvm-menu-expand__header">
-                  <mat-panel-title>
-                    <mat-icon>{{ entry.icon }}</mat-icon>
-                    <a
-                      [routerLink]="entry.path"
-                      routerLinkActive="active"
-                      (click)="$event.stopPropagation()"
-                    >
-                      {{ entry.label }}
-                    </a>
-                  </mat-panel-title>
-                </mat-expansion-panel-header>
-                <mat-nav-list>
+          <div class="flex flex-col gap-2">
+            @for (entry of gruppe.entries; track entry.id) {
+              <details class="cvm-nav-details" open>
+                <summary class="cvm-nav-item cvm-nav-item--summary">
+                  <cvm-icon [name]="entry.icon" [size]="18"></cvm-icon>
+                  <a
+                    [routerLink]="entry.path"
+                    routerLinkActive="cvm-nav-item--active"
+                    (click)="$event.stopPropagation()"
+                    class="grow"
+                  >
+                    {{ entry.label }}
+                  </a>
+                  <cvm-icon name="chevron-down" [size]="14" class="cvm-nav-details__chevron"></cvm-icon>
+                </summary>
+                <div class="pl-7 flex flex-col gap-0.5 mt-1">
                   @for (child of entry.children ?? []; track child.id) {
                     <a
-                      mat-list-item
                       [routerLink]="child.path"
-                      routerLinkActive="active"
-                      class="cvm-menu-child"
+                      routerLinkActive="cvm-nav-item--active"
+                      class="cvm-nav-item cvm-nav-item--child"
                     >
-                      <mat-icon matListItemIcon>{{ child.icon }}</mat-icon>
-                      <span matListItemTitle>{{ child.label }}</span>
+                      <cvm-icon [name]="child.icon" [size]="16"></cvm-icon>
+                      <span>{{ child.label }}</span>
                     </a>
                   }
-                </mat-nav-list>
-              </mat-expansion-panel>
-            </mat-accordion>
-          }
+                </div>
+              </details>
+            }
+          </div>
         }
       </div>
     }
-  </mat-sidenav>
+  </aside>
 
-  <mat-sidenav-content class="cvm-content">
+  <main class="cvm-content" (click)="closeMenus()">
     <router-outlet></router-outlet>
-  </mat-sidenav-content>
-</mat-sidenav-container>
+  </main>
+</div>

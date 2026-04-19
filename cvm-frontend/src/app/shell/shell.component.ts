@@ -1,19 +1,8 @@
-import { Component, DestroyRef, OnInit, computed, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { interval } from 'rxjs';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatListModule } from '@angular/material/list';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatIconModule } from '@angular/material/icon';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSelectModule } from '@angular/material/select';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDividerModule } from '@angular/material/divider';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../core/auth/auth.service';
 import { MenuEntry, MenuSection, RoleMenuService } from '../core/auth/role-menu.service';
@@ -23,7 +12,13 @@ import { AlertBannerService } from '../core/alerts/alert-banner.service';
 import { ThemeService } from '../core/theme/theme.service';
 import { BrandingHttpService } from '../core/theme/branding.service';
 import { AlertBannerComponent } from './alert-banner.component';
+import { CvmIconComponent } from '../shared/components/cvm-icon.component';
 
+/**
+ * Iteration 61B (CVM-62): Shell komplett auf Tailwind. Kein mat-toolbar,
+ * kein mat-sidenav mehr. Sticky Topbar + feste linke Sidebar + freier
+ * Content-Bereich mit voller Breite.
+ */
 @Component({
   selector: 'cvm-shell',
   standalone: true,
@@ -33,18 +28,8 @@ import { AlertBannerComponent } from './alert-banner.component';
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
-    MatToolbarModule,
-    MatSidenavModule,
-    MatListModule,
-    MatExpansionModule,
-    MatIconModule,
-    MatButtonModule,
-    MatMenuModule,
-    MatSelectModule,
-    MatFormFieldModule,
-    MatTooltipModule,
-    MatDividerModule,
-    AlertBannerComponent
+    AlertBannerComponent,
+    CvmIconComponent
   ],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
@@ -75,12 +60,6 @@ export class ShellComponent implements OnInit {
     this.menu.visibleEntries(this.auth.userRoles())
   );
 
-  /**
-   * Gruppiert die Menue-Eintraege in die drei Sektionen
-   * (Workflow / Uebersicht / Einstellungen). Die Reihenfolge der
-   * Eintraege innerhalb einer Sektion bleibt wie in
-   * {@link RoleMenuService} definiert.
-   */
   readonly menuGruppen = computed<
     readonly { section: MenuSection; label: string; entries: readonly MenuEntry[] }[]
   >(() => {
@@ -116,16 +95,8 @@ export class ShellComponent implements OnInit {
       .map((r) => ({ key: r, label: labels[r] }));
   });
 
-  /**
-   * UI-Fix HIGH-2: Tooltip-Zusammenfassung fuer die Rollen-Liste
-   * im Header. Rollen werden im User-Menue voll angezeigt und hier
-   * nur als "N Rollen"-Chip mit Hover-Tooltip, um den Header nicht
-   * zu ueberladen.
-   */
   readonly rollenTooltip = computed(() =>
-    this.rollenChips()
-      .map((r) => r.label)
-      .join(', ')
+    this.rollenChips().map((r) => r.label).join(', ')
   );
 
   readonly produkte: readonly { key: string; label: string }[] = [
@@ -140,6 +111,9 @@ export class ShellComponent implements OnInit {
       this.produkte.find((p) => p.key === this.selectedProduct)?.label
         ?? this.texte.shell.productSelector
   );
+
+  readonly productMenuOpen = signal(false);
+  readonly userMenuOpen = signal(false);
 
   trackProduct(_: number, p: { key: string }): string {
     return p.key;
@@ -166,13 +140,32 @@ export class ShellComponent implements OnInit {
       const config = await this.branding.load();
       this.theme.applyBranding(config);
     } catch {
-      // Default-Branding bleibt aktiv. Kein Banner-Spam beim
-      // anonymen Start.
+      // Default-Branding bleibt aktiv.
     }
   }
 
   toggleTheme(): void {
     this.theme.toggle();
+  }
+
+  toggleProductMenu(): void {
+    this.productMenuOpen.update((v) => !v);
+    this.userMenuOpen.set(false);
+  }
+
+  toggleUserMenu(): void {
+    this.userMenuOpen.update((v) => !v);
+    this.productMenuOpen.set(false);
+  }
+
+  closeMenus(): void {
+    this.productMenuOpen.set(false);
+    this.userMenuOpen.set(false);
+  }
+
+  pickProduct(key: string): void {
+    this.selectedProduct = key;
+    this.productMenuOpen.set(false);
   }
 
   async login(): Promise<void> {

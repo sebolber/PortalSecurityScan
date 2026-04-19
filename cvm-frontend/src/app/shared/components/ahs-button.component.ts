@@ -1,17 +1,24 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
 
-type Variante = 'primary' | 'secondary' | 'danger';
+type Variante = 'primary' | 'secondary' | 'danger' | 'ghost';
 
+/**
+ * Iteration 61A (CVM-62): Pure Tailwind. `mat-flat-button` entfaellt.
+ * Ruft `.btn .btn-*`-Klassen aus `styles.scss` auf.
+ */
 @Component({
   selector: 'ahs-button',
   standalone: true,
-  imports: [CommonModule, MatButtonModule],
+  imports: [CommonModule],
   template: `
     <button
-      mat-flat-button
-      [color]="materialFarbe"
+      type="button"
+      class="btn"
+      [class.btn-primary]="variant === 'primary'"
+      [class.btn-secondary]="variant === 'secondary'"
+      [class.btn-danger]="variant === 'danger'"
+      [class.btn-ghost]="variant === 'ghost'"
       [disabled]="disabled"
       (click)="ausgeloest.emit($event)"
     >
@@ -24,14 +31,4 @@ export class AhsButtonComponent {
   @Input() disabled = false;
 
   @Output() readonly ausgeloest = new EventEmitter<MouseEvent>();
-
-  get materialFarbe(): 'primary' | 'accent' | 'warn' {
-    if (this.variant === 'danger') {
-      return 'warn';
-    }
-    if (this.variant === 'secondary') {
-      return 'accent';
-    }
-    return 'primary';
-  }
 }

@@ -2,24 +2,15 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { MatButtonModule } from '@angular/material/button';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   CvePageResponse,
   CveSeverity,
   CvesService,
   CveView
 } from '../../core/cves/cves.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 const SEVERITIES: readonly CveSeverity[] = [
   'CRITICAL',
@@ -36,18 +27,9 @@ const SEVERITIES: readonly CveSeverity[] = [
     CommonModule,
     FormsModule,
     RouterLink,
-    MatButtonModule,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatChipsModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatSlideToggleModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatTooltipModule
+    CvmIconComponent,
+    SeverityBadgeComponent,
+    EmptyStateComponent
   ],
   templateUrl: './cves.component.html',
   styleUrls: ['./cves.component.scss']
@@ -56,15 +38,6 @@ export class CvesComponent implements OnInit {
   private readonly cves = inject(CvesService);
 
   readonly severities = SEVERITIES;
-  readonly columns = [
-    'cveId',
-    'severity',
-    'cvss',
-    'kev',
-    'epss',
-    'publishedAt',
-    'summary'
-  ] as const;
 
   searchText = '';
   severityFilter: CveSeverity | null = null;
@@ -112,15 +85,27 @@ export class CvesComponent implements OnInit {
     this.sucheAusloesen();
   }
 
-  onPage(event: PageEvent): void {
-    this.pageIndex = event.pageIndex;
+  nextPage(): void {
+    const p = this.page();
+    if (!p) return;
+    if ((this.pageIndex + 1) * this.pageSize >= p.totalElements) return;
+    this.pageIndex++;
     void this.laden();
   }
 
+  prevPage(): void {
+    if (this.pageIndex === 0) return;
+    this.pageIndex--;
+    void this.laden();
+  }
+
+  setSeverity(s: CveSeverity | null): void {
+    this.severityFilter = s;
+    this.sucheAusloesen();
+  }
+
   schwereVonCvss(score: number | null): CveSeverity {
-    if (score === null || score === undefined) {
-      return 'INFORMATIONAL';
-    }
+    if (score === null || score === undefined) return 'INFORMATIONAL';
     if (score >= 9) return 'CRITICAL';
     if (score >= 7) return 'HIGH';
     if (score >= 4) return 'MEDIUM';

@@ -1,110 +1,114 @@
-<div class="cvm-rules-page">
-  <div class="cvm-rules-head">
-    <div class="cvm-rules-head-text">
-      <!-- UI-Fix MEDIUM-6: H1 gross wie auf den anderen Seiten. -->
-      <h1 class="cvm-rules-title text-title-lg">Regeln</h1>
-      <p class="text-body cvm-rules-lead">
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1 min-w-0 flex-1 basis-[420px]">
+      <h1 class="page-title">Regeln</h1>
+      <p class="page-subtitle max-w-[80ch]">
         Regeln werten CVEs im Kontext eines Profils automatisch vor. Eine
         Regel liefert eine Severity-Empfehlung und ein Rationale-Template;
         sie ersetzt nie die Freigabe durch einen Reviewer. Anlage durch
         <code>CVM_RULE_AUTHOR</code>, Aktivierung im Vier-Augen-Prinzip.
       </p>
     </div>
-    <div class="cvm-rules-head-actions">
+    <div class="flex items-center gap-2">
       <button
-        mat-stroked-button
         type="button"
+        class="btn btn-secondary"
         (click)="editorUmschalten()"
         [disabled]="!canAuthor()"
       >
-        <mat-icon>{{ editorOpen() ? 'close' : 'add' }}</mat-icon>
+        <cvm-icon [name]="editorOpen() ? 'close' : 'add'" [size]="16"></cvm-icon>
         {{ editorOpen() ? 'Editor schliessen' : 'Neue Regel anlegen' }}
       </button>
-      <button mat-stroked-button (click)="laden()" [disabled]="loading()">
-        <mat-icon>refresh</mat-icon>
+      <button type="button" class="btn btn-secondary" (click)="laden()" [disabled]="loading()">
+        <cvm-icon name="refresh" [size]="16"></cvm-icon>
         Neu laden
       </button>
     </div>
-  </div>
+  </header>
 
   @if (editorOpen()) {
-    <mat-card class="cvm-rules-editor">
-      <mat-card-header>
-        <mat-card-title>
-          @if (editingRuleId()) { Regel bearbeiten (DRAFT) }
-          @else { Neue Regel (DRAFT) }
-        </mat-card-title>
-        <mat-card-subtitle>
-          Anlage durch <code>CVM_RULE_AUTHOR</code>; Aktivierung im
-          Vier-Augen-Prinzip durch anderen User mit
-          <code>CVM_RULE_APPROVER</code>.
-        </mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
+    <section class="card">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">
+            @if (editingRuleId()) { Regel bearbeiten (DRAFT) }
+            @else { Neue Regel (DRAFT) }
+          </h2>
+          <p class="text-caption">
+            Anlage durch <code>CVM_RULE_AUTHOR</code>; Aktivierung im
+            Vier-Augen-Prinzip durch anderen User mit
+            <code>CVM_RULE_APPROVER</code>.
+          </p>
+        </div>
+      </header>
+      <div class="card-body">
         @if (createError()) {
           <ahs-banner kind="critical" title="Fehler">
             {{ createError() }}
           </ahs-banner>
         }
-        <form (submit)="$event.preventDefault(); draftAnlegen()">
-          <div class="cvm-rules-editor-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Rule-Key</mat-label>
+        <form class="flex flex-col gap-4" (submit)="$event.preventDefault(); draftAnlegen()">
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <label class="form-group">
+              <span class="form-label form-label--required">Rule-Key</span>
               <input
-                matInput
+                type="text"
+                class="input-field"
                 [ngModel]="draft().ruleKey"
                 name="ruleKey"
                 (ngModelChange)="updateDraft('ruleKey', $event)"
                 required
               />
-              <mat-hint>z.B. kev-hit-downgrade</mat-hint>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Name</mat-label>
+              <span class="form-help">z.B. kev-hit-downgrade</span>
+            </label>
+            <label class="form-group">
+              <span class="form-label form-label--required">Name</span>
               <input
-                matInput
+                type="text"
+                class="input-field"
                 [ngModel]="draft().name"
                 name="name"
                 (ngModelChange)="updateDraft('name', $event)"
                 required
               />
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Vorgeschlagene Severity</mat-label>
-              <mat-select
+            </label>
+            <label class="form-group">
+              <span class="form-label">Vorgeschlagene Severity</span>
+              <select
+                class="select-field"
                 [ngModel]="draft().proposedSeverity"
                 name="proposedSeverity"
                 (ngModelChange)="updateDraft('proposedSeverity', $event)"
               >
                 @for (s of severities; track s) {
-                  <mat-option [value]="s">{{ s }}</mat-option>
+                  <option [value]="s">{{ s }}</option>
                 }
-              </mat-select>
-            </mat-form-field>
+              </select>
+            </label>
           </div>
 
-          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
-            <mat-label>Beschreibung</mat-label>
+          <label class="form-group">
+            <span class="form-label">Beschreibung</span>
             <input
-              matInput
+              type="text"
+              class="input-field"
               [ngModel]="draft().description"
               name="description"
               (ngModelChange)="updateDraft('description', $event)"
             />
-          </mat-form-field>
+          </label>
 
-          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
-            <mat-label>Condition (JSON)</mat-label>
+          <label class="form-group">
+            <span class="form-label form-label--required">Condition (JSON)</span>
             <textarea
-              matInput
+              class="textarea-field font-mono text-sm"
               rows="10"
               [ngModel]="draft().conditionJson"
               name="conditionJson"
               (ngModelChange)="updateDraft('conditionJson', $event)"
               spellcheck="false"
-              class="cvm-rules-editor-code"
             ></textarea>
-            <mat-hint>
+            <span class="form-help">
               Logik <code>all</code> / <code>any</code> / <code>not</code>,
               Vergleiche <code>eq</code>, <code>ne</code>, <code>gt</code>,
               <code>lt</code>, <code>matches</code>, <code>in</code>,
@@ -113,70 +117,81 @@
               <code>component.*</code>.
               Beispiel (fuer jeden Scan):
               <code>&#123;"matches":&#123;"path":"cve.id","value":"^CVE-"&#125;&#125;</code>.
-            </mat-hint>
-          </mat-form-field>
+            </span>
+          </label>
 
-          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
-            <mat-label>Rationale-Template</mat-label>
+          <label class="form-group">
+            <span class="form-label">Rationale-Template</span>
             <input
-              matInput
+              type="text"
+              class="input-field"
               [ngModel]="draft().rationaleTemplate"
               name="rationaleTemplate"
               (ngModelChange)="updateDraft('rationaleTemplate', $event)"
             />
-            <mat-hint>
+            <span class="form-help">
               Freitext mit Platzhaltern wie &#123;cve.id&#125; oder
               &#123;profile.architecture.windows_hosts&#125;.
-            </mat-hint>
-          </mat-form-field>
+            </span>
+          </label>
 
-          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
-            <mat-label>Rationale-Quellfelder (komma-getrennt)</mat-label>
+          <label class="form-group">
+            <span class="form-label">Rationale-Quellfelder (komma-getrennt)</span>
             <input
-              matInput
+              type="text"
+              class="input-field"
               [ngModel]="draft().rationaleSourceFields"
               name="rationaleSourceFields"
               (ngModelChange)="updateDraft('rationaleSourceFields', $event)"
             />
-          </mat-form-field>
+          </label>
 
-          <mat-form-field appearance="outline" class="cvm-rules-editor-field">
-            <mat-label>Origin</mat-label>
+          <label class="form-group">
+            <span class="form-label">Origin</span>
             <input
-              matInput
+              type="text"
+              class="input-field"
               [ngModel]="draft().origin"
               name="origin"
               (ngModelChange)="updateDraft('origin', $event)"
             />
-            <mat-hint>z.B. MANUAL, AI_EXTRACTED</mat-hint>
-          </mat-form-field>
+            <span class="form-help">z.B. MANUAL, AI_EXTRACTED</span>
+          </label>
 
-          <div class="cvm-rules-editor-actions">
+          <div class="flex items-center justify-end gap-2">
             <button
               type="submit"
-              mat-flat-button
-              color="primary"
+              class="btn btn-primary"
               [disabled]="creating()"
             >
               @if (creating()) {
+                <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
                 Speichere...
               } @else if (editingRuleId()) {
+                <cvm-icon name="save" [size]="16"></cvm-icon>
                 Aenderungen speichern
               } @else {
+                <cvm-icon name="save" [size]="16"></cvm-icon>
                 Draft anlegen
               }
             </button>
           </div>
         </form>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
   }
 
   @if (loading()) {
-    <p class="cvm-rules-muted">Regeln werden geladen...</p>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+      <span>Regeln werden geladen...</span>
+    </div>
   }
   @if (error()) {
-    <p class="cvm-rules-error">{{ error() }}</p>
+    <div class="banner banner-critical">
+      <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+      <span>{{ error() }}</span>
+    </div>
   }
   @if (!loading() && !error() && rules().length === 0) {
     <!--
@@ -184,9 +199,9 @@
       was eine Regel tut und welche Rollen dafuer noetig sind, statt nur
       auf den Button zu verweisen.
     -->
-    <div class="cvm-rules-empty">
-      <mat-icon aria-hidden="true">rule</mat-icon>
-      <div>
+    <div class="card card-padded flex gap-4 items-start">
+      <cvm-icon name="list-checks" [size]="32" class="text-text-muted shrink-0" aria-hidden="true"></cvm-icon>
+      <div class="flex flex-col gap-2">
         <p class="text-body">
           <strong>Es sind noch keine Regeln angelegt.</strong>
         </p>
@@ -205,31 +220,32 @@
     </div>
   }
 
-  <mat-accordion multi>
+  <div class="flex flex-col gap-3">
     @for (rule of rules(); track rule.id) {
-      <mat-expansion-panel class="cvm-rule-panel">
-        <mat-expansion-panel-header>
-          <mat-panel-title class="cvm-rule-title-row">
-            <span class="cvm-rule-name">{{ rule.name }}</span>
-            <span class="cvm-rule-key">{{ rule.ruleKey }}</span>
-          </mat-panel-title>
-          <mat-panel-description class="cvm-rule-desc-row">
+      <details class="card">
+        <summary class="flex items-center justify-between gap-3 px-6 py-4 cursor-pointer list-none">
+          <div class="flex items-center gap-3 flex-wrap min-w-0">
+            <span class="font-semibold">{{ rule.name }}</span>
+            <span class="text-sm text-text-muted font-mono">{{ rule.ruleKey }}</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
             <span
-              class="cvm-status-chip"
-              [class.cvm-status-active]="rule.status === 'ACTIVE'"
-              [class.cvm-status-draft]="rule.status === 'DRAFT'"
-              [class.cvm-status-retired]="rule.status === 'RETIRED'"
+              class="badge"
+              [class.badge-success]="rule.status === 'ACTIVE'"
+              [class.badge-warning]="rule.status === 'DRAFT'"
+              [class.badge-neutral]="rule.status === 'RETIRED'"
             >{{ rule.status }}</span>
-            <span class="cvm-rule-sev">{{ rule.proposedSeverity }}</span>
-            <span class="cvm-rule-ver">v{{ rule.version }}</span>
-          </mat-panel-description>
-        </mat-expansion-panel-header>
+            <span class="text-sm text-text-muted">{{ rule.proposedSeverity }}</span>
+            <span class="text-xs text-text-muted font-mono">v{{ rule.version }}</span>
+            <cvm-icon name="chevron-down" [size]="18" class="text-text-muted"></cvm-icon>
+          </div>
+        </summary>
 
-        <div class="cvm-rule-body">
+        <div class="flex flex-col gap-3 px-6 pb-6 border-t border-border pt-4">
           @if (rule.description) {
-            <p class="cvm-rule-desc">{{ rule.description }}</p>
+            <p class="text-sm">{{ rule.description }}</p>
           }
-          <div class="cvm-rule-meta">
+          <div class="flex flex-wrap gap-4 text-sm text-text-muted">
             <span><strong>Angelegt:</strong> {{ rule.createdBy }} am {{ rule.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
             @if (rule.activatedBy) {
               <span><strong>Aktiviert:</strong> {{ rule.activatedBy }} am {{ rule.activatedAt | date:'yyyy-MM-dd HH:mm' }}</span>
@@ -239,71 +255,76 @@
             }
           </div>
 
-          <h4 class="cvm-rule-sub">Condition</h4>
-          <pre class="cvm-rule-code">{{ rule.conditionJson }}</pre>
+          <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted">Condition</h4>
+          <pre class="bg-surface-muted text-text p-3 rounded-md overflow-x-auto text-sm font-mono m-0">{{ rule.conditionJson }}</pre>
 
           @if (rule.rationaleTemplate) {
-            <h4 class="cvm-rule-sub">Rationale-Template</h4>
-            <pre class="cvm-rule-code">{{ rule.rationaleTemplate }}</pre>
+            <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted">Rationale-Template</h4>
+            <pre class="bg-surface-muted text-text p-3 rounded-md overflow-x-auto text-sm font-mono m-0">{{ rule.rationaleTemplate }}</pre>
           }
 
-          <div class="cvm-rule-actions">
+          <div class="flex flex-wrap gap-2 pt-1">
             @if (canAuthor()) {
               <button
-                mat-stroked-button
+                type="button"
+                class="btn btn-secondary"
                 [disabled]="isPending(rule.id)"
                 (click)="dryRun(rule)"
               >
-                <mat-icon>play_arrow</mat-icon>
+                <cvm-icon name="play" [size]="16"></cvm-icon>
                 Dry-Run (180 Tage)
               </button>
             }
             @if (canAuthor() && rule.status === 'DRAFT') {
               <button
-                mat-stroked-button
+                type="button"
+                class="btn btn-secondary"
                 [disabled]="isPending(rule.id)"
                 (click)="bearbeite(rule)"
-                title="DRAFT-Felder bearbeiten"
+                [attr.title]="'DRAFT-Felder bearbeiten'"
               >
-                <mat-icon>edit</mat-icon>
+                <cvm-icon name="edit" [size]="16"></cvm-icon>
                 Bearbeiten
               </button>
             }
             @if (canActivate() && rule.status === 'DRAFT') {
               <button
-                mat-raised-button color="primary"
+                type="button"
+                class="btn btn-primary"
                 [disabled]="isPending(rule.id)"
                 (click)="aktivieren(rule)"
               >
-                <mat-icon>check_circle</mat-icon>
+                <cvm-icon name="check-circle" [size]="16"></cvm-icon>
                 Aktivieren
               </button>
             }
             @if (canAdmin()) {
               <button
-                mat-stroked-button
-                color="warn"
+                type="button"
+                class="btn btn-danger"
                 [disabled]="isPending(rule.id)"
                 (click)="loesche(rule)"
-                title="Soft-Delete (technisch entfernt, unterscheidet sich von RETIRED)"
+                [attr.title]="'Soft-Delete (technisch entfernt, unterscheidet sich von RETIRED)'"
               >
-                <mat-icon>delete</mat-icon>
+                <cvm-icon name="delete" [size]="16"></cvm-icon>
                 Soft-Delete
               </button>
             }
           </div>
 
           @if (dryRuns()[rule.id]; as r) {
-            <div class="cvm-dryrun-result">
-              <h4 class="cvm-rule-sub">Dry-Run-Ergebnis ({{ r.fensterTage }} Tage)</h4>
-              <ul>
+            <div class="rounded-md border border-border bg-surface-muted p-4 mt-2">
+              <h4 class="text-xs font-semibold uppercase tracking-wide text-text-muted mb-2">
+                Dry-Run-Ergebnis ({{ r.fensterTage }} Tage)
+              </h4>
+              <ul class="list-disc pl-6 text-sm">
                 <li>Wuerde greifen: <strong>{{ r.wuerdeGreifen }}</strong></li>
                 <li>Kollisionen mit aktiven Bewertungen: <strong>{{ r.kollidiertMitAktivBewertung }}</strong></li>
               </ul>
               @if (r.beispiele.length > 0) {
-                <details>
-                  <summary>Beispiele ({{ r.beispiele.length }})</summary>
-                  <ul>
+                <details class="mt-2">
+                  <summary class="cursor-pointer text-primary text-sm">Beispiele ({{ r.beispiele.length }})</summary>
+                  <ul class="list-disc pl-6 text-sm mt-1">
                     @for (b of r.beispiele; track b) {
                       <li>{{ b }}</li>
                     }
@@ -313,7 +334,7 @@
             </div>
           }
         </div>
-      </mat-expansion-panel>
+      </details>
     }
-  </mat-accordion>
+  </div>
 </div>

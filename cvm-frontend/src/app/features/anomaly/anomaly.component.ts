@@ -1,17 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import {
   AnomalyService,
   AnomalyView
 } from '../../core/anomaly/anomaly.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
 const FENSTER: readonly { key: number; label: string }[] = [
   { key: 24, label: '24 h' },
@@ -20,9 +16,8 @@ const FENSTER: readonly { key: number; label: string }[] = [
 ];
 
 /**
- * Anomalie-Board (Iteration 27d, CVM-64). Ersetzt den
- * Platzhalter aus 27b durch eine Server-gespeiste Liste
- * gestoppter KI-Vorbewertungen.
+ * Anomalie-Board (Iteration 27d, CVM-64). Iteration 61 (CVM-62):
+ * Migration von Angular Material auf pure Tailwind-Komponenten.
  */
 @Component({
   selector: 'cvm-anomaly',
@@ -31,13 +26,9 @@ const FENSTER: readonly { key: number; label: string }[] = [
     CommonModule,
     FormsModule,
     DatePipe,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
     AhsBannerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    CvmIconComponent
   ],
   templateUrl: './anomaly.component.html',
   styleUrls: ['./anomaly.component.scss']
@@ -46,13 +37,6 @@ export class AnomalyComponent implements OnInit {
   private readonly service = inject(AnomalyService);
 
   readonly fenster = FENSTER;
-  readonly columns = [
-    'triggeredAt',
-    'pattern',
-    'severity',
-    'reason',
-    'assessment'
-  ] as const;
 
   hours = signal<number>(24);
   readonly loading = signal(false);

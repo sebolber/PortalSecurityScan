@@ -1,15 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/auth/auth.service';
 import { CVM_ROLES } from '../../core/auth/cvm-roles';
 import {
@@ -18,6 +9,9 @@ import {
   RulesService
 } from '../../core/rules/rules.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 interface RuleDraftForm {
   ruleKey: string;
@@ -64,15 +58,9 @@ function initialDraft(): RuleDraftForm {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatChipsModule,
-    MatExpansionModule,
-    MatIconModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    AhsBannerComponent
+    AhsBannerComponent,
+    CvmIconComponent,
+    EmptyStateComponent
   ],
   templateUrl: './rules.component.html',
   styleUrls: ['./rules.component.scss']
@@ -80,7 +68,7 @@ function initialDraft(): RuleDraftForm {
 export class RulesComponent implements OnInit {
   private readonly rulesService = inject(RulesService);
   private readonly auth = inject(AuthService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly severities = SEVERITIES;
 
@@ -139,25 +127,24 @@ export class RulesComponent implements OnInit {
   async aktivieren(rule: RuleResponse): Promise<void> {
     const approverId = this.auth.username() || '';
     if (!approverId) {
-      this.snackBar.open(
-        'Kein Benutzer angemeldet. Aktivieren nicht moeglich.', 'OK',
-        { duration: 3000 });
+      this.toast.warning(
+        'Kein Benutzer angemeldet. Aktivieren nicht moeglich.'
+      );
       return;
     }
     if (rule.createdBy === approverId) {
-      this.snackBar.open(
-        'Vier-Augen: der Anleger darf nicht gleichzeitig aktivieren.', 'OK',
-        { duration: 4000 });
+      this.toast.warning(
+        'Vier-Augen: der Anleger darf nicht gleichzeitig aktivieren.'
+      );
       return;
     }
     this.setPending(rule.id, true);
     try {
       await this.rulesService.activate(rule.id, approverId);
-      this.snackBar.open(`Regel "${rule.ruleKey}" aktiviert.`, 'OK',
-        { duration: 3000 });
+      this.toast.success(`Regel "${rule.ruleKey}" aktiviert.`, 3000);
       await this.laden();
     } catch {
-      // ApiClient zeigt Snackbar.
+      // ApiClient zeigt Toast.
     } finally {
       this.setPending(rule.id, false);
     }
@@ -177,11 +164,10 @@ export class RulesComponent implements OnInit {
     this.setPending(rule.id, true);
     try {
       await this.rulesService.delete(rule.id);
-      this.snackBar.open('Regel "' + rule.ruleKey + '" entfernt.', 'OK',
-        { duration: 3000 });
+      this.toast.success('Regel "' + rule.ruleKey + '" entfernt.', 3000);
       await this.laden();
     } catch {
-      // ApiClient zeigt Snackbar.
+      // ApiClient zeigt Toast.
     } finally {
       this.setPending(rule.id, false);
     }
@@ -195,7 +181,7 @@ export class RulesComponent implements OnInit {
       runs[rule.id] = result;
       this.dryRuns.set(runs);
     } catch {
-      // ApiClient zeigt Snackbar.
+      // ApiClient zeigt Toast.
     } finally {
       this.setPending(rule.id, false);
     }
@@ -217,9 +203,9 @@ export class RulesComponent implements OnInit {
   /** Iteration 53 (CVM-103): Draft-Regel zum Editieren laden. */
   bearbeite(rule: RuleResponse): void {
     if (rule.status !== 'DRAFT') {
-      this.snackBar.open(
-        'Nur DRAFT-Regeln sind editierbar (diese ist ' + rule.status + ').',
-        'OK', { duration: 4000 });
+      this.toast.warning(
+        'Nur DRAFT-Regeln sind editierbar (diese ist ' + rule.status + ').'
+      );
       return;
     }
     this.editingRuleId.set(rule.id);
@@ -280,12 +266,11 @@ export class RulesComponent implements OnInit {
       const rule = editingId
         ? await this.rulesService.update(editingId, payload)
         : await this.rulesService.create(payload);
-      this.snackBar.open(
+      this.toast.success(
         editingId
           ? 'Regel "' + rule.ruleKey + '" aktualisiert.'
           : 'Regel "' + rule.ruleKey + '" angelegt (Status DRAFT).',
-        'OK',
-        { duration: 4000 }
+        4000
       );
       this.draft.set(initialDraft());
       this.editingRuleId.set(null);

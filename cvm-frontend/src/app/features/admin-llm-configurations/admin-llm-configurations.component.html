@@ -1,169 +1,184 @@
-<div class="cvm-llm-config-page">
-  <h1 class="cvm-llm-config-title text-title-lg">LLM-Konfigurationen</h1>
-  <p class="cvm-llm-config-lead text-body">
-    Mandantenspezifische Zugaenge zu LLM-Anbietern. Exakt eine
-    Konfiguration pro Mandant kann aktiv sein; nur diese wird vom
-    LLM-Gateway verwendet.
-  </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">LLM-Konfigurationen</h1>
+      <p class="page-subtitle">
+        Mandantenspezifische Zugaenge zu LLM-Anbietern. Exakt eine
+        Konfiguration pro Mandant kann aktiv sein; nur diese wird vom
+        LLM-Gateway verwendet.
+      </p>
+    </div>
+  </header>
 
   @if (fehler(); as f) {
-    <div class="cvm-llm-config-error" role="alert">
-      <mat-icon aria-hidden="true">error_outline</mat-icon>
+    <div class="banner banner-critical" role="alert">
+      <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
       <span>{{ f }}</span>
     </div>
   }
 
-  <mat-card class="cvm-llm-config-card">
-    <mat-card-header>
-      <mat-card-title>
-        {{ bearbeiteId() ? 'Konfiguration bearbeiten' : 'Neue Konfiguration anlegen' }}
-      </mat-card-title>
-      <mat-card-subtitle>Nur fuer CVM_ADMIN</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <form #formRef="ngForm" class="cvm-llm-config-form"
+  <section class="card">
+    <header class="card-header">
+      <div class="flex flex-col gap-1">
+        <h2 class="card-title">
+          {{ bearbeiteId() ? 'Konfiguration bearbeiten' : 'Neue Konfiguration anlegen' }}
+        </h2>
+        <span class="text-caption">Nur fuer CVM_ADMIN</span>
+      </div>
+    </header>
+    <div class="card-body">
+      <form #formRef="ngForm" class="grid grid-cols-1 md:grid-cols-2 gap-4"
             (ngSubmit)="speichere(formRef)">
-        <mat-form-field appearance="outline" class="cvm-llm-config-field">
-          <mat-label>Name</mat-label>
-          <input matInput
+        <label class="form-group">
+          <span class="form-label form-label--required">Name</span>
+          <input class="input-field"
+                 type="text"
                  name="name"
                  [ngModel]="formular().name"
                  (ngModelChange)="updateFeld('name', $event)"
                  required
-                 maxlength="255">
-          <mat-hint>Anzeigename, max 255 Zeichen.</mat-hint>
-        </mat-form-field>
+                 maxlength="255" />
+          <span class="form-help">Anzeigename, max 255 Zeichen.</span>
+        </label>
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field">
-          <mat-label>Provider</mat-label>
-          <mat-select
-            name="provider"
-            [ngModel]="formular().provider"
-            (ngModelChange)="updateFeld('provider', $event)"
-            required>
+        <label class="form-group">
+          <span class="form-label form-label--required">Provider</span>
+          <select class="select-field"
+                  name="provider"
+                  [ngModel]="formular().provider"
+                  (ngModelChange)="updateFeld('provider', $event)"
+                  required>
             @for (p of provider(); track p.provider) {
-              <mat-option [value]="p.provider">{{ p.provider }}</mat-option>
+              <option [value]="p.provider">{{ p.provider }}</option>
             }
-          </mat-select>
+          </select>
           @if (ausgewaehlterProvider()?.requiresExplicitBaseUrl) {
-            <mat-hint>Azure verlangt eine explizite Base-URL.</mat-hint>
+            <span class="form-help">Azure verlangt eine explizite Base-URL.</span>
           } @else if (ausgewaehlterProvider()?.defaultBaseUrl) {
-            <mat-hint>Default Base-URL: {{ ausgewaehlterProvider()?.defaultBaseUrl }}</mat-hint>
+            <span class="form-help">Default Base-URL: {{ ausgewaehlterProvider()?.defaultBaseUrl }}</span>
           }
-        </mat-form-field>
+        </label>
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field">
-          <mat-label>Modell</mat-label>
-          <input matInput
+        <label class="form-group">
+          <span class="form-label form-label--required">Modell</span>
+          <input class="input-field"
+                 type="text"
                  name="model"
                  [ngModel]="formular().model"
                  (ngModelChange)="updateFeld('model', $event)"
                  required
-                 maxlength="255">
-          <mat-hint>Z.B. gpt-4o, claude-sonnet-4-6, llama3.</mat-hint>
-        </mat-form-field>
+                 maxlength="255" />
+          <span class="form-help">Z.B. gpt-4o, claude-sonnet-4-6, llama3.</span>
+        </label>
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field cvm-llm-config-field-wide">
-          <mat-label>Base-URL (optional)</mat-label>
-          <input matInput
+        <label class="form-group md:col-span-2">
+          <span class="form-label">Base-URL (optional)</span>
+          <input class="input-field"
+                 type="text"
                  name="baseUrl"
                  [ngModel]="formular().baseUrl"
                  (ngModelChange)="updateFeld('baseUrl', $event)"
-                 maxlength="2048">
-          <mat-hint>Leer = Provider-Default.</mat-hint>
-        </mat-form-field>
+                 maxlength="2048" />
+          <span class="form-help">Leer = Provider-Default.</span>
+        </label>
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field cvm-llm-config-field-wide">
-          <mat-label>Beschreibung (optional)</mat-label>
-          <input matInput
+        <label class="form-group md:col-span-2">
+          <span class="form-label">Beschreibung (optional)</span>
+          <input class="input-field"
+                 type="text"
                  name="description"
                  [ngModel]="formular().description"
                  (ngModelChange)="updateFeld('description', $event)"
-                 maxlength="1000">
-        </mat-form-field>
+                 maxlength="1000" />
+        </label>
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field">
-          <mat-label>Secret / API-Key</mat-label>
-          <input matInput type="password"
+        <label class="form-group">
+          <span class="form-label">Secret / API-Key</span>
+          <input class="input-field"
+                 type="password"
                  name="secret"
                  [ngModel]="formular().secret"
                  (ngModelChange)="updateFeld('secret', $event)"
                  autocomplete="new-password"
-                 [disabled]="formular().secretClear">
+                 [disabled]="formular().secretClear" />
           @if (bearbeiteId()) {
-            <mat-hint>Leer lassen = unveraendert.</mat-hint>
+            <span class="form-help">Leer lassen = unveraendert.</span>
           } @else {
-            <mat-hint>AES-GCM-verschluesselt abgelegt.</mat-hint>
+            <span class="form-help">AES-GCM-verschluesselt abgelegt.</span>
           }
-        </mat-form-field>
+        </label>
 
         @if (bearbeiteId()) {
-          <mat-checkbox
-            class="cvm-llm-config-checkbox"
-            name="secretClear"
-            [ngModel]="formular().secretClear"
-            (ngModelChange)="updateFeld('secretClear', $event)">
-            Secret entfernen
-          </mat-checkbox>
+          <label class="inline-flex items-center gap-2 h-10">
+            <input type="checkbox"
+                   name="secretClear"
+                   class="form-checkbox"
+                   [ngModel]="formular().secretClear"
+                   (ngModelChange)="updateFeld('secretClear', $event)" />
+            <span class="text-sm">Secret entfernen</span>
+          </label>
         }
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field-small">
-          <mat-label>Max. Tokens (optional)</mat-label>
-          <input matInput type="number"
+        <label class="form-group">
+          <span class="form-label">Max. Tokens (optional)</span>
+          <input class="input-field"
+                 type="number"
                  name="maxTokens"
                  [ngModel]="formular().maxTokens"
                  (ngModelChange)="updateFeld('maxTokens', $event)"
-                 min="1">
-        </mat-form-field>
+                 min="1" />
+        </label>
 
-        <mat-form-field appearance="outline" class="cvm-llm-config-field-small">
-          <mat-label>Temperature (0.0 - 1.0)</mat-label>
-          <input matInput type="number"
+        <label class="form-group">
+          <span class="form-label">Temperature (0.0 - 1.0)</span>
+          <input class="input-field"
+                 type="number"
                  name="temperature"
                  [ngModel]="formular().temperature"
                  (ngModelChange)="updateFeld('temperature', $event)"
-                 min="0" max="1" step="0.1">
-        </mat-form-field>
+                 min="0" max="1" step="0.1" />
+        </label>
 
-        <mat-slide-toggle
-          class="cvm-llm-config-toggle"
-          name="active"
-          [ngModel]="formular().active"
-          (ngModelChange)="updateFeld('active', $event)">
-          Aktiv (nur eine pro Mandant)
-        </mat-slide-toggle>
+        <label class="inline-flex items-center gap-2 md:col-span-2">
+          <input type="checkbox"
+                 name="active"
+                 class="form-checkbox"
+                 [ngModel]="formular().active"
+                 (ngModelChange)="updateFeld('active', $event)" />
+          <span class="text-sm">Aktiv (nur eine pro Mandant)</span>
+        </label>
 
-        <div class="cvm-llm-config-actions">
-          <button mat-raised-button color="primary"
+        <div class="flex flex-wrap items-center gap-2 md:col-span-2">
+          <button class="btn btn-primary"
                   type="submit"
                   [disabled]="pending() || testend() !== null">
-            <mat-icon>save</mat-icon>
+            <cvm-icon name="save" [size]="16"></cvm-icon>
             {{ pending() ? 'Wird gespeichert...' : (bearbeiteId() ? 'Speichern' : 'Anlegen') }}
           </button>
-          <button mat-stroked-button type="button"
+          <button class="btn btn-secondary" type="button"
                   (click)="testeFormular()"
                   [disabled]="pending() || testend() !== null || !formular().provider || !formular().model">
-            <mat-icon>network_check</mat-icon>
+            <cvm-icon name="zap" [size]="16"></cvm-icon>
             {{ testend() !== null ? 'Teste...' : 'Verbindung testen' }}
           </button>
           @if (bearbeiteId()) {
-            <button mat-stroked-button type="button"
+            <button class="btn btn-ghost" type="button"
                     (click)="neuerEintrag()"
                     [disabled]="pending() || testend() !== null">
-              <mat-icon>close</mat-icon>
+              <cvm-icon name="close" [size]="16"></cvm-icon>
               Abbrechen
             </button>
           }
         </div>
         @if (testErgebnis(); as t) {
-          <div class="cvm-llm-config-test-result"
-               [class.cvm-llm-config-test-ok]="t.success"
-               [class.cvm-llm-config-test-fail]="!t.success"
+          <div class="md:col-span-2 banner"
+               [class.banner-success]="t.success"
+               [class.banner-critical]="!t.success"
                role="status">
-            <mat-icon aria-hidden="true">{{ t.success ? 'check_circle' : 'cancel' }}</mat-icon>
-            <div>
+            <cvm-icon [name]="t.success ? 'check-circle' : 'x-circle'" [size]="18"></cvm-icon>
+            <div class="flex flex-col">
               <strong>{{ t.success ? 'Verbindung OK' : 'Verbindung fehlgeschlagen' }}</strong>
-              <span class="cvm-llm-config-test-sub">
+              <span class="text-xs">
                 {{ t.message }}
                 @if (t.httpStatus) { &middot; HTTP {{ t.httpStatus }} }
                 &middot; {{ t.latencyMs }} ms
@@ -172,109 +187,110 @@
           </div>
         }
       </form>
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </section>
 
-  <mat-card class="cvm-llm-config-card">
-    <mat-card-header>
-      <mat-card-title>Bestehende Konfigurationen</mat-card-title>
-      <mat-card-subtitle>
-        @if (aktiveKonfig(); as a) {
-          Aktiv: <strong>{{ a.name }}</strong> ({{ a.provider }} / {{ a.model }})
-        } @else {
-          Keine aktive Konfiguration - LLM-Gateway nutzt Fallback aus application.yaml.
-        }
-      </mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
+  <section class="card">
+    <header class="card-header">
+      <div class="flex flex-col gap-1">
+        <h2 class="card-title">Bestehende Konfigurationen</h2>
+        <span class="text-caption">
+          @if (aktiveKonfig(); as a) {
+            Aktiv: <strong>{{ a.name }}</strong> ({{ a.provider }} / {{ a.model }})
+          } @else {
+            Keine aktive Konfiguration - LLM-Gateway nutzt Fallback aus application.yaml.
+          }
+        </span>
+      </div>
+    </header>
+    <div class="card-body">
       @if (laedt()) {
-        <p class="cvm-llm-config-muted">Daten werden geladen...</p>
+        <div class="flex items-center gap-2 text-text-muted text-sm">
+          <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+          <span>Daten werden geladen...</span>
+        </div>
       } @else if (konfigurationen().length === 0) {
         <ahs-empty-state
-          icon="smart_toy"
+          icon="sparkles"
           title="Noch keine LLM-Konfiguration"
           hint="Legen Sie oben einen Zugang an. Der erste Eintrag wird automatisch aktiv, wenn Sie den Toggle setzen.">
         </ahs-empty-state>
       } @else {
-        <table mat-table [dataSource]="konfigurationen()" class="cvm-llm-config-table">
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let k">
-              <strong>{{ k.name }}</strong>
-              @if (k.description) {
-                <div class="cvm-llm-config-sub">{{ k.description }}</div>
+        <div class="overflow-x-auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Provider</th>
+                <th>Modell</th>
+                <th>Base-URL</th>
+                <th>Secret</th>
+                <th>Aktiv</th>
+                <th>ID</th>
+                <th>Aktion</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (k of konfigurationen(); track k.id) {
+                <tr>
+                  <td>
+                    <strong>{{ k.name }}</strong>
+                    @if (k.description) {
+                      <div class="text-xs text-text-muted">{{ k.description }}</div>
+                    }
+                  </td>
+                  <td>{{ k.provider }}</td>
+                  <td>{{ k.model }}</td>
+                  <td>{{ k.baseUrl || '-' }}</td>
+                  <td>
+                    @if (k.secretSet) {
+                      <span class="font-mono text-xs">{{ k.secretHint || 'gesetzt' }}</span>
+                    } @else {
+                      <span class="text-text-muted">nicht gesetzt</span>
+                    }
+                  </td>
+                  <td>
+                    @if (k.active) {
+                      <span class="badge badge-info">aktiv</span>
+                    } @else {
+                      <button class="btn btn-secondary btn-sm" type="button"
+                              (click)="aktiviereDirekt(k)">
+                        <cvm-icon name="play" [size]="14"></cvm-icon>
+                        aktivieren
+                      </button>
+                    }
+                  </td>
+                  <td>
+                    <cvm-uuid-chip [value]="k.id"></cvm-uuid-chip>
+                  </td>
+                  <td>
+                    <div class="inline-flex items-center gap-1">
+                      <button class="btn-icon" type="button"
+                              (click)="testeGespeichert(k)"
+                              [disabled]="testend() !== null"
+                              [attr.aria-label]="'Verbindung testen: ' + k.name"
+                              [attr.title]="'Verbindung testen'">
+                        <cvm-icon [name]="testend() === k.id ? 'loader' : 'zap'" [size]="16"
+                                  [class.animate-spin]="testend() === k.id"></cvm-icon>
+                      </button>
+                      <button class="btn-icon" type="button"
+                              (click)="zumBearbeiten(k)"
+                              aria-label="Bearbeiten">
+                        <cvm-icon name="edit" [size]="16"></cvm-icon>
+                      </button>
+                      <button class="btn-icon" type="button"
+                              (click)="loesche(k)"
+                              aria-label="Loeschen">
+                        <cvm-icon name="delete" [size]="16"></cvm-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="provider">
-            <th mat-header-cell *matHeaderCellDef>Provider</th>
-            <td mat-cell *matCellDef="let k">{{ k.provider }}</td>
-          </ng-container>
-          <ng-container matColumnDef="model">
-            <th mat-header-cell *matHeaderCellDef>Modell</th>
-            <td mat-cell *matCellDef="let k">{{ k.model }}</td>
-          </ng-container>
-          <ng-container matColumnDef="baseUrl">
-            <th mat-header-cell *matHeaderCellDef>Base-URL</th>
-            <td mat-cell *matCellDef="let k">{{ k.baseUrl || '-' }}</td>
-          </ng-container>
-          <ng-container matColumnDef="secret">
-            <th mat-header-cell *matHeaderCellDef>Secret</th>
-            <td mat-cell *matCellDef="let k">
-              @if (k.secretSet) {
-                <span class="cvm-llm-config-secret">{{ k.secretHint || 'gesetzt' }}</span>
-              } @else {
-                <span class="cvm-llm-config-muted">nicht gesetzt</span>
-              }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="active">
-            <th mat-header-cell *matHeaderCellDef>Aktiv</th>
-            <td mat-cell *matCellDef="let k">
-              @if (k.active) {
-                <mat-chip color="primary" selected>aktiv</mat-chip>
-              } @else {
-                <button mat-stroked-button type="button"
-                        (click)="aktiviereDirekt(k)">
-                  <mat-icon>power_settings_new</mat-icon>
-                  aktivieren
-                </button>
-              }
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="uuid">
-            <th mat-header-cell *matHeaderCellDef>ID</th>
-            <td mat-cell *matCellDef="let k">
-              <cvm-uuid-chip [value]="k.id"></cvm-uuid-chip>
-            </td>
-          </ng-container>
-          <ng-container matColumnDef="aktion">
-            <th mat-header-cell *matHeaderCellDef>Aktion</th>
-            <td mat-cell *matCellDef="let k">
-              <button mat-icon-button type="button"
-                      (click)="testeGespeichert(k)"
-                      [disabled]="testend() !== null"
-                      [attr.aria-label]="'Verbindung testen: ' + k.name"
-                      matTooltip="Verbindung testen">
-                <mat-icon>{{ testend() === k.id ? 'hourglass_top' : 'network_check' }}</mat-icon>
-              </button>
-              <button mat-icon-button type="button"
-                      (click)="zumBearbeiten(k)"
-                      aria-label="Bearbeiten">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button type="button"
-                      color="warn"
-                      (click)="loesche(k)"
-                      aria-label="Loeschen">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          <tr mat-header-row *matHeaderRowDef="spalten"></tr>
-          <tr mat-row *matRowDef="let row; columns: spalten;"></tr>
-        </table>
+            </tbody>
+          </table>
+        </div>
       }
-    </mat-card-content>
-  </mat-card>
+    </div>
+  </section>
 </div>

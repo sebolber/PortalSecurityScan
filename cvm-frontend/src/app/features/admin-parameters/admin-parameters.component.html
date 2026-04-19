@@ -1,277 +1,310 @@
-<section class="admin-parameters">
-  <header class="kopf">
-    <h1>System-Parameter</h1>
-    <p class="untertitel">
-      Schluessel/Wert-Parameter fuer den aktuellen Mandanten. Sensible
-      Werte werden in der Tabelle und im Audit-Log maskiert.
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">System-Parameter</h1>
+      <p class="page-subtitle">
+        Schluessel/Wert-Parameter fuer den aktuellen Mandanten. Sensible
+        Werte werden in der Tabelle und im Audit-Log maskiert.
+      </p>
+    </div>
   </header>
 
   @if (fehler(); as msg) {
-    <div class="fehler" role="alert">{{ msg }}</div>
+    <div class="banner banner-critical" role="alert">
+      <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+      <span>{{ msg }}</span>
+    </div>
   }
 
-  <mat-tab-group (selectedTabChange)="$event.index === 1 ? ladeAuditLog() : null">
-    <mat-tab label="Parameter">
-      <mat-card class="karte">
-        <mat-card-header>
-          <mat-card-title>{{ bearbeiteId() ? 'Parameter bearbeiten' : 'Neuer Parameter' }}</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <form #form="ngForm" (ngSubmit)="speichere(form)" class="formular">
-            <mat-form-field appearance="outline">
-              <mat-label>Schluessel</mat-label>
-              <input matInput required name="paramKey" [disabled]="bearbeiteId() !== null"
-                     [ngModel]="formular().paramKey"
-                     (ngModelChange)="updateFeld('paramKey', $event)" />
-            </mat-form-field>
+  <div class="tabs">
+    <button type="button"
+            class="tab"
+            [class.tab-active]="aktiverTab() === 'parameter'"
+            (click)="zeigeTab('parameter')">Parameter</button>
+    <button type="button"
+            class="tab"
+            [class.tab-active]="aktiverTab() === 'audit'"
+            (click)="zeigeTab('audit')">Audit-Log</button>
+  </div>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Anzeigename</mat-label>
-              <input matInput required name="label"
-                     [ngModel]="formular().label"
-                     (ngModelChange)="updateFeld('label', $event)" />
-            </mat-form-field>
+  @if (aktiverTab() === 'parameter') {
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title">{{ bearbeiteId() ? 'Parameter bearbeiten' : 'Neuer Parameter' }}</h2>
+      </header>
+      <div class="card-body">
+        <form #form="ngForm" (ngSubmit)="speichere(form)"
+              class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <label class="form-group">
+            <span class="form-label form-label--required">Schluessel</span>
+            <input class="input-field" type="text" required name="paramKey"
+                   [disabled]="bearbeiteId() !== null"
+                   [ngModel]="formular().paramKey"
+                   (ngModelChange)="updateFeld('paramKey', $event)" />
+          </label>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Kategorie</mat-label>
-              <input matInput required name="category"
-                     [ngModel]="formular().category"
-                     (ngModelChange)="updateFeld('category', $event)" />
-            </mat-form-field>
+          <label class="form-group">
+            <span class="form-label form-label--required">Anzeigename</span>
+            <input class="input-field" type="text" required name="label"
+                   [ngModel]="formular().label"
+                   (ngModelChange)="updateFeld('label', $event)" />
+          </label>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Subkategorie</mat-label>
-              <input matInput name="subcategory"
-                     [ngModel]="formular().subcategory"
-                     (ngModelChange)="updateFeld('subcategory', $event)" />
-            </mat-form-field>
+          <label class="form-group">
+            <span class="form-label form-label--required">Kategorie</span>
+            <input class="input-field" type="text" required name="category"
+                   [ngModel]="formular().category"
+                   (ngModelChange)="updateFeld('category', $event)" />
+          </label>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Typ</mat-label>
-              <mat-select name="type" required
-                          [ngModel]="formular().type"
-                          (ngModelChange)="updateFeld('type', $event)">
-                @for (t of typen; track t) {
-                  <mat-option [value]="t">{{ t }}</mat-option>
-                }
-              </mat-select>
-            </mat-form-field>
+          <label class="form-group">
+            <span class="form-label">Subkategorie</span>
+            <input class="input-field" type="text" name="subcategory"
+                   [ngModel]="formular().subcategory"
+                   (ngModelChange)="updateFeld('subcategory', $event)" />
+          </label>
 
-            <mat-form-field appearance="outline">
-              <mat-label>Einheit</mat-label>
-              <input matInput name="unit"
-                     [ngModel]="formular().unit"
-                     (ngModelChange)="updateFeld('unit', $event)" />
-            </mat-form-field>
-
-            @if (!bearbeiteId()) {
-              <mat-form-field appearance="outline" class="voll">
-                <mat-label>Wert</mat-label>
-                <input matInput name="value"
-                       [type]="formular().sensitive ? 'password' : 'text'"
-                       [ngModel]="formular().value"
-                       (ngModelChange)="updateFeld('value', $event)" />
-              </mat-form-field>
-            }
-
-            <mat-form-field appearance="outline" class="voll">
-              <mat-label>Standardwert</mat-label>
-              <input matInput name="defaultValue"
-                     [ngModel]="formular().defaultValue"
-                     (ngModelChange)="updateFeld('defaultValue', $event)" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="voll">
-              <mat-label>Beschreibung</mat-label>
-              <textarea matInput rows="2" name="description"
-                        [ngModel]="formular().description"
-                        (ngModelChange)="updateFeld('description', $event)"></textarea>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="voll">
-              <mat-label>Handbuch / Hinweis</mat-label>
-              <textarea matInput rows="2" name="handbook"
-                        [ngModel]="formular().handbook"
-                        (ngModelChange)="updateFeld('handbook', $event)"></textarea>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="voll">
-              <mat-label>Validierungs-Regex</mat-label>
-              <input matInput name="validationRules"
-                     [ngModel]="formular().validationRules"
-                     (ngModelChange)="updateFeld('validationRules', $event)" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="voll">
-              <mat-label>Optionen (komma-separiert, fuer SELECT/MULTISELECT)</mat-label>
-              <input matInput name="options"
-                     [ngModel]="formular().options"
-                     (ngModelChange)="updateFeld('options', $event)" />
-            </mat-form-field>
-
-            <div class="toggle-zeile">
-              <mat-slide-toggle name="required"
-                                [ngModel]="formular().required"
-                                (ngModelChange)="updateFeld('required', $event)">
-                Pflicht
-              </mat-slide-toggle>
-              <mat-slide-toggle name="sensitive"
-                                [ngModel]="formular().sensitive"
-                                (ngModelChange)="updateFeld('sensitive', $event)">
-                Sensibel
-              </mat-slide-toggle>
-              <mat-slide-toggle name="hotReload"
-                                [ngModel]="formular().hotReload"
-                                (ngModelChange)="updateFeld('hotReload', $event)">
-                Hot-Reload
-              </mat-slide-toggle>
-              <mat-slide-toggle name="adminOnly"
-                                [ngModel]="formular().adminOnly"
-                                (ngModelChange)="updateFeld('adminOnly', $event)">
-                Nur Admin
-              </mat-slide-toggle>
-            </div>
-
-            <div class="aktionen">
-              <button mat-raised-button color="primary" type="submit"
-                      [disabled]="pending()">
-                {{ bearbeiteId() ? 'Speichern' : 'Anlegen' }}
-              </button>
-              <button mat-button type="button" (click)="neuerEintrag()">
-                Zuruecksetzen
-              </button>
-            </div>
-          </form>
-        </mat-card-content>
-      </mat-card>
-
-      <mat-card class="karte">
-        <mat-card-header>
-          <mat-card-title>Parameter ({{ gefiltertesParameter().length }})</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <mat-form-field appearance="outline" class="filter">
-            <mat-label>Kategorie filtern</mat-label>
-            <mat-select [ngModel]="kategorieFilter()"
-                        (ngModelChange)="kategorieFilter.set($event)">
-              <mat-option [value]="''">Alle</mat-option>
-              @for (k of kategorien(); track k) {
-                <mat-option [value]="k">{{ k }}</mat-option>
+          <label class="form-group">
+            <span class="form-label form-label--required">Typ</span>
+            <select class="select-field" name="type" required
+                    [ngModel]="formular().type"
+                    (ngModelChange)="updateFeld('type', $event)">
+              @for (t of typen; track t) {
+                <option [value]="t">{{ t }}</option>
               }
-            </mat-select>
-          </mat-form-field>
+            </select>
+          </label>
 
-          @if (laedt()) {
-            <p>Laedt ...</p>
-          } @else if (gefiltertesParameter().length === 0) {
-            <ahs-empty-state
-              title="Keine Parameter"
-              hint="Lege oben einen neuen Parameter an."></ahs-empty-state>
-          } @else {
-            <table mat-table [dataSource]="gefiltertesParameter()" class="tabelle">
-              <ng-container matColumnDef="paramKey">
-                <th mat-header-cell *matHeaderCellDef>Schluessel</th>
-                <td mat-cell *matCellDef="let p">{{ p.paramKey }}</td>
-              </ng-container>
-              <ng-container matColumnDef="label">
-                <th mat-header-cell *matHeaderCellDef>Anzeigename</th>
-                <td mat-cell *matCellDef="let p">{{ p.label }}</td>
-              </ng-container>
-              <ng-container matColumnDef="category">
-                <th mat-header-cell *matHeaderCellDef>Kategorie</th>
-                <td mat-cell *matCellDef="let p">
-                  {{ p.category }}<span *ngIf="p.subcategory"> / {{ p.subcategory }}</span>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="type">
-                <th mat-header-cell *matHeaderCellDef>Typ</th>
-                <td mat-cell *matCellDef="let p">{{ p.type }}</td>
-              </ng-container>
-              <ng-container matColumnDef="value">
-                <th mat-header-cell *matHeaderCellDef>Wert</th>
-                <td mat-cell *matCellDef="let p">
-                  {{ p.value }}<span *ngIf="p.unit"> {{ p.unit }}</span>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="flags">
-                <th mat-header-cell *matHeaderCellDef>Flags</th>
-                <td mat-cell *matCellDef="let p">
-                  <mat-chip-set>
-                    <mat-chip *ngIf="p.required" color="warn" highlighted>Pflicht</mat-chip>
-                    <mat-chip *ngIf="p.sensitive" highlighted>Sensibel</mat-chip>
-                    <mat-chip *ngIf="p.hotReload" highlighted>Hot</mat-chip>
-                    <mat-chip *ngIf="p.restartRequired" color="warn" highlighted
-                              title="Aenderung erfordert Neustart der Anwendung">
-                      Neustart noetig
-                    </mat-chip>
-                  </mat-chip-set>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="aktion">
-                <th mat-header-cell *matHeaderCellDef>Aktion</th>
-                <td mat-cell *matCellDef="let p">
-                  <button mat-icon-button (click)="wertAendern(p)" title="Wert aendern">
-                    <mat-icon>edit_note</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="wertZuruecksetzen(p)" title="Auf Standard">
-                    <mat-icon>restart_alt</mat-icon>
-                  </button>
-                  <button mat-icon-button (click)="zumBearbeiten(p)" title="Bearbeiten">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-icon-button color="warn" (click)="loesche(p)" title="Loeschen">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="spalten"></tr>
-              <tr mat-row *matRowDef="let row; columns: spalten"></tr>
-            </table>
-          }
-        </mat-card-content>
-      </mat-card>
-    </mat-tab>
+          <label class="form-group">
+            <span class="form-label">Einheit</span>
+            <input class="input-field" type="text" name="unit"
+                   [ngModel]="formular().unit"
+                   (ngModelChange)="updateFeld('unit', $event)" />
+          </label>
 
-    <mat-tab label="Audit-Log">
-      <mat-card class="karte">
-        <mat-card-content>
-          @if (auditLog().length === 0) {
-            <ahs-empty-state
-              title="Keine Eintraege"
-              hint="Es wurden noch keine Aenderungen protokolliert."></ahs-empty-state>
-          } @else {
-            <table mat-table [dataSource]="auditLog()" class="tabelle">
-              <ng-container matColumnDef="changedAt">
-                <th mat-header-cell *matHeaderCellDef>Zeit</th>
-                <td mat-cell *matCellDef="let a">{{ a.changedAt | date:'short' }}</td>
-              </ng-container>
-              <ng-container matColumnDef="paramKey">
-                <th mat-header-cell *matHeaderCellDef>Schluessel</th>
-                <td mat-cell *matCellDef="let a">{{ a.paramKey }}</td>
-              </ng-container>
-              <ng-container matColumnDef="oldValue">
-                <th mat-header-cell *matHeaderCellDef>Alt</th>
-                <td mat-cell *matCellDef="let a">{{ a.oldValue }}</td>
-              </ng-container>
-              <ng-container matColumnDef="newValue">
-                <th mat-header-cell *matHeaderCellDef>Neu</th>
-                <td mat-cell *matCellDef="let a">{{ a.newValue }}</td>
-              </ng-container>
-              <ng-container matColumnDef="changedBy">
-                <th mat-header-cell *matHeaderCellDef>Benutzer</th>
-                <td mat-cell *matCellDef="let a">{{ a.changedBy }}</td>
-              </ng-container>
-              <ng-container matColumnDef="reason">
-                <th mat-header-cell *matHeaderCellDef>Grund</th>
-                <td mat-cell *matCellDef="let a">{{ a.reason }}</td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="auditSpalten"></tr>
-              <tr mat-row *matRowDef="let row; columns: auditSpalten"></tr>
-            </table>
+          @if (!bearbeiteId()) {
+            <label class="form-group md:col-span-2">
+              <span class="form-label">Wert</span>
+              <input class="input-field" name="value"
+                     [type]="formular().sensitive ? 'password' : 'text'"
+                     [ngModel]="formular().value"
+                     (ngModelChange)="updateFeld('value', $event)" />
+            </label>
           }
-        </mat-card-content>
-      </mat-card>
-    </mat-tab>
-  </mat-tab-group>
-</section>
+
+          <label class="form-group md:col-span-2">
+            <span class="form-label">Standardwert</span>
+            <input class="input-field" type="text" name="defaultValue"
+                   [ngModel]="formular().defaultValue"
+                   (ngModelChange)="updateFeld('defaultValue', $event)" />
+          </label>
+
+          <label class="form-group md:col-span-2">
+            <span class="form-label">Beschreibung</span>
+            <textarea class="textarea-field" rows="2" name="description"
+                      [ngModel]="formular().description"
+                      (ngModelChange)="updateFeld('description', $event)"></textarea>
+          </label>
+
+          <label class="form-group md:col-span-2">
+            <span class="form-label">Handbuch / Hinweis</span>
+            <textarea class="textarea-field" rows="2" name="handbook"
+                      [ngModel]="formular().handbook"
+                      (ngModelChange)="updateFeld('handbook', $event)"></textarea>
+          </label>
+
+          <label class="form-group md:col-span-2">
+            <span class="form-label">Validierungs-Regex</span>
+            <input class="input-field" type="text" name="validationRules"
+                   [ngModel]="formular().validationRules"
+                   (ngModelChange)="updateFeld('validationRules', $event)" />
+          </label>
+
+          <label class="form-group md:col-span-2">
+            <span class="form-label">Optionen (komma-separiert, fuer SELECT/MULTISELECT)</span>
+            <input class="input-field" type="text" name="options"
+                   [ngModel]="formular().options"
+                   (ngModelChange)="updateFeld('options', $event)" />
+          </label>
+
+          <div class="flex flex-wrap gap-4 md:col-span-2">
+            <label class="inline-flex items-center gap-2">
+              <input type="checkbox" class="form-checkbox" name="required"
+                     [ngModel]="formular().required"
+                     (ngModelChange)="updateFeld('required', $event)" />
+              <span class="text-sm">Pflicht</span>
+            </label>
+            <label class="inline-flex items-center gap-2">
+              <input type="checkbox" class="form-checkbox" name="sensitive"
+                     [ngModel]="formular().sensitive"
+                     (ngModelChange)="updateFeld('sensitive', $event)" />
+              <span class="text-sm">Sensibel</span>
+            </label>
+            <label class="inline-flex items-center gap-2">
+              <input type="checkbox" class="form-checkbox" name="hotReload"
+                     [ngModel]="formular().hotReload"
+                     (ngModelChange)="updateFeld('hotReload', $event)" />
+              <span class="text-sm">Hot-Reload</span>
+            </label>
+            <label class="inline-flex items-center gap-2">
+              <input type="checkbox" class="form-checkbox" name="adminOnly"
+                     [ngModel]="formular().adminOnly"
+                     (ngModelChange)="updateFeld('adminOnly', $event)" />
+              <span class="text-sm">Nur Admin</span>
+            </label>
+          </div>
+
+          <div class="flex items-center gap-2 md:col-span-2">
+            <button class="btn btn-primary" type="submit"
+                    [disabled]="pending()">
+              {{ bearbeiteId() ? 'Speichern' : 'Anlegen' }}
+            </button>
+            <button class="btn btn-ghost" type="button" (click)="neuerEintrag()">
+              Zuruecksetzen
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title">Parameter ({{ gefiltertesParameter().length }})</h2>
+      </header>
+      <div class="card-body">
+        <div class="filter-bar mb-4">
+          <label class="form-group min-w-[220px]">
+            <span class="form-label">Kategorie filtern</span>
+            <select class="select-field"
+                    [ngModel]="kategorieFilter()"
+                    (ngModelChange)="kategorieFilter.set($event)">
+              <option [value]="''">Alle</option>
+              @for (k of kategorien(); track k) {
+                <option [value]="k">{{ k }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        @if (laedt()) {
+          <div class="flex items-center gap-2 text-text-muted text-sm">
+            <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+            <span>Laedt ...</span>
+          </div>
+        } @else if (gefiltertesParameter().length === 0) {
+          <ahs-empty-state
+            icon="inbox"
+            title="Keine Parameter"
+            hint="Lege oben einen neuen Parameter an."></ahs-empty-state>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Schluessel</th>
+                  <th>Anzeigename</th>
+                  <th>Kategorie</th>
+                  <th>Typ</th>
+                  <th>Wert</th>
+                  <th>Flags</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of gefiltertesParameter(); track p.id) {
+                  <tr>
+                    <td class="font-mono text-xs">{{ p.paramKey }}</td>
+                    <td>{{ p.label }}</td>
+                    <td>
+                      {{ p.category }}@if (p.subcategory) { / {{ p.subcategory }} }
+                    </td>
+                    <td>{{ p.type }}</td>
+                    <td>
+                      {{ p.value }}@if (p.unit) { {{ p.unit }} }
+                    </td>
+                    <td>
+                      <div class="flex flex-wrap gap-1">
+                        @if (p.required) { <span class="badge badge-danger">Pflicht</span> }
+                        @if (p.sensitive) { <span class="badge badge-warning">Sensibel</span> }
+                        @if (p.hotReload) { <span class="badge badge-info">Hot</span> }
+                        @if (p.restartRequired) {
+                          <span class="badge badge-danger"
+                                [attr.title]="'Aenderung erfordert Neustart der Anwendung'">
+                            Neustart noetig
+                          </span>
+                        }
+                      </div>
+                    </td>
+                    <td>
+                      <div class="inline-flex items-center gap-1">
+                        <button class="btn-icon" (click)="wertAendern(p)" [attr.title]="'Wert aendern'"
+                                aria-label="Wert aendern">
+                          <cvm-icon name="edit" [size]="16"></cvm-icon>
+                        </button>
+                        <button class="btn-icon" (click)="wertZuruecksetzen(p)" [attr.title]="'Auf Standard'"
+                                aria-label="Auf Standard">
+                          <cvm-icon name="refresh" [size]="16"></cvm-icon>
+                        </button>
+                        <button class="btn-icon" (click)="zumBearbeiten(p)" [attr.title]="'Bearbeiten'"
+                                aria-label="Bearbeiten">
+                          <cvm-icon name="wrench" [size]="16"></cvm-icon>
+                        </button>
+                        <button class="btn-icon" (click)="loesche(p)" [attr.title]="'Loeschen'"
+                                aria-label="Loeschen">
+                          <cvm-icon name="delete" [size]="16"></cvm-icon>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  @if (aktiverTab() === 'audit') {
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title">Audit-Log</h2>
+      </header>
+      <div class="card-body">
+        @if (auditLog().length === 0) {
+          <ahs-empty-state
+            icon="clipboard-list"
+            title="Keine Eintraege"
+            hint="Es wurden noch keine Aenderungen protokolliert."></ahs-empty-state>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Zeit</th>
+                  <th>Schluessel</th>
+                  <th>Alt</th>
+                  <th>Neu</th>
+                  <th>Benutzer</th>
+                  <th>Grund</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (a of auditLog(); track a.id) {
+                  <tr>
+                    <td>{{ a.changedAt | date:'short' }}</td>
+                    <td class="font-mono text-xs">{{ a.paramKey }}</td>
+                    <td>{{ a.oldValue }}</td>
+                    <td>{{ a.newValue }}</td>
+                    <td>{{ a.changedBy }}</td>
+                    <td>{{ a.reason }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

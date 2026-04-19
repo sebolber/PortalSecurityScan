@@ -1,88 +1,95 @@
-<section class="cvm-fix-verification">
-  <header class="cvm-fix-verification__header">
-    <h1 class="text-title-lg">Fix-Verifikation</h1>
-    <p class="text-body">
-      Quality-Grade A/B/C pro Mitigation-Plan. A = CVE-Erwaehnung
-      gefunden, B = Funktions-/Klassen-Bezug in der Commit-Message,
-      C = keine eindeutige Evidenz, UNKNOWN = Verifikation noch
-      offen.
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Fix-Verifikation</h1>
+      <p class="page-subtitle">
+        Quality-Grade A/B/C pro Mitigation-Plan. A = CVE-Erwaehnung
+        gefunden, B = Funktions-/Klassen-Bezug in der Commit-Message,
+        C = keine eindeutige Evidenz, UNKNOWN = Verifikation noch offen.
+      </p>
+    </div>
   </header>
 
-  <mat-button-toggle-group
-    [value]="grade()"
-    (change)="gradeWechseln($event.value)"
-    aria-label="Grade-Filter"
-  >
-    @for (g of grades; track g) {
-      <mat-button-toggle [value]="g">{{ g }}</mat-button-toggle>
-    }
-  </mat-button-toggle-group>
+  <section class="card p-4">
+    <div class="filter-bar">
+      <div class="form-group">
+        <span class="form-label">Grade-Filter</span>
+        <div
+          class="inline-flex rounded-lg border border-border bg-surface overflow-hidden h-10"
+          role="group"
+          aria-label="Grade-Filter"
+        >
+          @for (g of grades; track g) {
+            <button
+              type="button"
+              class="px-3 text-sm border-r border-border last:border-r-0"
+              [class.bg-primary-muted]="grade() === g"
+              [class.text-primary]="grade() === g"
+              [attr.data-testid]="'fix-grade-' + g"
+              (click)="gradeWechseln(g)"
+            >{{ g }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
 
   @if (error()) {
     <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
   }
 
   @if (loading()) {
-    <mat-spinner diameter="36"></mat-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+      <span>Laedt...</span>
+    </div>
   } @else if (rows().length === 0) {
     <ahs-empty-state
-      icon="verified"
+      icon="shield-check"
       title="Keine Mitigations"
       hint="Fuer den aktuellen Filter sind keine Mitigation-Plaene vorhanden."
     ></ahs-empty-state>
   } @else {
-    <table
-      mat-table
-      [dataSource]="rows()"
-      [trackBy]="trackId"
-      class="cvm-fix-verification__table"
-    >
-      <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef>Erstellt</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.createdAt | date: 'yyyy-MM-dd' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="strategy">
-        <th mat-header-cell *matHeaderCellDef>Strategie</th>
-        <td mat-cell *matCellDef="let r">{{ r.strategy }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let r">{{ r.status }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="target">
-        <th mat-header-cell *matHeaderCellDef>Ziel-Version</th>
-        <td mat-cell *matCellDef="let r" class="text-code">
-          {{ r.targetVersion || '–' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="grade">
-        <th mat-header-cell *matHeaderCellDef>Grade</th>
-        <td mat-cell *matCellDef="let r">
-          <span
-            class="cvm-fix-verification__grade"
-            [attr.data-grade]="r.verificationGrade || 'UNKNOWN'"
-          >
-            {{ r.verificationGrade || 'UNKNOWN' }}
-          </span>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="verifiedAt">
-        <th mat-header-cell *matHeaderCellDef>Verifiziert</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.verifiedAt ? (r.verifiedAt | date: 'yyyy-MM-dd') : '–' }}
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
-    </table>
+    <section class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Erstellt</th>
+            <th>Strategie</th>
+            <th>Status</th>
+            <th>Ziel-Version</th>
+            <th>Grade</th>
+            <th>Verifiziert</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track trackId($index, r)) {
+            <tr>
+              <td>{{ r.createdAt | date: 'yyyy-MM-dd' }}</td>
+              <td>{{ r.strategy }}</td>
+              <td>{{ r.status }}</td>
+              <td class="text-code">{{ r.targetVersion || '-' }}</td>
+              <td>
+                @switch (r.verificationGrade || 'UNKNOWN') {
+                  @case ('A') {
+                    <span class="badge badge-success font-bold">A</span>
+                  }
+                  @case ('B') {
+                    <span class="badge badge-warning font-bold">B</span>
+                  }
+                  @case ('C') {
+                    <span class="badge badge-danger font-bold">C</span>
+                  }
+                  @default {
+                    <span class="badge badge-neutral font-bold">UNKNOWN</span>
+                  }
+                }
+              </td>
+              <td>{{ r.verifiedAt ? (r.verifiedAt | date: 'yyyy-MM-dd') : '-' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
   }
-</section>
+</div>
