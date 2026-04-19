@@ -198,3 +198,30 @@ Regression). Vier neue OsvJsonlMirrorTest-Cases.
 Versionen; ranges[0].events.introduced/fixed werden geparst,
 sonst konservatives "match all". Drei neue Tests
 (Standard-Range, unparseable-Fallback, range ohne fixed).
+
+[17:42] Sauberer Stopp. Verbleibende offene Punkte in
+docs/20260419/offene-punkte.md sind alle entweder Sandbox-
+/Infra-gebunden oder Non-Code:
+- JGit SSH-Support (braucht Vault-Anbindung + echten
+  Git-Server).
+- Network-Sandboxing fuer den Reachability-Subprocess (Docker).
+- Ecosystem-spezifische Versions-Sortierung fuer OSV-Ranges
+  (mehrere halbtaegige Aufgaben: Maven-VersionRange, PEP440,
+  npm-semver-prerelease).
+- Tenant-Default-Setzen + Keycloak-Realm-Mapping (Admin-SQL
+  bzw. Realm-Setup, keine Code-Aufgabe).
+- Playwright-E2E + axe-core in CI, Karma in CI,
+  Testcontainers-IT auf Docker-Desktop-macOS (alle auf
+  CI-Runner-Seite).
+Das Kriterium "keinen konkret umsetzbaren Punkt mehr" (Abbruch-
+bedingung 1) ist damit fuer diese Sandbox-Umgebung erreicht;
+kein Fortschritt im verbleibenden Zeitbudget moeglich, ohne
+in einen der drei echten Abbrueche zu laufen.
+
+Gesamtbilanz Folge-Session: 17 Iterationen (63-79).
+Block A (Bug + UI-Integrationen) komplett, Block B (Parameter-
+Store-Callsite-Migration + Deployment-Doku) komplett, Block C
+(Reachability-Auto-Trigger + JGit + OSV-Mirror inkl. Reload-
+Endpunkt/UI und Versionsfilter) komplett. Zusaetzlich
+persistente DRAFTs, Product.repoUrl inkl. Edit-UI, echter
+ReachabilityAutoTriggerAdapter und OSV semver-Range-MVP.
