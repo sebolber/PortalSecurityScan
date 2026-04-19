@@ -7,37 +7,43 @@
 
 ### Konfigurationsverwaltung
 
-- **Generischer System-Parameter-Store** (neu, geplant). Admins
-  sollen Feature-Flags, Timeouts, Rate-Limits, Batch-Groessen,
-  Feed-/LLM-Default-URLs und SMTP-Alert-Parameter ueber einen
-  Key-Value-Dialog unter "Einstellungen" editieren koennen. Werte
-  werden in einer neuen Tabelle `system_setting (setting_key, value,
-  updated_at, updated_by)` persistiert und ueberschreiben die
-  `application.yaml`-Defaults zur Laufzeit. Secrets werden analog
-  `SbomEncryption` AES-GCM-verschluesselt abgelegt und nie im Klartext
-  ausgeliefert. Vollstaendiger Migrations-Prompt mit Parameterliste,
-  Architektur, Tests und Akzeptanzkriterien liegt als Arbeitsauftrag
-  bereit (Session-Chat 2026-04-19); ca. 30 Kernparameter aus allen
-  `@ConfigurationProperties`- und `@Value`-Stellen im Scope. Pflicht-
-  Hinweise:
-  - Katalog als statische Registry im Java-Code
-    (`SystemSettingCatalog` in `cvm-application/systemsetting`) -
-    DB haelt nur Overrides.
-  - Pro Key die Metadaten `type, defaultValue, description, category,
-    secret, restartRequired` pflegen, damit das UI generisch rendert.
-  - Zugriffs-Wrapper `getEffective(...)` in den bestehenden
-    `*Config`-Beans (ReachabilityConfig, OsvProperties, Feed*Config,
+- **System-Parameter-Store parallel auf main gebaut** (Classes
+  `SystemParameterService`, `SystemParameterValidator`,
+  `SystemParameterView`, `SystemParameterCommands`,
+  `SystemParameterAuditLogView`, REST-Controller, Angular-Komponente
+  `admin-parameters`). Dieser Eintrag ist damit in Teilen erledigt.
+  Noch offen (ehemaliger Migrations-Prompt aus der Session
+  2026-04-19):
+  - **Katalog-Befuellung**: sicherstellen, dass alle im Prompt
+    aufgelisteten Keys tatsaechlich durch den Store abgedeckt sind
+    (AI_LLM-Fallbacks, AI_REACHABILITY, RAG, ENRICHMENT mit OSV/NVD/
+    GHSA/KEV/EPSS, RATE_LIMIT, ANOMALY, PIPELINE_GATE, MAIL,
+    COPILOT, SCAN, SCHEDULER, SECURITY). Gegen die
+    `@ConfigurationProperties`- und `@Value`-Stellen abgleichen.
+  - **Zugriffs-Wrapper** (`getEffective(...)`) in den bestehenden
+    `*Config`-Beans: ReachabilityConfig, OsvProperties, Feed*Config,
     AutoAssessmentConfig, FixVerificationConfig, AnomalyConfig,
-    RuleExtractionConfig, AlertConfig, ...). Beans, die einen
-    `RestClient.Builder` im Konstruktor zementieren, entweder lazy
-    bauen oder `restartRequired=true` setzen.
-  - Audit-Trail-Eintrag pro `PUT/DELETE` (alter + neuer Wert; Secrets
-    maskiert).
-  - ArchUnit-Regel: nur `cvm-application/systemsetting` greift auf
-    das Repository zu.
-  - Tests zuerst (SystemSettingService-Unit, Repository-Slice,
-    Controller-Web, End-to-End-Pfad fuer mindestens einen Parameter -
-    z.B. `cvm.ai.reachability.enabled`).
+    RuleExtractionConfig, AlertConfig, AssessmentConfig. Beans, die
+    einen `RestClient.Builder` im Konstruktor zementieren, entweder
+    lazy bauen oder explizit `restartRequired=true` kennzeichnen und
+    das UI ein "Neustart noetig"-Badge anzeigen lassen.
+  - **Secret-Behandlung** (AES-GCM, Hint statt Klartext, analog
+    `SbomEncryption`) fuer Keys wie `cvm.llm.claude.api-key`,
+    `cvm.ai.fix-verification.github.token`,
+    `cvm.feed.nvd.api-key`, `cvm.feed.ghsa.api-key`,
+    `cvm.encryption.sbom-secret`.
+  - **ArchUnit-Regel**: nur das Parameter-Modul greift aufs
+    Repository.
+  - **End-to-End-Test** fuer mindestens einen Parameter
+    (`cvm.ai.reachability.enabled`), der nachweist, dass eine
+    DB-Aenderung den Agent-Aufruf ohne Restart beeinflusst.
+  - **Nicht migrieren** (dokumentieren, damit nachher niemand
+    versucht): `spring.datasource.*`, `spring.jpa.*`,
+    `spring.flyway.*`, `spring.security.oauth2.resourceserver.jwt.*`,
+    `spring.mail.*`, `spring.servlet.multipart.*`, `server.port`,
+    `management.endpoints.*`, `logging.level.*`,
+    `cvm.llm.pricing.*`, `cvm.enrichment.osv.base-url`,
+    `cvm.feed.*.base-url`.
 
 - **LLM-Konfiguration bleibt eigenstaendig** (Entscheidung,
   dokumentiert damit die Migration nicht versehentlich spaeter
