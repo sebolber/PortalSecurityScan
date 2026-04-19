@@ -49,6 +49,13 @@ describe('AiAuditService', () => {
     const req = http.expectOne(
       'http://api.test/api/v1/ai/audits?status=INVALID_OUTPUT&useCase=AUTO_ASSESSMENT&page=2&size=50'
     );
+    // Iteration 65 (CVM-302): expectOne-String-Matcher loest keine
+    // Jasmine-Erwartung aus; zusaetzlich explizites expect() auf
+    // Methode und URL setzen.
+    expect(req.request.method).toBe('GET');
+    expect(req.request.urlWithParams).toBe(
+      'http://api.test/api/v1/ai/audits?status=INVALID_OUTPUT&useCase=AUTO_ASSESSMENT&page=2&size=50'
+    );
     req.flush({ content: [], page: 2, size: 50, totalElements: 0, totalPages: 0 });
     await promise;
   });

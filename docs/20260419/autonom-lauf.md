@@ -96,3 +96,9 @@ draftAktualisieren, "Draft loeschen" mit window.confirm und
 Toast, neues Dispatch-Flag in draftSpeichern). Karma-Specs
 fuer Service + Component ergaenzt. Naechstes: Iteration 65
 Karma-Specs auf neue Selektoren umstellen.
+[15:55] Iteration 65 abgeschlossen: Karma-Suite wieder
+vollstaendig gruen (91 Tests, keine "has no expectations"-
+Warnungen). RoleMenuService-Spec-Kinderliste auf 9 aktuelle
+Eintraege aktualisiert, QueueApiService und AiAuditService
+expectOne-Predicate-Cases mit expliziten expect() ergaenzt.
+Naechstes: Iteration 66 ClaudeApiClient auf Parameter-Resolver.

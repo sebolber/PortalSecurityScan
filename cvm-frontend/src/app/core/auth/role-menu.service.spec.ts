@@ -125,13 +125,18 @@ describe('RoleMenuService', () => {
     expect(settingsEntry).toBeTruthy();
     expect(admin[admin.length - 1].id).toBe('settings');
     const childIds = (settingsEntry?.children ?? []).map((c) => c.id);
+    // Iteration 65 (CVM-302): Kinderliste auf Iteration-56/41/61-Stand
+    // aktualisiert (Mandanten, System-Parameter, CVE-Import ergaenzt).
     expect(childIds).toEqual([
       'profiles',
       'rules',
       'admin-products',
       'admin-environments',
       'admin-theme',
-      'admin-llm-configurations'
+      'admin-llm-configurations',
+      'admin-parameters',
+      'admin-tenants',
+      'admin-cve-import'
     ]);
   });
 

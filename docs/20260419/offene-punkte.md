@@ -192,5 +192,7 @@ Siehe `docs/20260418/offene-punkte.md`, insbesondere:
 - Auto-Trigger der Reachability, wenn AI-Vorschlag-Confidence unter
   Schwelle.
 - Playwright-E2E + axe-core in CI, Karma in CI, Testcontainers-IT auf
-  Docker-Desktop-macOS.
+  Docker-Desktop-macOS. *(Iteration 65 hat die Karma-Suite lokal
+  wieder vollstaendig gruen bekommen - 91 Tests SUCCESS, keine "has
+  no expectations"-Warnungen mehr. CI-Integration bleibt offen.)*
 - Diverse Audit-/Cleanup-/Performance-Nachzuege (siehe 20260418).
