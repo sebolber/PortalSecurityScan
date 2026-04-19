@@ -22,3 +22,6 @@ Iteration 46 ArchUnit-Regel + E2E-Test Reachability-Flag.
 [09:46] Iteration 46 abgeschlossen: ArchUnit-Regel (Parameter-Modul-
 Zugriff) + E2E-Test fuer Reachability-Override (commit aaf003c2).
 Naechstes: Iteration 47 Queue-Filter oberhalb der Liste.
+[09:50] Iteration 47 abgeschlossen: Queue-Filter als horizontaler
+Balken oberhalb der Tabelle (commit c9e86a9b). Naechstes: Iteration 48
+Umgebungen Soft-Delete.

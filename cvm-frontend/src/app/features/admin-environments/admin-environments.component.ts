@@ -63,7 +63,7 @@ export class AdminEnvironmentsComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
 
   readonly stages = STAGES;
-  readonly columns = ['uuid', 'key', 'name', 'stage', 'tenant'] as const;
+  readonly columns = ['uuid', 'key', 'name', 'stage', 'tenant', 'aktion'] as const;
 
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -135,5 +135,25 @@ export class AdminEnvironmentsComponent implements OnInit {
 
   trackId(_: number, env: EnvironmentView): string {
     return env.id;
+  }
+
+  async loesche(env: EnvironmentView): Promise<void> {
+    const confirmed = window.confirm(
+      'Umgebung "' + env.key + '" wirklich entfernen?\n\n'
+        + 'Soft-Delete: Scans und Findings bleiben erhalten, die Umgebung '
+        + 'verschwindet nur aus den Listen.'
+    );
+    if (!confirmed) {
+      return;
+    }
+    try {
+      await this.service.delete(env.id);
+      this.snackBar.open('Umgebung "' + env.key + '" entfernt.', 'OK', {
+        duration: 4000
+      });
+      await this.laden();
+    } catch {
+      this.snackBar.open('Loeschen fehlgeschlagen.', 'OK', { duration: 4000 });
+    }
   }
 }

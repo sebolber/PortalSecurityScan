@@ -53,6 +53,13 @@ public class Environment {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
+    /**
+     * Soft-Delete-Marker (Iteration 48, CVM-98). {@code null} = aktiv;
+     * gesetzt = logisch entfernt.
+     */
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @PrePersist
     void initialisiere() {
         if (id == null) {

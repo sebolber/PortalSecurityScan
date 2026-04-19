@@ -3,7 +3,10 @@ package com.ahs.cvm.application.environment;
 import com.ahs.cvm.domain.enums.EnvironmentStage;
 import com.ahs.cvm.persistence.environment.Environment;
 import com.ahs.cvm.persistence.environment.EnvironmentRepository;
+import jakarta.persistence.EntityNotFoundException;
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +27,29 @@ public class EnvironmentQueryService {
 
     @Transactional(readOnly = true)
     public List<EnvironmentView> listAll() {
-        return repository.findAll().stream()
-                .sorted((a, b) -> a.getKey().compareToIgnoreCase(b.getKey()))
+        return repository.findByDeletedAtIsNullOrderByKeyAsc().stream()
                 .map(EnvironmentQueryService::toView)
                 .toList();
+    }
+
+    /**
+     * Soft-Delete (Iteration 48, CVM-98). Die Umgebung bleibt in der
+     * Datenbank stehen (Scans/Findings/Assessments referenzieren sie
+     * weiter), der Eintrag verschwindet nur aus den Admin- und
+     * Auswahl-Listen.
+     */
+    @Transactional
+    public void loesche(UUID environmentId) {
+        if (environmentId == null) {
+            throw new IllegalArgumentException("environmentId darf nicht null sein.");
+        }
+        Environment umgebung = repository.findById(environmentId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Umgebung nicht gefunden: " + environmentId));
+        if (umgebung.getDeletedAt() == null) {
+            umgebung.setDeletedAt(Instant.now());
+            repository.save(umgebung);
+        }
     }
 
     /**

@@ -35,4 +35,11 @@ export class EnvironmentsService {
       )
     );
   }
+
+  /** Iteration 48 (CVM-98): Soft-Delete. Scans bleiben erhalten. */
+  delete(id: string): Promise<void> {
+    return firstValueFrom(
+      this.api.delete<void>('/api/v1/environments/' + id)
+    );
+  }
 }
