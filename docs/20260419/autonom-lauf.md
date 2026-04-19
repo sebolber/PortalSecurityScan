@@ -44,3 +44,6 @@ Naechstes: Iteration 53 Rules-Editor im Frontend.
 [10:40] Iteration 53 abgeschlossen: Rules-Editor Update-Form
 (Backend + Frontend) (commit 43216d1a). Naechstes: Iteration 54
 Profil-YAML-Editor (Monaco + Diff).
+[10:45] Iteration 54 abgeschlossen: Monaco-YAML-Editor in der
+Profile-Seite, Monaco-Assets lazy-ausgeliefert (commit b5615972).
+Naechstes: Iteration 55 KPI-UI.

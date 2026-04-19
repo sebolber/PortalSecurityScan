@@ -70,6 +70,38 @@ export class TenantKpiComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly result = signal<KpiResult | null>(null);
 
+  /**
+   * Iteration 55 (CVM-105): Severity-Saeulen-Diagramm. Zeigt die
+   * offenen Findings pro Severity als Balken mit Severity-Farbe.
+   */
+  readonly severityBarOption = computed<EChartsOption>(() => {
+    const colors = this.chartTheme.severityColors();
+    const sevs = this.severities;
+    const values = sevs.map((s) => this.openCount(s));
+    return {
+      tooltip: { trigger: 'item' },
+      grid: { left: 40, right: 20, top: 20, bottom: 40 },
+      xAxis: {
+        type: 'category',
+        data: sevs as string[],
+        axisLabel: { color: this.chartTheme.textColor() }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: { color: this.chartTheme.textColor() }
+      },
+      series: [
+        {
+          type: 'bar',
+          data: sevs.map((s, i) => ({
+            value: values[i],
+            itemStyle: { color: colors[s] }
+          }))
+        }
+      ]
+    };
+  });
+
   readonly burnDownOption = computed<EChartsOption>(() => {
     const data = this.result()?.burnDown ?? [];
     const color = this.chartTheme.severityColors()['CRITICAL'];
@@ -129,5 +161,22 @@ export class TenantKpiComponent implements OnInit {
 
   slaQuote(severity: Severity): number {
     return this.result()?.slaBySeverity?.[severity]?.quote ?? 1;
+  }
+
+  /**
+   * Iteration 55 (CVM-105): SLA-Ampel pro Severity.
+   * - gruen: SLA-Quote &ge; 0.95
+   * - gelb:  0.80 &le; Quote &lt; 0.95
+   * - rot:   Quote &lt; 0.80
+   */
+  slaAmpel(severity: Severity): 'green' | 'yellow' | 'red' {
+    const q = this.slaQuote(severity);
+    if (q >= 0.95) {
+      return 'green';
+    }
+    if (q >= 0.8) {
+      return 'yellow';
+    }
+    return 'red';
   }
 }

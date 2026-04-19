@@ -129,14 +129,19 @@
 
 Siehe `docs/20260418/offene-punkte.md`, insbesondere:
 
-- Profil-Edit / -Soft-Delete im Frontend.
+- ~~Profil-Edit / -Soft-Delete im Frontend~~ - Backend + Service in
+  Iteration 51 (PUT/DELETE `/api/v1/profiles/{id}`); UI-Integration
+  folgt mit Monaco (Iteration 54).
 - OSV-Mirror fuer air-gapped-Installationen.
 - PURL-Canonicalization, falls Trefferquote in Prod zu niedrig.
-- Bundle-Budget-Reduktion.
-- Rules-Editor im Frontend.
-- Profil-YAML-Editor (Monaco) im Frontend.
-- Tenant-Verwaltungs-UI.
-- KPI-UI (ECharts, Burn-Down, SLA-Ampel).
+- ~~Bundle-Budget-Reduktion~~ - erledigt in Iteration 52
+  (2.13 MB -> 1.10 MB, ECharts und LoginCallback lazy).
+- ~~Rules-Editor im Frontend~~ - Update-Form erledigt in Iteration 53.
+- ~~Profil-YAML-Editor (Monaco) im Frontend~~ - Editor eingebunden
+  in Iteration 54. Side-by-Side Monaco-Diff folgt bei Bedarf.
+- Tenant-Verwaltungs-UI (Multi-Tenant-Admin-Seite).
+- ~~KPI-UI (ECharts, Burn-Down, SLA-Ampel)~~ - Severity-Saeulen und
+  SLA-Ampel ergaenzt in Iteration 55; Burn-Down war bereits vorhanden.
 - JGit-Adapter fuer Reachability (aktuell `NoopGitCheckoutAdapter`),
   SSH-Key aus Vault, Network-Sandboxing fuer den Subprocess.
 - Auto-Trigger der Reachability, wenn AI-Vorschlag-Confidence unter

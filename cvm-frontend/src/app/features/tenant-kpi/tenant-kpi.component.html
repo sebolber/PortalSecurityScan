@@ -67,7 +67,15 @@
                   </td>
                   <td>{{ openCount(s) }}</td>
                   <td>{{ mttr(s) | number }}</td>
-                  <td>{{ slaQuote(s) | percent: '1.0-0' }}</td>
+                  <td>
+                    <span
+                      class="cvm-tenant-kpi__ampel"
+                      [attr.data-ampel]="slaAmpel(s)"
+                      [title]="
+                        'SLA-Quote: ' + (slaQuote(s) * 100 | number: '1.0-0') + '%'"
+                    ></span>
+                    {{ slaQuote(s) | percent: '1.0-0' }}
+                  </td>
                 </tr>
               }
             </tbody>
@@ -84,6 +92,21 @@
             class="cvm-tenant-kpi__chart"
             echarts
             [options]="burnDownOption()"
+            [autoResize]="true"
+          ></div>
+        </mat-card-content>
+      </mat-card>
+
+      <!-- Iteration 55 (CVM-105): Severity-Saeulen zusaetzlich zur Tabelle. -->
+      <mat-card class="cvm-tenant-kpi__severity-bar">
+        <mat-card-header>
+          <mat-card-title>Offene Findings je Severity</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div
+            class="cvm-tenant-kpi__chart"
+            echarts
+            [options]="severityBarOption()"
             [autoResize]="true"
           ></div>
         </mat-card-content>
