@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, of, throwError } from 'rxjs';
 import { AppConfigService } from '../config/app-config.service';
 import { HttpErrorHandler } from './http-error-handler';
 
@@ -21,6 +21,24 @@ export class ApiClient {
 
   get<T>(path: string): Observable<T> {
     return this.http.get<T>(this.url(path)).pipe(this.handleError('GET ' + path));
+  }
+
+  /**
+   * Wie {@link get}, behandelt aber ausgewaehlte Status-Codes (Default
+   * 404) als legitimen Leer-Zustand: Observable emittiert {@code null}
+   * und es erscheint KEINE Fehler-Toast-Meldung. Nutzung z.B. wenn eine
+   * Ressource optional ist (aktuelles Kontext-Profil einer Umgebung).
+   */
+  getOptional<T>(path: string, silentStatuses: readonly number[] = [404]): Observable<T | null> {
+    return this.http.get<T>(this.url(path)).pipe(
+      catchError<T, Observable<T | null>>((err: HttpErrorResponse) => {
+        if (silentStatuses.includes(err?.status)) {
+          return of(null);
+        }
+        this.errorHandler.show('GET ' + path, err);
+        return throwError(() => err);
+      })
+    );
   }
 
   post<T, B = unknown>(path: string, body: B): Observable<T> {

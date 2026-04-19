@@ -1,6 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpErrorResponse } from '@angular/common/http';
-import { catchError, firstValueFrom, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { ApiClient } from '../api/api-client.service';
 
 export interface ProfileResponse {
@@ -33,20 +32,15 @@ export class ProfilesService {
 
   /**
    * Liefert das aktive Profil, oder {@code null}, wenn noch keines
-   * angelegt wurde (404 vom Backend).
+   * angelegt wurde. Iteration 61 (CVM-62): nutzt `getOptional`, damit
+   * 404 keinen Error-Toast im UI ausloest - "kein Profil" ist ein
+   * legitimer Leer-Zustand, kein Fehler.
    */
   aktivesProfil(environmentId: string): Promise<ProfileResponse | null> {
     return firstValueFrom(
-      this.api
-        .get<ProfileResponse>(`/api/v1/environments/${environmentId}/profile`)
-        .pipe(
-          catchError((err: HttpErrorResponse) => {
-            if (err.status === 404) {
-              return of(null as ProfileResponse | null);
-            }
-            throw err;
-          })
-        )
+      this.api.getOptional<ProfileResponse>(
+        `/api/v1/environments/${environmentId}/profile`
+      )
     );
   }
 
