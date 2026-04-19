@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
 import { QueueEntry, SEVERITY_REIHENFOLGE } from './queue.types';
 import { Severity } from '../../shared/components/severity-badge.component';
@@ -21,7 +22,7 @@ import { braucheZweitfreigabe } from './vier-augen';
 @Component({
   selector: 'cvm-queue-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, SeverityBadgeComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SeverityBadgeComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section
@@ -36,7 +37,9 @@ import { braucheZweitfreigabe } from './vier-augen';
             <div class="text-xs uppercase text-zinc-500">
               {{ entry.source }} &middot; v{{ entry.version }}
             </div>
-            <div class="font-mono text-sm">{{ entry.cveKey }}</div>
+            <a class="font-mono text-sm text-primary hover:underline"
+               [routerLink]="['/cves', entry.cveKey]"
+               title="Zur CVE-Detailseite">{{ entry.cveKey }}</a>
           </div>
           <button
             type="button"

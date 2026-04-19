@@ -2,6 +2,7 @@ package com.ahs.cvm.api.product;
 
 import com.ahs.cvm.application.product.ProductCatalogService;
 import com.ahs.cvm.application.product.ProductCatalogService.ProductCreateInput;
+import com.ahs.cvm.application.product.ProductCatalogService.ProductUpdateInput;
 import com.ahs.cvm.application.product.ProductCatalogService.ProductVersionCreateInput;
 import com.ahs.cvm.application.product.ProductQueryService;
 import com.ahs.cvm.application.product.ProductVersionView;
@@ -19,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -71,6 +73,22 @@ public class ProductsController {
         return ResponseEntity
                 .created(URI.create("/api/v1/products/" + created.id()))
                 .body(created);
+    }
+
+    @PutMapping("/{productId}")
+    @PreAuthorize("hasAuthority('CVM_ADMIN')")
+    @Operation(summary = "Produkt-Stammdaten aktualisieren (Name/Beschreibung).")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Produkt aktualisiert"),
+        @ApiResponse(responseCode = "400", description = "Eingabe ungueltig"),
+        @ApiResponse(responseCode = "404", description = "Produkt nicht gefunden")
+    })
+    public ResponseEntity<ProductView> aktualisieren(
+            @PathVariable UUID productId,
+            @Valid @RequestBody ProductUpdateRequest request) {
+        ProductView updated = catalogService.aktualisiere(productId,
+                new ProductUpdateInput(request.name(), request.description()));
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{productId}/versions")

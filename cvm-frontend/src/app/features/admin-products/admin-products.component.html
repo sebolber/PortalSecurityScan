@@ -98,8 +98,13 @@
               <button mat-stroked-button type="button"
                       (click)="waehleProdukt(p.id)"
                       [class.cvm-admin-selected]="selectedProductId() === p.id">
-                <mat-icon>edit</mat-icon>
+                <mat-icon>list</mat-icon>
                 Versionen
+              </button>
+              <button mat-icon-button type="button"
+                      (click)="bearbeiteProdukt(p)"
+                      aria-label="Produkt bearbeiten">
+                <mat-icon>edit</mat-icon>
               </button>
             </td>
           </ng-container>

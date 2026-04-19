@@ -23,6 +23,11 @@ export interface ProductCreateRequest {
   readonly description: string | null;
 }
 
+export interface ProductUpdateRequest {
+  readonly name?: string | null;
+  readonly description?: string | null;
+}
+
 export interface ProductVersionCreateRequest {
   readonly version: string;
   readonly gitCommit: string | null;
@@ -48,6 +53,13 @@ export class ProductsService {
   create(req: ProductCreateRequest): Promise<ProductView> {
     return firstValueFrom(
       this.api.post<ProductView, ProductCreateRequest>('/api/v1/products', req)
+    );
+  }
+
+  update(productId: string, req: ProductUpdateRequest): Promise<ProductView> {
+    return firstValueFrom(
+      this.api.put<ProductView, ProductUpdateRequest>(
+        `/api/v1/products/${productId}`, req)
     );
   }
 

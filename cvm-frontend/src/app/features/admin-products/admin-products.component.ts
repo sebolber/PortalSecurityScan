@@ -188,6 +188,40 @@ export class AdminProductsComponent implements OnInit {
     return this.versionen()[productId] ?? [];
   }
 
+  /**
+   * Minimal-Edit fuer Name/Beschreibung eines Produkts. Nutzt zwei
+   * window.prompt-Dialoge, damit der Admin-Flow ohne eigenes
+   * Formular-Modal auskommt (Iteration 37, CVM-81).
+   */
+  async bearbeiteProdukt(p: ProductView): Promise<void> {
+    const neuerName = window.prompt(
+      `Name fuer Produkt "${p.key}"`, p.name);
+    if (neuerName === null) {
+      return;
+    }
+    const neueBeschreibung = window.prompt(
+      `Beschreibung fuer Produkt "${p.key}" (leer lassen = keine)`,
+      p.description ?? '');
+    try {
+      const aktualisiert = await this.products.update(p.id, {
+        name: neuerName.trim(),
+        description: neueBeschreibung === null ? null : neueBeschreibung.trim()
+      });
+      this.snack.open(
+        `Produkt "${aktualisiert.key}" aktualisiert.`,
+        'OK',
+        { duration: 3000 }
+      );
+      await this.ladeProdukte();
+    } catch (err) {
+      this.snack.open(
+        this.fehlermeldung(err, 'Aktualisierung fehlgeschlagen.'),
+        'OK',
+        { duration: 5000 }
+      );
+    }
+  }
+
   private fehlermeldung(err: unknown, fallback: string): string {
     if (err && typeof err === 'object') {
       const obj = err as { status?: number; error?: { error?: string; message?: string } };

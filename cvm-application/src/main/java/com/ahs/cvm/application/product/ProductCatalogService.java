@@ -125,7 +125,38 @@ public class ProductCatalogService {
         return value.trim();
     }
 
+    /**
+     * Aktualisiert Name und Beschreibung eines Produkts. Der Key ist
+     * fachlich unveraenderlich und wird bewusst nicht ueberschrieben
+     * (sonst waeren SBOM-Referenzen inkonsistent).
+     */
+    @Transactional
+    public ProductView aktualisiere(UUID productId, ProductUpdateInput input) {
+        if (productId == null) {
+            throw new IllegalArgumentException("productId darf nicht null sein.");
+        }
+        if (input == null) {
+            throw new IllegalArgumentException("Eingabe darf nicht null sein.");
+        }
+        Product produkt = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException(productId));
+        if (input.name() != null) {
+            String name = input.name().trim();
+            if (name.isEmpty()) {
+                throw new IllegalArgumentException("name darf nicht leer sein.");
+            }
+            produkt.setName(name);
+        }
+        if (input.description() != null) {
+            String description = input.description().trim();
+            produkt.setDescription(description.isEmpty() ? null : description);
+        }
+        return ProductView.from(productRepository.save(produkt));
+    }
+
     public record ProductCreateInput(String key, String name, String description) {}
+
+    public record ProductUpdateInput(String name, String description) {}
 
     public record ProductVersionCreateInput(
             String version, String gitCommit, Instant releasedAt) {}

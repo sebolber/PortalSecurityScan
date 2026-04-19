@@ -1,10 +1,27 @@
 # Offene Punkte (kumulativ)
 
-## Stand 2026-04-19 nach Iteration 36 - offen
+## Stand 2026-04-19 nach Iteration 37 - offen
+
+- ~~**Cross-Link Queue-Detail -> CVE-Detail**~~ erledigt in 37.
+- ~~**Produkt-Edit**~~ erledigt in 37 (Name/Beschreibung; Key
+  bleibt unveraenderlich).
+- **Produkt-Soft-Delete** (Folge-Iteration).
+- **Profil-Edit/-Soft-Delete** im Frontend (Iteration 28 Eintrag).
+- **OSV-Mirror** fuer air-gapped-Installationen.
+- **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
+- **OpenAI-/Azure-/Adesso-LLM-Adapter**: fehlen, Fallback mit
+  Log-Warnung aktiv.
+- **Bundle-Budget-Reduktion**.
+
+> Iteration 37 am 2026-04-19 hat Queue-Detail -> CVE-Detail
+> verlinkt und `PUT /api/v1/products/{id}` sowie den Admin-Edit-
+> Flow fuer Produkte ausgeliefert.
+
+## Stand 2026-04-19 nach Iteration 36 - offen (vorher)
 
 - ~~**CVE-Detailseite**~~ erledigt in 36 (Backend + Frontend +
   Verlinkung aus der CVE-Liste).
-- **Cross-Link Queue-Detail -> CVE-Detail** (Folge-Iteration).
+- ~~**Cross-Link Queue-Detail -> CVE-Detail**~~ erledigt in 37.
 - **OSV-Mirror** fuer air-gapped-Installationen.
 - **PURL-Canonicalization**, falls Trefferquote in Prod zu niedrig.
 - **OpenAI-/Azure-/Adesso-LLM-Adapter**: fehlen, Fallback mit

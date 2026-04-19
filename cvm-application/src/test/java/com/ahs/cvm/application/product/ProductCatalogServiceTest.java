@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
 import com.ahs.cvm.application.product.ProductCatalogService.ProductCreateInput;
+import com.ahs.cvm.application.product.ProductCatalogService.ProductUpdateInput;
 import com.ahs.cvm.application.product.ProductCatalogService.ProductVersionCreateInput;
 import com.ahs.cvm.persistence.product.Product;
 import com.ahs.cvm.persistence.product.ProductRepository;
@@ -153,5 +154,75 @@ class ProductCatalogServiceTest {
         assertThatThrownBy(() -> service.anlegeVersion(productId,
                 new ProductVersionCreateInput("1.14.2-test", null, null)))
                 .isInstanceOf(ProductVersionConflictException.class);
+    }
+
+    @Test
+    @DisplayName("aktualisiere: Name und Beschreibung werden gespeichert")
+    void aktualisiereHappyPath() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).key("portalcore-test").name("Old Name")
+                .description("Old").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        ProductView result = service.aktualisiere(productId,
+                new ProductUpdateInput("  Neuer Name ", "  Neu "));
+
+        assertThat(result.name()).isEqualTo("Neuer Name");
+        assertThat(result.description()).isEqualTo("Neu");
+        assertThat(result.key()).isEqualTo("portalcore-test");
+    }
+
+    @Test
+    @DisplayName("aktualisiere: null-Felder bleiben unveraendert")
+    void aktualisiereNullsIgnorieren() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).key("portalcore-test").name("Name")
+                .description("Desc").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        ProductView result = service.aktualisiere(productId,
+                new ProductUpdateInput(null, null));
+        assertThat(result.name()).isEqualTo("Name");
+        assertThat(result.description()).isEqualTo("Desc");
+    }
+
+    @Test
+    @DisplayName("aktualisiere: leerer Name wirft IllegalArgument")
+    void aktualisiereNameLeer() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).key("portalcore-test").name("Name").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        assertThatThrownBy(() -> service.aktualisiere(productId,
+                new ProductUpdateInput("   ", null)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("aktualisiere: unbekannte Produkt-Id wirft ProductNotFoundException")
+    void aktualisiereUnbekannt() {
+        UUID productId = UUID.randomUUID();
+        given(productRepo.findById(productId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.aktualisiere(productId,
+                new ProductUpdateInput("x", null)))
+                .isInstanceOf(ProductNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("aktualisiere: leere Beschreibung wird zu null normalisiert")
+    void aktualisiereBeschreibungLeer() {
+        UUID productId = UUID.randomUUID();
+        Product p = Product.builder()
+                .id(productId).key("portalcore-test").name("Name")
+                .description("Old").build();
+        given(productRepo.findById(productId)).willReturn(Optional.of(p));
+
+        ProductView result = service.aktualisiere(productId,
+                new ProductUpdateInput(null, "   "));
+        assertThat(result.description()).isNull();
     }
 }
