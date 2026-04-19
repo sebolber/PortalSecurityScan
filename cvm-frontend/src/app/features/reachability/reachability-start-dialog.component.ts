@@ -16,7 +16,8 @@ import { MatSelectModule } from '@angular/material/select';
 import {
   ReachabilityQueryService,
   ReachabilityResult,
-  ReachabilityStartRequest
+  ReachabilityStartRequest,
+  ReachabilitySuggestion
 } from '../../core/reachability/reachability.service';
 
 export interface ReachabilityStartDialogInput {
@@ -131,6 +132,27 @@ function leeresFormular(): FormState {
                  placeholder="org.apache.commons.text.StringSubstitutor#replace">
           <mat-hint>Vollqualifizierter Name der anfaelligen Funktion / Methode.</mat-hint>
         </mat-form-field>
+        @if (vorschlag(); as v) {
+          <div class="cvm-reachability-dialog-hint" role="status">
+            <mat-icon aria-hidden="true">lightbulb</mat-icon>
+            <div>
+              @if (v.symbol) {
+                <span>
+                  Vorgeschlagen:
+                  <button type="button" class="cvm-reachability-dialog-chip"
+                          (click)="uebernehmeVorschlag()">
+                    {{ v.symbol }}
+                  </button>
+                </span>
+              } @else {
+                <span>Keine automatische Ableitung moeglich - bitte manuell eingeben.</span>
+              }
+              @if (v.rationale) {
+                <span class="cvm-reachability-dialog-rationale">{{ v.rationale }}</span>
+              }
+            </div>
+          </div>
+        }
 
         <mat-form-field appearance="outline">
           <mat-label>Sprache</mat-label>
@@ -206,6 +228,38 @@ function leeresFormular(): FormState {
       border: 1px solid color-mix(in srgb, #d32f2f 40%, transparent);
       font-size: 0.85rem;
     }
+    .cvm-reachability-dialog-hint {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      background: color-mix(in srgb, #1976d2 8%, transparent);
+      color: #1976d2;
+      border: 1px solid color-mix(in srgb, #1976d2 30%, transparent);
+      font-size: 0.85rem;
+    }
+    .cvm-reachability-dialog-hint > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .cvm-reachability-dialog-chip {
+      font-family: var(--cvm-font-mono, monospace);
+      background: var(--cvm-surface-alt, rgba(0, 0, 0, 0.04));
+      color: var(--cvm-text);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid color-mix(in srgb, #1976d2 35%, transparent);
+      cursor: pointer;
+    }
+    .cvm-reachability-dialog-chip:hover {
+      background: color-mix(in srgb, #1976d2 15%, transparent);
+    }
+    .cvm-reachability-dialog-rationale {
+      color: var(--cvm-text-muted);
+      font-size: 0.78rem;
+    }
   `]
 })
 export class ReachabilityStartDialogComponent implements OnInit {
@@ -218,6 +272,7 @@ export class ReachabilityStartDialogComponent implements OnInit {
   readonly formular = signal<FormState>(leeresFormular());
   readonly laeuft = signal(false);
   readonly fehler = signal<string | null>(null);
+  readonly vorschlag = signal<ReachabilitySuggestion | null>(null);
 
   constructor(
     @Inject(MAT_DIALOG_DATA) public readonly data: ReachabilityStartDialogInput
@@ -228,6 +283,37 @@ export class ReachabilityStartDialogComponent implements OnInit {
     if (gespeichert) {
       this.formular.set(gespeichert);
     }
+    // Suggestion parallel laden und symbol/language vorbefuellen,
+    // sofern das Formular dort noch leer ist. Fehler sind nicht
+    // blockierend - der Admin kann weiterhin manuell eingeben.
+    void this.ladeVorschlag();
+  }
+
+  private async ladeVorschlag(): Promise<void> {
+    try {
+      const v = await this.service.suggestion(this.data.findingId);
+      this.vorschlag.set(v);
+      this.formular.update((f) => ({
+        ...f,
+        vulnerableSymbol: f.vulnerableSymbol || v.symbol || '',
+        language: f.language || v.language || f.language
+      }));
+    } catch {
+      // Suggestion-Endpoint nicht verfuegbar oder 404 -> leise
+      // ignorieren, UI funktioniert unveraendert.
+    }
+  }
+
+  uebernehmeVorschlag(): void {
+    const v = this.vorschlag();
+    if (!v || !v.symbol) {
+      return;
+    }
+    this.formular.update((f) => ({
+      ...f,
+      vulnerableSymbol: v.symbol!,
+      language: v.language || f.language
+    }));
   }
 
   updateFeld<K extends keyof FormState>(key: K, value: FormState[K]): void {

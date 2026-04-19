@@ -1,8 +1,10 @@
 package com.ahs.cvm.api.reachability;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -10,6 +12,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.ahs.cvm.ai.reachability.ReachabilityAgent;
 import com.ahs.cvm.ai.reachability.ReachabilityResult;
 import com.ahs.cvm.ai.reachability.ReachabilityResult.CallSite;
+import com.ahs.cvm.application.reachability.ReachabilityQueryService;
+import com.ahs.cvm.application.reachability.ReachabilitySuggestionView;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.DisplayName;
@@ -84,5 +88,34 @@ class ReachabilityControllerWebTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("GET /{id}/reachability/suggestion: 200 mit abgeleitetem Symbol")
+    void suggestionHappyPath() throws Exception {
+        given(reachabilityQueryService.suggestionForFinding(eq(FINDING)))
+                .willReturn(new ReachabilitySuggestionView(
+                        FINDING,
+                        "pkg:maven/org.apache.commons/commons-text@1.9",
+                        "org.apache.commons.text",
+                        "java",
+                        "Paket-Prefix aus Maven-Koordinaten."));
+
+        mockMvc.perform(get("/api/v1/findings/" + FINDING + "/reachability/suggestion"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.symbol").value("org.apache.commons.text"))
+                .andExpect(jsonPath("$.language").value("java"))
+                .andExpect(jsonPath("$.sourcePurl").value("pkg:maven/org.apache.commons/commons-text@1.9"));
+    }
+
+    @Test
+    @DisplayName("GET /{id}/reachability/suggestion: 404 bei unbekanntem Finding")
+    void suggestionNotFound() throws Exception {
+        willThrow(new ReachabilityQueryService.FindingNotFoundException(FINDING))
+                .given(reachabilityQueryService).suggestionForFinding(eq(FINDING));
+
+        mockMvc.perform(get("/api/v1/findings/" + FINDING + "/reachability/suggestion"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("finding_not_found"));
     }
 }

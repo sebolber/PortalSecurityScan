@@ -1,5 +1,6 @@
 package com.ahs.cvm.api.reachability;
 
+import com.ahs.cvm.application.reachability.ReachabilityQueryService;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,5 +19,12 @@ public class ReachabilityExceptionHandler {
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "reachability_bad_request", "message", e.getMessage()));
+    }
+
+    @ExceptionHandler(ReachabilityQueryService.FindingNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> findingNotFound(
+            ReachabilityQueryService.FindingNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "finding_not_found", "message", e.getMessage()));
     }
 }

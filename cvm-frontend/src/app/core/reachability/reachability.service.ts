@@ -45,6 +45,14 @@ export interface ReachabilityResult {
   readonly callSites: readonly ReachabilityCallSite[];
 }
 
+export interface ReachabilitySuggestion {
+  readonly findingId: string;
+  readonly sourcePurl: string | null;
+  readonly symbol: string | null;
+  readonly language: string | null;
+  readonly rationale: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReachabilityQueryService {
   private readonly api = inject(ApiClient);
@@ -70,6 +78,19 @@ export class ReachabilityQueryService {
       this.api.post<ReachabilityResult, ReachabilityStartRequest>(
         `/api/v1/findings/${encodeURIComponent(findingId)}/reachability`,
         request
+      )
+    );
+  }
+
+  /**
+   * Holt einen abgeleiteten Symbol-Vorschlag (aus der Component-PURL
+   * des Findings). {@code symbol} kann null sein, wenn die PURL nicht
+   * parsebar ist - Aufrufer muss dann auf manuelle Eingabe fallback.
+   */
+  suggestion(findingId: string): Promise<ReachabilitySuggestion> {
+    return firstValueFrom(
+      this.api.get<ReachabilitySuggestion>(
+        `/api/v1/findings/${encodeURIComponent(findingId)}/reachability/suggestion`
       )
     );
   }
