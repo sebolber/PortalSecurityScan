@@ -145,10 +145,10 @@
     </ahs-card>
 
     <ahs-card title="In dieser Sitzung erzeugte Reports"
-              subtitle="Backend-Listing-Endpoint folgt; aktuell nur Session-Liste.">
+              subtitle="Nach Erzeugen erscheinen die Reports auch unten in der Historie.">
       @if (erzeugte().length === 0) {
         <p class="text-caption">
-          Noch kein Report erzeugt.
+          Noch kein Report in dieser Sitzung erzeugt.
         </p>
       } @else {
         <div class="table-card">
@@ -189,4 +189,69 @@
       }
     </ahs-card>
   </div>
+
+  <ahs-card title="Report-Historie"
+            subtitle="Neueste 20 Reports (alle Produkt-Versionen und Umgebungen).">
+    <div class="flex items-center gap-2 mb-3">
+      <button type="button"
+              class="btn btn-secondary btn-sm"
+              data-testid="reports-historie-refresh"
+              (click)="ladeHistorie()"
+              [disabled]="historieLaedt()">
+        <cvm-icon name="refresh" [size]="16"></cvm-icon>
+        Neu laden
+      </button>
+      <span class="text-caption">
+        {{ historieGesamt() }} Report(s) gesamt
+      </span>
+    </div>
+    @if (historieLaedt()) {
+      <p class="text-caption flex items-center gap-2">
+        <cvm-icon name="loader" [size]="14" class="animate-spin"></cvm-icon>
+        Lade Historie...
+      </p>
+    } @else if (historieFehler()) {
+      <p class="form-error" data-testid="reports-historie-error">{{ historieFehler() }}</p>
+    } @else if (historie().length === 0) {
+      <p class="text-caption" data-testid="reports-historie-empty">
+        Noch keine archivierten Reports gefunden.
+      </p>
+    } @else {
+      <div class="table-card">
+        <table class="data-table" data-testid="reports-historie-table">
+          <thead>
+            <tr>
+              <th>Titel</th>
+              <th>Gesamt</th>
+              <th>Erzeugt von</th>
+              <th>Erzeugt am</th>
+              <th>SHA-256</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of historie(); track r.reportId) {
+              <tr>
+                <td>{{ r.title }}</td>
+                <td>
+                  <ahs-severity-badge [severity]="r.gesamteinstufung"></ahs-severity-badge>
+                </td>
+                <td class="text-xs">{{ r.erzeugtVon }}</td>
+                <td>{{ r.erzeugtAm | date:'short' }}</td>
+                <td class="font-mono text-xs">{{ r.sha256.slice(0, 12) }}...</td>
+                <td>
+                  <button type="button"
+                          class="btn-icon"
+                          (click)="download(r)"
+                          aria-label="Download">
+                    <cvm-icon name="download" [size]="18"></cvm-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </ahs-card>
 </div>

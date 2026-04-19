@@ -69,6 +69,12 @@ export class ReportsComponent implements OnInit {
   readonly busy = signal<boolean>(false);
   readonly fehler = signal<string | null>(null);
 
+  // Iteration 93 (CVM-333): Report-Historie.
+  readonly historie = signal<readonly ReportResponse[]>([]);
+  readonly historieLaedt = signal<boolean>(false);
+  readonly historieFehler = signal<string | null>(null);
+  readonly historieGesamt = signal<number>(0);
+
   /**
    * UI-Fix MEDIUM-5 (UI-Exploration 20260418): Statt UUIDs per Hand
    * eintippen zu lassen, laden wir Produkt-Versionen und Umgebungen
@@ -100,6 +106,26 @@ export class ReportsComponent implements OnInit {
       );
     } finally {
       this.ladeKatalog.set(false);
+    }
+    await this.ladeHistorie();
+  }
+
+  /** Iteration 93 (CVM-333): Historie laden (20 neueste Eintraege). */
+  async ladeHistorie(): Promise<void> {
+    this.historieLaedt.set(true);
+    this.historieFehler.set(null);
+    try {
+      const res = await firstValueFrom(this.reports.list({ size: 20 }));
+      this.historie.set(res.items);
+      this.historieGesamt.set(res.totalElements);
+    } catch {
+      this.historieFehler.set(
+        'Report-Historie konnte nicht geladen werden.'
+      );
+      this.historie.set([]);
+      this.historieGesamt.set(0);
+    } finally {
+      this.historieLaedt.set(false);
     }
   }
 
@@ -147,6 +173,7 @@ export class ReportsComponent implements OnInit {
       }));
       this.erzeugte.update((list) => [response, ...list]);
       this.freigeberKommentar = '';
+      void this.ladeHistorie();
     } catch (err) {
       this.fehler.set(this.formatError(err));
     } finally {

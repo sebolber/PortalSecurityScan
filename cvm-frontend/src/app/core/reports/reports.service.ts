@@ -34,6 +34,21 @@ export interface ReportResponse {
   readonly sha256: string;
 }
 
+export interface ReportListResponse {
+  readonly items: readonly ReportResponse[];
+  readonly page: number;
+  readonly size: number;
+  readonly totalElements: number;
+  readonly totalPages: number;
+}
+
+export interface ReportListQuery {
+  readonly productVersionId?: string;
+  readonly environmentId?: string;
+  readonly page?: number;
+  readonly size?: number;
+}
+
 /**
  * Frontend-Anbindung an die PDF-Report-API (Iteration 10):
  * <ul>
@@ -63,5 +78,20 @@ export class ReportsService {
     const url = this.config.get().apiBaseUrl.replace(/\/$/, '')
       + '/api/v1/reports/' + reportId;
     return this.http.get(url, { responseType: 'blob' });
+  }
+
+  /**
+   * Iteration 93 (CVM-333): Report-Historie. Mappt die optionalen
+   * Filter auf queryParams und liefert eine paginierte Liste.
+   */
+  list(query: ReportListQuery = {}): Observable<ReportListResponse> {
+    const qp: Record<string, string> = {};
+    if (query.productVersionId) qp['productVersionId'] = query.productVersionId;
+    if (query.environmentId) qp['environmentId'] = query.environmentId;
+    if (query.page !== undefined) qp['page'] = String(query.page);
+    if (query.size !== undefined) qp['size'] = String(query.size);
+    const search = new URLSearchParams(qp).toString();
+    const suffix = search.length > 0 ? '?' + search : '';
+    return this.api.get<ReportListResponse>('/api/v1/reports' + suffix);
   }
 }

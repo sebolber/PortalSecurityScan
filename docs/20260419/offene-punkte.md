@@ -92,6 +92,13 @@ Iterationen 80+ implementieren die Befunde.
 - **U-08 Dashboard-Handlungszentrale + Report-Listing** -
   Iteration 93-94. Benoetigt kleinen Backend-Endpoint
   `GET /reports`.
+  - ~~**U-08 Teil 1 Report-Historie im UI**~~ - **Erledigt in
+    Iteration 93** (CVM-333). Der Backend-Endpoint `GET
+    /api/v1/reports` existiert bereits; `ReportsService.list` und
+    eine neue Card "Report-Historie" zeigen die 20 neuesten
+    Reports. Refresh-Button, Leer-/Fehlerzustand, Session-Liste
+    bleibt als ergaenzende Uebersicht bestehen. 2 neue Service-
+    Specs. Pagination-Controls sind Folge-Iteration 94.
 - **U-09 Secrets-Show/Hide-Toggle + Rotation** - Iteration 95.
 - **U-10 Erstnutzer-Wizard** - Iteration 96.
 

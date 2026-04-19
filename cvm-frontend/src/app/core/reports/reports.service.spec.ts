@@ -50,6 +50,52 @@ describe('ReportsService', () => {
     expect(res.reportId).toBe('r1');
   });
 
+  it('Iteration 93: list() fuellt queryParams korrekt', async () => {
+    const promise = firstValueFrom(
+      service.list({ productVersionId: 'pv1', size: 5 })
+    );
+    const req = http.expectOne(
+      'http://api.test/api/v1/reports?productVersionId=pv1&size=5'
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      items: [],
+      page: 0,
+      size: 5,
+      totalElements: 0,
+      totalPages: 0
+    });
+    const out = await promise;
+    expect(out.totalElements).toBe(0);
+  });
+
+  it('Iteration 93: list() ohne Filter ruft /api/v1/reports', async () => {
+    const promise = firstValueFrom(service.list());
+    const req = http.expectOne('http://api.test/api/v1/reports');
+    req.flush({
+      items: [
+        {
+          reportId: 'r1',
+          productVersionId: 'pv1',
+          environmentId: 'e1',
+          reportType: 'HARDENING',
+          title: 'T',
+          gesamteinstufung: 'HIGH',
+          erzeugtVon: 't',
+          erzeugtAm: 'now',
+          stichtag: 'now',
+          sha256: 'abc'
+        }
+      ],
+      page: 0,
+      size: 20,
+      totalElements: 1,
+      totalPages: 1
+    });
+    const out = await promise;
+    expect(out.items.length).toBe(1);
+  });
+
   it('GET ladePdf liefert Blob', async () => {
     const promise = firstValueFrom(service.ladePdf('r1'));
     const req = http.expectOne('http://api.test/api/v1/reports/r1');
