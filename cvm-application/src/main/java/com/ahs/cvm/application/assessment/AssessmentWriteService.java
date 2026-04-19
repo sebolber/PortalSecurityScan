@@ -93,6 +93,7 @@ public class AssessmentWriteService {
         int naechsteVersion = naechsteVersionFuer(cmd.findingId());
 
         Assessment.AssessmentBuilder builder = Assessment.builder()
+                .tenantId(finding.getTenantId())
                 .finding(finding)
                 .productVersion(refProductVersion(cmd.productVersionId()))
                 .environment(refEnvironment(cmd.environmentId()))
@@ -157,6 +158,7 @@ public class AssessmentWriteService {
         });
 
         Assessment neu = Assessment.builder()
+                .tenantId(finding.getTenantId())
                 .finding(finding)
                 .productVersion(refProductVersion(extractProductVersionId(aktuell, cmd)))
                 .environment(refEnvironment(extractEnvironmentId(aktuell, cmd)))
@@ -246,6 +248,7 @@ public class AssessmentWriteService {
         assessmentRepository.save(bestehend);
 
         Assessment genehmigt = Assessment.builder()
+                .tenantId(bestehend.getTenantId())
                 .finding(bestehend.getFinding())
                 .productVersion(bestehend.getProductVersion())
                 .environment(bestehend.getEnvironment())
@@ -310,6 +313,7 @@ public class AssessmentWriteService {
         assessmentRepository.save(bestehend);
 
         Assessment abgelehnt = Assessment.builder()
+                .tenantId(bestehend.getTenantId())
                 .finding(bestehend.getFinding())
                 .productVersion(bestehend.getProductVersion())
                 .environment(bestehend.getEnvironment())

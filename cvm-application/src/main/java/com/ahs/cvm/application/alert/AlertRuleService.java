@@ -1,5 +1,6 @@
 package com.ahs.cvm.application.alert;
 
+import com.ahs.cvm.application.tenant.TenantContext;
 import com.ahs.cvm.domain.enums.AlertSeverity;
 import com.ahs.cvm.domain.enums.AlertTriggerArt;
 import com.ahs.cvm.persistence.alert.AlertRule;
@@ -36,6 +37,7 @@ public class AlertRuleService {
             throw new IllegalArgumentException("templateName erforderlich");
         }
         AlertRule rule = AlertRule.builder()
+                .tenantId(TenantContext.requireCurrent())
                 .name(command.name())
                 .description(command.description())
                 .triggerArt(command.triggerArt())

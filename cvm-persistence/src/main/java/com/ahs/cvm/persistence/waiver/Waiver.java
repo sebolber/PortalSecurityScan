@@ -38,6 +38,10 @@ public class Waiver {
     @Column(name = "id", nullable = false, updatable = false)
     private UUID id;
 
+    /** Iteration 62D (CVM-62): Mandanten-Zuordnung. */
+    @Column(name = "tenant_id", nullable = false, updatable = false)
+    private UUID tenantId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "assessment_id", nullable = false, updatable = false)
     private Assessment assessment;

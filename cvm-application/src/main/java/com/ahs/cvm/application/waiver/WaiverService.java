@@ -84,6 +84,7 @@ public class WaiverService {
                 || cmd.reviewIntervalDays() <= 0 ? 90 : cmd.reviewIntervalDays();
 
         Waiver waiver = repository.save(Waiver.builder()
+                .tenantId(assessment.getTenantId())
                 .assessment(assessment)
                 .reason(cmd.reason())
                 .grantedBy(cmd.grantedBy())
