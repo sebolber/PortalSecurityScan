@@ -131,4 +131,94 @@
       </div>
     </section>
   </section>
+
+  <!-- Iteration 94 (CVM-334): T2-Eskalation + letzte Reports. -->
+  <section
+    class="grid grid-cols-1 gap-4 md:grid-cols-2"
+    data-testid="dashboard-handlungszentrale"
+  >
+    <section class="card">
+      <header class="card-header">
+        <div class="flex flex-col gap-1">
+          <h2 class="card-title">T2-Eskalation</h2>
+          <p class="text-caption">
+            Anzahl kritischer Vorschlaege ohne Bewertung.
+          </p>
+        </div>
+      </header>
+      <div class="card-body">
+        @if (alertStatus() !== null && alertStatus()!.visible) {
+          <div class="flex items-center gap-3"
+               data-testid="dashboard-t2-critical">
+            <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
+            <span class="text-lg">
+              {{ alertStatus()!.count }} offen
+              &gt; {{ alertStatus()!.t2Minutes }} min
+            </span>
+          </div>
+          <a class="btn btn-secondary btn-sm mt-3"
+             routerLink="/queue"
+             data-testid="dashboard-t2-queue-link">
+            <cvm-icon name="rule" [size]="14"></cvm-icon>
+            Zur Queue
+          </a>
+        } @else {
+          <div class="flex items-center gap-3"
+               data-testid="dashboard-t2-ok">
+            <ahs-severity-badge severity="LOW"></ahs-severity-badge>
+            <span>Keine T2-Eskalation offen.</span>
+          </div>
+        }
+      </div>
+    </section>
+
+    @if (darfReports()) {
+      <section class="card" data-testid="dashboard-letzte-reports">
+        <header class="card-header">
+          <div class="flex flex-col gap-1">
+            <h2 class="card-title">Zuletzt erzeugte Reports</h2>
+            <p class="text-caption">
+              Die 5 neuesten Hardening-Reports mandantenweit.
+            </p>
+          </div>
+        </header>
+        <div class="card-body">
+          @if (letzteReportsLaedt()) {
+            <p class="text-caption flex items-center gap-2">
+              <cvm-icon name="loader" [size]="14" class="animate-spin"></cvm-icon>
+              Laedt...
+            </p>
+          } @else if (letzteReportsFehler()) {
+            <p class="form-error" data-testid="dashboard-reports-error">
+              Reports konnten nicht geladen werden.
+            </p>
+          } @else if (letzteReports().length === 0) {
+            <p class="text-caption" data-testid="dashboard-reports-empty">
+              Noch kein Report erzeugt.
+            </p>
+          } @else {
+            <ul class="flex flex-col divide-y divide-border">
+              @for (r of letzteReports(); track r.reportId) {
+                <li class="flex items-center justify-between py-2 gap-3">
+                  <div class="flex items-center gap-2 min-w-0">
+                    <ahs-severity-badge [severity]="r.gesamteinstufung"></ahs-severity-badge>
+                    <span class="truncate">{{ r.title }}</span>
+                  </div>
+                  <span class="text-xs text-text-muted shrink-0">
+                    {{ r.erzeugtAm | date:'short' }}
+                  </span>
+                </li>
+              }
+            </ul>
+            <a class="btn btn-secondary btn-sm mt-3"
+               routerLink="/reports"
+               data-testid="dashboard-reports-link">
+              <cvm-icon name="file-text" [size]="14"></cvm-icon>
+              Alle Reports ansehen
+            </a>
+          }
+        </div>
+      </section>
+    }
+  </section>
 </div>

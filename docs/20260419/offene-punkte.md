@@ -99,6 +99,13 @@ Iterationen 80+ implementieren die Befunde.
     Reports. Refresh-Button, Leer-/Fehlerzustand, Session-Liste
     bleibt als ergaenzende Uebersicht bestehen. 2 neue Service-
     Specs. Pagination-Controls sind Folge-Iteration 94.
+  - ~~**U-08 Teil 2 Dashboard-Handlungszentrale**~~ -
+    **Erledigt in Iteration 94** (CVM-334). Dashboard zeigt jetzt
+    zusaetzlich eine T2-Eskalations-Ampel (aus AlertBannerService)
+    und die 5 neuesten Reports rollen-gefiltert (ADMIN/REPORTER/
+    VIEWER). 5 neue Karma-Specs. Offen: persoenliche "Mein Tag"-
+    Card mit zugewiesenen Queue-Items - benoetigt
+    `/queue?assignee=...`-Endpoint.
 - **U-09 Secrets-Show/Hide-Toggle + Rotation** - Iteration 95.
 - **U-10 Erstnutzer-Wizard** - Iteration 96.
 

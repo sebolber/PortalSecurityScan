@@ -1,6 +1,7 @@
-import { Component, computed, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { NgxEchartsDirective } from 'ngx-echarts';
 import type { EChartsOption } from 'echarts';
 import { echartsRouteProviders } from '../../shared/charts/echarts-providers';
@@ -8,9 +9,14 @@ import {
   Severity,
   SeverityBadgeComponent
 } from '../../shared/components/severity-badge.component';
+import { AlertBannerService } from '../../core/alerts/alert-banner.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { CVM_ROLES } from '../../core/auth/cvm-roles';
 import { LocaleService } from '../../core/i18n/locale.service';
+import {
+  ReportResponse,
+  ReportsService
+} from '../../core/reports/reports.service';
 import { ChartThemeService } from '../../core/theme/chart-theme.service';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 
@@ -36,6 +42,7 @@ interface SeverityCount {
   standalone: true,
   imports: [
     CommonModule,
+    DatePipe,
     RouterLink,
     SeverityBadgeComponent,
     NgxEchartsDirective,
@@ -46,10 +53,12 @@ interface SeverityCount {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
   private readonly locale = inject(LocaleService);
   private readonly chartTheme = inject(ChartThemeService);
   private readonly auth = inject(AuthService);
+  private readonly reports = inject(ReportsService);
+  private readonly alerts = inject(AlertBannerService);
 
   readonly texte = this.locale.messages.dashboard;
 
@@ -88,6 +97,39 @@ export class DashboardComponent {
 
   readonly aeltesteCritical = '–';
   readonly weiterbetriebOk = true;
+
+  // Iteration 94 (CVM-334): Dashboard als Handlungszentrale -
+  // letzte 5 Reports und aktuelle T2-Eskalations-Anzahl.
+  readonly letzteReports = signal<readonly ReportResponse[]>([]);
+  readonly letzteReportsLaedt = signal<boolean>(false);
+  readonly letzteReportsFehler = signal<boolean>(false);
+  readonly alertStatus = this.alerts.status;
+  readonly darfReports = computed(
+    () =>
+      this.auth.hasRole(CVM_ROLES.ADMIN) ||
+      this.auth.hasRole(CVM_ROLES.REPORTER) ||
+      this.auth.hasRole(CVM_ROLES.VIEWER)
+  );
+
+  async ngOnInit(): Promise<void> {
+    if (this.darfReports()) {
+      await this.ladeLetzteReports();
+    }
+  }
+
+  async ladeLetzteReports(): Promise<void> {
+    this.letzteReportsLaedt.set(true);
+    this.letzteReportsFehler.set(false);
+    try {
+      const res = await firstValueFrom(this.reports.list({ size: 5 }));
+      this.letzteReports.set(res.items);
+    } catch {
+      this.letzteReports.set([]);
+      this.letzteReportsFehler.set(true);
+    } finally {
+      this.letzteReportsLaedt.set(false);
+    }
+  }
 
   readonly chartOption = computed<EChartsOption>(() => {
     const colors = this.chartTheme.severityColors();
