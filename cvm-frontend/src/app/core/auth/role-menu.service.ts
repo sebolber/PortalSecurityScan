@@ -104,6 +104,16 @@ const ADMIN_TENANTS_ENTRY: MenuEntry = {
   requiredRoles: [CVM_ROLES.ADMIN]
 };
 
+/** Iteration 61 (CVM-62): CVE-JSON-Import fuer air-gapped Setups. */
+const ADMIN_CVE_IMPORT_ENTRY: MenuEntry = {
+  id: 'admin-cve-import',
+  label: 'CVE-Import',
+  path: '/admin/cve-import',
+  icon: 'upload',
+  section: 'einstellungen',
+  requiredRoles: [CVM_ROLES.ADMIN]
+};
+
 const SETTINGS_ENTRY: MenuEntry = {
   id: 'settings',
   label: 'Einstellungen',
@@ -131,7 +141,8 @@ const SETTINGS_ENTRY: MenuEntry = {
     ADMIN_THEME_ENTRY,
     ADMIN_LLM_ENTRY,
     ADMIN_PARAMETERS_ENTRY,
-    ADMIN_TENANTS_ENTRY
+    ADMIN_TENANTS_ENTRY,
+    ADMIN_CVE_IMPORT_ENTRY
   ]
 };
 

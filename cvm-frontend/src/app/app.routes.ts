@@ -149,6 +149,15 @@ export const APP_ROUTES: Routes = [
             .then((m) => m.AdminParametersComponent)
       },
       {
+        // Iteration 61 (CVM-62): CVE-Datei-Import fuer air-gapped Setups.
+        path: 'admin/cve-import',
+        canActivate: [authGuard],
+        data: { requiredRoles: [CVM_ROLES.ADMIN] },
+        loadComponent: () =>
+          import('./features/admin-cve-import/admin-cve-import.component')
+            .then((m) => m.AdminCveImportComponent)
+      },
+      {
         // Iteration 56 (CVM-106): Mandanten-Liste (read-only).
         path: 'admin/tenants',
         canActivate: [authGuard],
