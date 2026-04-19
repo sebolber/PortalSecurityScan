@@ -27,8 +27,11 @@ Iterationen 80+ implementieren die Befunde.
   `/fix-verification` grade, `/tenant-kpi` window. Sechs neue
   Karma-Cases. KPI-Presets (Heute/Quartal/custom) bleibt
   Folge-Iteration.
-- **U-02c Tenant-Badge im Shell + Default-Switch** -
-  Iteration 84.
+- ~~U-02c Tenant-Badge im Shell + Default-Switch~~ -
+  **Erledigt in Iteration 84** (CVM-324). Tenant-Badge ist
+  jetzt ein Button mit Popover; Admin sieht alle Mandanten mit
+  "Als Default"-Button. Hinweis: Mandantenwechsel erfordert
+  weiterhin Re-Login via Keycloak (Infrastruktur-Ebene).
 - **U-03 Waiver-Extend/Revoke-Aktionen + Expiry-Banner** -
   Iteration 85. Backend existiert; UI fehlt.
 - **U-04a Vier-Augen-Warnung im Queue-Detail** - Iteration 86.

@@ -11,17 +11,87 @@
   </a>
 
   @if (loggedIn() && tenantSig(); as tenant) {
-    <div
-      class="inline-flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-surface-muted text-sm"
-      [attr.title]="'Aktueller Mandant: ' + tenant.name + ' (' + tenant.tenantKey + ')'"
-    >
-      <cvm-icon name="shield" [size]="16" class="text-primary"></cvm-icon>
-      <div class="flex flex-col leading-tight">
-        <span class="font-medium">{{ tenant.name }}</span>
-        <span class="text-xs text-text-muted font-mono">{{ tenant.tenantKey }}</span>
-      </div>
-      @if (tenant.defaultTenant) {
-        <span class="badge badge-info text-xs" title="Default-Mandant">Default</span>
+    <div class="relative">
+      <button
+        type="button"
+        class="inline-flex items-center gap-2 h-10 px-3 rounded-lg border border-border bg-surface-muted text-sm hover:bg-surface"
+        data-testid="shell-tenant-badge"
+        [attr.title]="'Aktueller Mandant: ' + tenant.name + ' (' + tenant.tenantKey + ')'"
+        [attr.aria-expanded]="tenantMenuOpen()"
+        (click)="toggleTenantMenu()"
+      >
+        <cvm-icon name="shield" [size]="16" class="text-primary"></cvm-icon>
+        <div class="flex flex-col leading-tight items-start">
+          <span class="font-medium">{{ tenant.name }}</span>
+          <span class="text-xs text-text-muted font-mono">{{ tenant.tenantKey }}</span>
+        </div>
+        @if (tenant.defaultTenant) {
+          <span class="badge badge-info text-xs" title="Default-Mandant">Default</span>
+        }
+        <cvm-icon
+          [name]="tenantMenuOpen() ? 'chevron-up' : 'chevron-down'"
+          [size]="16"
+        ></cvm-icon>
+      </button>
+      @if (tenantMenuOpen()) {
+        <div
+          class="absolute right-0 top-full mt-2 w-[360px] bg-surface border border-border rounded-lg shadow-lg p-3 z-50"
+          data-testid="shell-tenant-popover"
+        >
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-sm">
+              <cvm-icon name="info" [size]="16" class="text-text-muted"></cvm-icon>
+              <span class="text-text-muted">
+                Mandantenwechsel = Logout + Re-Login mit dem anderen
+                Mandanten-Kontext (Keycloak).
+              </span>
+            </div>
+            @if (istAdmin()) {
+              <div class="border-t border-border my-2"></div>
+              <div class="text-xs font-semibold uppercase text-text-muted">
+                Alle Mandanten
+              </div>
+              @if (tenantMenuLaedt()) {
+                <div class="text-sm text-text-muted flex items-center gap-2">
+                  <cvm-icon name="loader" [size]="14" class="animate-spin"></cvm-icon>
+                  Laedt...
+                </div>
+              } @else if (alleTenants().length === 0) {
+                <div class="text-sm text-text-muted">Keine Mandanten ladbar.</div>
+              } @else {
+                <ul class="flex flex-col gap-1 max-h-60 overflow-auto">
+                  @for (t of alleTenants(); track t.id) {
+                    <li
+                      class="flex items-center gap-2 px-2 py-1 rounded hover:bg-surface-muted"
+                      [attr.data-testid]="'shell-tenant-row-' + t.tenantKey"
+                    >
+                      <div class="flex flex-col grow min-w-0">
+                        <span class="font-medium truncate">{{ t.name }}</span>
+                        <span class="text-xs text-text-muted font-mono truncate">
+                          {{ t.tenantKey }}
+                        </span>
+                      </div>
+                      @if (t.defaultTenant) {
+                        <span class="badge badge-info text-xs">Default</span>
+                      } @else if (t.active) {
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          [attr.data-testid]="'shell-tenant-set-default-' + t.tenantKey"
+                          (click)="setzeAlsDefault(t.id)"
+                        >
+                          Als Default
+                        </button>
+                      } @else {
+                        <span class="text-xs text-text-muted">inaktiv</span>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            }
+          </div>
+        </div>
       }
     </div>
   }

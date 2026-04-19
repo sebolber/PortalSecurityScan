@@ -116,6 +116,15 @@ export class ShellComponent implements OnInit {
 
   readonly userMenuOpen = signal(false);
 
+  // Iteration 84 (CVM-324): Tenant-Popover mit Liste und
+  // Set-Default-Aktion fuer Admins.
+  readonly tenantMenuOpen = signal(false);
+  readonly alleTenants = signal<readonly TenantView[]>([]);
+  readonly tenantMenuLaedt = signal(false);
+  readonly istAdmin = computed(() =>
+    this.auth.userRoles().includes('CVM_ADMIN')
+  );
+
   ngOnInit(): void {
     this.theme.init();
     this.auth.refreshFromKeycloak();
@@ -156,10 +165,46 @@ export class ShellComponent implements OnInit {
 
   toggleUserMenu(): void {
     this.userMenuOpen.update((v) => !v);
+    if (this.userMenuOpen()) {
+      this.tenantMenuOpen.set(false);
+    }
+  }
+
+  toggleTenantMenu(): void {
+    const naechster = !this.tenantMenuOpen();
+    this.tenantMenuOpen.set(naechster);
+    if (naechster) {
+      this.userMenuOpen.set(false);
+      if (this.istAdmin()) {
+        void this.ladeAlleTenants();
+      }
+    }
   }
 
   closeMenus(): void {
     this.userMenuOpen.set(false);
+    this.tenantMenuOpen.set(false);
+  }
+
+  private async ladeAlleTenants(): Promise<void> {
+    this.tenantMenuLaedt.set(true);
+    try {
+      this.alleTenants.set(await this.tenants.list());
+    } catch {
+      this.alleTenants.set([]);
+    } finally {
+      this.tenantMenuLaedt.set(false);
+    }
+  }
+
+  async setzeAlsDefault(tenantId: string): Promise<void> {
+    try {
+      await this.tenants.setDefault(tenantId);
+      await this.ladeAlleTenants();
+      await this.ladeTenant();
+    } catch {
+      // Fehler-Toast waere schoen - bleibt Folge-Iteration. Noop.
+    }
   }
 
   async login(): Promise<void> {

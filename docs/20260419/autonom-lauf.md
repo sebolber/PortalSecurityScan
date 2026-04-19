@@ -250,3 +250,11 @@ Select (ALLE/PROPOSED/NEEDS_REVIEW/APPROVED/REJECTED/EXPIRED).
 queue.component synchronisiert Filter <-> queryParams in beide
 Richtungen; Deep-Links und Reload halten den Zustand. Karma 109.
 Naechstes: U-02b CVE/KPI/FixVerif-Filter-URL + KPI-Presets.
+[18:40] Iteration 83 abgeschlossen: U-02b Filter-URL in
+/cves (q/severity/kev/page), /fix-verification (grade) und
+/tenant-kpi (window). Sechs neue Specs, Karma 115.
+[18:55] Iteration 84 abgeschlossen: U-02c Tenant-Badge wird
+interaktiv; Popover mit Mandanten-Liste und "Als Default"-
+Button fuer Admins. Drei neue Unit-Tests (Shell ohne
+DOM-Rendering aus Service-Tree-Gruenden). Karma 118.
+Naechstes: U-03 Waiver-Lifecycle im UI.
