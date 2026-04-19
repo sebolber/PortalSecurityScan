@@ -241,3 +241,12 @@ Queue-Empty-State mit drei CTAs (Neuer Scan/Berichte/Dashboard).
 Dashboard-Handlungskarten (Scan/Queue/Waiver) oberhalb der KPIs,
 rollen-gefiltert. 7 neue Karma-Cases (insgesamt 101 Tests).
 Naechstes: U-01b weitere Workflow-CTAs.
+[18:26] Iteration 81 abgeschlossen: U-01b Workflow-CTAs Runde 2.
+Header-Buttons Reachability->FixVerif, FixVerif->Waiver,
+Anomalie->Waiver, Waiver->Bericht. Vier neue Specs, Karma 105.
+Naechstes: U-02a Queue-Status-Filter + URL-Persistenz.
+[18:33] Iteration 82 abgeschlossen: U-02a. Status-Chips statt
+Select (ALLE/PROPOSED/NEEDS_REVIEW/APPROVED/REJECTED/EXPIRED).
+queue.component synchronisiert Filter <-> queryParams in beide
+Richtungen; Deep-Links und Reload halten den Zustand. Karma 109.
+Naechstes: U-02b CVE/KPI/FixVerif-Filter-URL + KPI-Presets.

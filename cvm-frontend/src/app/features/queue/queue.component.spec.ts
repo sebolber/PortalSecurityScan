@@ -1,6 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of } from 'rxjs';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router,
+  convertToParamMap,
+  provideRouter
+} from '@angular/router';
 import { QueueComponent } from './queue.component';
 import { QueueApiService } from './queue-api.service';
 import { QueueStore } from './queue-store';
@@ -27,9 +32,17 @@ class FakeAuth {
 
 describe('QueueComponent', () => {
   let paramMap$: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
+  let routeSnapshotMap = convertToParamMap({});
 
   beforeEach(() => {
     paramMap$ = new BehaviorSubject(convertToParamMap({}));
+    routeSnapshotMap = convertToParamMap({});
+    const fakeRoute = {
+      queryParamMap: paramMap$,
+      get snapshot() {
+        return { queryParamMap: routeSnapshotMap };
+      }
+    };
     TestBed.configureTestingModule({
       imports: [QueueComponent],
       providers: [
@@ -37,7 +50,7 @@ describe('QueueComponent', () => {
         QueueStore,
         { provide: QueueApiService, useClass: FakeApi },
         { provide: AuthService, useClass: FakeAuth },
-        { provide: ActivatedRoute, useValue: { queryParamMap: paramMap$ } }
+        { provide: ActivatedRoute, useValue: fakeRoute }
       ]
     });
   });
@@ -77,5 +90,24 @@ describe('QueueComponent', () => {
     expect(filter.productVersionId).toBe('pv-1');
     expect(filter.environmentId).toBe('env-1');
     expect(filter.status).toBe('PROPOSED');
+  });
+
+  it('Iteration 82: Store-Filter-Aenderung navigiert zur URL', () => {
+    const router = TestBed.inject(Router);
+    const spy = spyOn(router, 'navigate').and.resolveTo(true);
+    const fixture = TestBed.createComponent(QueueComponent);
+    const store = TestBed.inject(QueueStore);
+    fixture.detectChanges();
+    spy.calls.reset();
+
+    store.setFilter({ status: 'APPROVED' });
+    fixture.detectChanges();
+
+    expect(spy).toHaveBeenCalled();
+    const lastCall = spy.calls.mostRecent();
+    const params = (lastCall.args[1] as { queryParams: Record<string, unknown> })
+      .queryParams;
+    expect(params['status']).toBe('APPROVED');
+    expect(params['productVersionId']).toBeNull();
   });
 });

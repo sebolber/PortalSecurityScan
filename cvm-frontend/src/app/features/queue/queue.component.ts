@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { interval } from 'rxjs';
 import { QueueStore } from './queue-store';
 import { QueueShortcutsDirective } from './queue-shortcuts.directive';
@@ -56,6 +56,7 @@ export class QueueComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly entries = this.store.entries;
   readonly selected = this.store.selected;
@@ -93,6 +94,36 @@ export class QueueComponent implements OnInit {
         void this.store.reload();
       },
       { allowSignalWrites: true }
+    );
+
+    // Iteration 82 (CVM-322): Filter in die URL spiegeln, damit
+    // Reload und Share-Links den Zustand erhalten. Wir schreiben
+    // replaceUrl, damit der Back-Button nicht jedes Filter-Toggle
+    // als History-Schritt sieht.
+    effect(
+      () => {
+        const f = this.store.filter();
+        const params = {
+          productVersionId: f.productVersionId ?? null,
+          environmentId: f.environmentId ?? null,
+          status: f.status ?? null,
+          source: f.source ?? null
+        };
+        const current = this.route.snapshot.queryParamMap;
+        const same =
+          (current.get('productVersionId') ?? null) === params.productVersionId
+          && (current.get('environmentId') ?? null) === params.environmentId
+          && (current.get('status') ?? null) === params.status
+          && (current.get('source') ?? null) === params.source;
+        if (!same) {
+          void this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: params,
+            queryParamsHandling: 'merge',
+            replaceUrl: true
+          });
+        }
+      }
     );
   }
 

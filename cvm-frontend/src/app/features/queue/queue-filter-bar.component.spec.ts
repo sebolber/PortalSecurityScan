@@ -47,4 +47,36 @@ describe('QueueFilterBarComponent', () => {
     fixture.componentInstance.toggle('HIGH');
     expect(store.toggleSeverityFilter).toHaveBeenCalledWith('HIGH');
   });
+
+  it('Iteration 82: rendert sechs Status-Chips (ALLE/PROPOSED/NEEDS_REVIEW/APPROVED/REJECTED/EXPIRED)', () => {
+    const fixture = TestBed.createComponent(QueueFilterBarComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('[data-testid="queue-status-ALL"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="queue-status-PROPOSED"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="queue-status-NEEDS_REVIEW"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="queue-status-APPROVED"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="queue-status-REJECTED"]')).not.toBeNull();
+    expect(el.querySelector('[data-testid="queue-status-EXPIRED"]')).not.toBeNull();
+  });
+
+  it('Iteration 82: Klick auf APPROVED-Chip setzt Store-Filter-Status', () => {
+    const fixture = TestBed.createComponent(QueueFilterBarComponent);
+    fixture.detectChanges();
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="queue-status-APPROVED"]'
+    ) as HTMLButtonElement;
+    btn.click();
+    expect(store.setFilter).toHaveBeenCalledWith({ status: 'APPROVED' });
+  });
+
+  it('Iteration 82: Klick auf ALLE-Chip setzt status=undefined', () => {
+    const fixture = TestBed.createComponent(QueueFilterBarComponent);
+    fixture.detectChanges();
+    const btn = fixture.nativeElement.querySelector(
+      '[data-testid="queue-status-ALL"]'
+    ) as HTMLButtonElement;
+    btn.click();
+    expect(store.setFilter).toHaveBeenCalledWith({ status: undefined });
+  });
 });

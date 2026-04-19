@@ -3,8 +3,25 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { QueueStore } from './queue-store';
-import { SEVERITY_REIHENFOLGE } from './queue.types';
+import {
+  AssessmentStatus,
+  SEVERITY_REIHENFOLGE
+} from './queue.types';
 import { Severity } from '../../shared/components/severity-badge.component';
+
+interface StatusChip {
+  readonly key: AssessmentStatus | null;
+  readonly label: string;
+}
+
+const STATUS_CHIPS: readonly StatusChip[] = [
+  { key: null, label: 'ALLE' },
+  { key: 'PROPOSED', label: 'PROPOSED' },
+  { key: 'NEEDS_REVIEW', label: 'NEEDS_REVIEW' },
+  { key: 'APPROVED', label: 'APPROVED' },
+  { key: 'REJECTED', label: 'REJECTED' },
+  { key: 'EXPIRED', label: 'EXPIRED' }
+];
 
 /**
  * Horizontaler Filter-Balken oberhalb der Queue-Tabelle.
@@ -16,6 +33,8 @@ import { Severity } from '../../shared/components/severity-badge.component';
  * <p>Iteration 61 (CVM-62): Material-freie Umsetzung mit
  * `.filter-bar`, `.form-group`, `.input-field`, `.select-field`,
  * `.severity-chip`.
+ *
+ * <p>Iteration 82 (CVM-322): Status-Chips statt Select.
  */
 @Component({
   selector: 'cvm-queue-filter-bar',
@@ -47,18 +66,25 @@ import { Severity } from '../../shared/components/severity-badge.component';
           />
         </label>
 
-        <label class="form-group">
+        <div class="form-group">
           <span class="form-label">Status</span>
-          <select
-            class="select-field"
-            [ngModel]="store.filter().status ?? ''"
-            (ngModelChange)="status($event)"
+          <div
+            class="inline-flex rounded-lg border border-border bg-surface overflow-hidden h-10"
+            role="group"
+            aria-label="Status-Filter"
           >
-            <option value="">Offen (PROPOSED + NEEDS_REVIEW)</option>
-            <option value="PROPOSED">PROPOSED</option>
-            <option value="NEEDS_REVIEW">NEEDS_REVIEW</option>
-          </select>
-        </label>
+            @for (c of statusChips; track c.label) {
+              <button
+                type="button"
+                class="px-3 text-xs font-semibold uppercase tracking-wide border-r border-border last:border-r-0"
+                [class.bg-primary-muted]="(store.filter().status ?? null) === c.key"
+                [class.text-primary]="(store.filter().status ?? null) === c.key"
+                [attr.data-testid]="'queue-status-' + (c.key ?? 'ALL')"
+                (click)="status(c.key)"
+              >{{ c.label }}</button>
+            }
+          </div>
+        </div>
 
         <label class="form-group">
           <span class="form-label">Vorschlagsquelle</span>
@@ -98,6 +124,7 @@ import { Severity } from '../../shared/components/severity-badge.component';
           <button
             type="button"
             class="btn btn-secondary"
+            data-testid="queue-filter-reset"
             (click)="reset()"
           >
             <cvm-icon name="clear" [size]="16"></cvm-icon>
@@ -111,6 +138,7 @@ import { Severity } from '../../shared/components/severity-badge.component';
 export class QueueFilterBarComponent {
   readonly store = inject(QueueStore);
   readonly severities = SEVERITY_REIHENFOLGE;
+  readonly statusChips = STATUS_CHIPS;
 
   auf(
     key: 'productVersionId' | 'environmentId',
@@ -120,10 +148,8 @@ export class QueueFilterBarComponent {
     this.store.setFilter({ [key]: trimmed.length === 0 ? undefined : trimmed });
   }
 
-  status(value: string): void {
-    this.store.setFilter({
-      status: value === '' ? undefined : (value as 'PROPOSED' | 'NEEDS_REVIEW')
-    });
+  status(key: AssessmentStatus | null): void {
+    this.store.setFilter({ status: key ?? undefined });
   }
 
   source(value: string): void {

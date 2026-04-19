@@ -17,9 +17,11 @@ Iterationen 80+ implementieren die Befunde.
   Waiver, Waiver -> Bericht. Vier neue Karma-Specs. Per-Zeile-
   Navigation auf Finding-Ebene wartet auf findingId-Filter in
   der Queue (U-02a).
-- **U-02a Queue-Status-Filter + URL-Persistenz** - Iteration 82.
-  Status-Chips (ALLE/OFFEN/APPROVED/REJECTED/NEEDS_VERIFICATION),
-  Filter-State via `ActivatedRoute.queryParams`.
+- ~~U-02a Queue-Status-Filter + URL-Persistenz~~ -
+  **Erledigt in Iteration 82** (CVM-322). Status-Chips
+  (ALLE/PROPOSED/NEEDS_REVIEW/APPROVED/REJECTED/EXPIRED) ersetzen
+  das Select. Filter spiegelt sich in queryParams;
+  Deep-Links und Page-Reloads erhalten den Zustand.
 - **U-02b CVE/KPI/FixVerif-Filter-URL + KPI-Presets** -
   Iteration 83.
 - **U-02c Tenant-Badge im Shell + Default-Switch** -
