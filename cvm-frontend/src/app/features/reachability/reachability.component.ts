@@ -1,53 +1,56 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
+import { FormsModule } from '@angular/forms';
 import {
   ReachabilityQueryService,
+  ReachabilityResult,
   ReachabilitySummaryView
 } from '../../core/reachability/reachability.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
+import {
+  ReachabilityStartDialogComponent,
+  ReachabilityStartDialogInput
+} from './reachability-start-dialog.component';
 
 /**
- * Reachability-Uebersicht (Iteration 27e, CVM-65). Ersetzt den
- * Platzhalter aus 27d durch eine Server-gespeiste Liste der
- * letzten Reachability-AiSuggestions.
+ * Reachability-Uebersicht (Iteration 27e, CVM-65). Iteration 61
+ * (CVM-62): Migration von Angular Material auf pure Tailwind-
+ * Komponenten. Der Start-Dialog wird inline ueber {@code <cvm-dialog>}
+ * gerendert und durch ein Signal gesteuert.
  */
 @Component({
   selector: 'cvm-reachability',
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     DatePipe,
     DecimalPipe,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
     AhsBannerComponent,
-    EmptyStateComponent
+    EmptyStateComponent,
+    CvmIconComponent,
+    ReachabilityStartDialogComponent
   ],
   templateUrl: './reachability.component.html',
   styleUrls: ['./reachability.component.scss']
 })
 export class ReachabilityComponent implements OnInit {
   private readonly api = inject(ReachabilityQueryService);
-
-  readonly columns = [
-    'createdAt',
-    'severity',
-    'status',
-    'rationale',
-    'confidence',
-    'finding'
-  ] as const;
+  private readonly auth = inject(AuthService);
+  private readonly toast = inject(CvmToastService);
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly rows = signal<readonly ReachabilitySummaryView[]>([]);
+
+  // Inline-Dialog-Steuerung (Iteration 61, CVM-62).
+  readonly startDialogOffen = signal(false);
+  readonly startDialogData = signal<ReachabilityStartDialogInput | null>(null);
+  readonly neueFindingId = signal<string>('');
 
   ngOnInit(): void {
     void this.laden();
@@ -68,5 +71,38 @@ export class ReachabilityComponent implements OnInit {
 
   trackId(_: number, r: ReachabilitySummaryView): string {
     return r.id;
+  }
+
+  oeffneStartDialog(): void {
+    const findingId = this.neueFindingId().trim();
+    if (!findingId) {
+      this.toast.warning('Bitte Finding-ID eintragen.');
+      return;
+    }
+    const triggeredBy = this.auth.username() || 'anonymous';
+    this.startDialogData.set({ findingId, triggeredBy });
+    this.startDialogOffen.set(true);
+  }
+
+  onDialogConfirm(result: ReachabilityResult): void {
+    this.startDialogOffen.set(false);
+    this.startDialogData.set(null);
+    this.neueFindingId.set('');
+    if (!result.available) {
+      const hinweis = result.noteIfUnavailable?.trim()
+        || 'Kein Detail vom Backend gemeldet.';
+      this.toast.warning('Reachability nicht verfuegbar: ' + hinweis);
+      return;
+    }
+    const kurz = (result.summary && result.summary.trim().length > 0)
+      ? result.summary.trim()
+      : (result.recommendation ?? 'Analyse abgeschlossen.');
+    this.toast.success('Reachability fertig: ' + kurz, 8000);
+    void this.laden();
+  }
+
+  onDialogCancel(): void {
+    this.startDialogOffen.set(false);
+    this.startDialogData.set(null);
   }
 }

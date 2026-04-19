@@ -1,21 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import {
   TenantView,
   TenantsService
 } from '../../core/tenants/tenants.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 
 interface TenantForm {
@@ -38,16 +30,8 @@ function initialForm(): TenantForm {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatChipsModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatSlideToggleModule,
-    MatTableModule,
     AhsBannerComponent,
+    CvmIconComponent,
     EmptyStateComponent
   ],
   templateUrl: './admin-tenants.component.html',
@@ -55,9 +39,8 @@ function initialForm(): TenantForm {
 })
 export class AdminTenantsComponent implements OnInit {
   private readonly service = inject(TenantsService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
-  readonly columns = ['tenantKey', 'name', 'active', 'default', 'createdAt', 'aktion'] as const;
   readonly rows = signal<readonly TenantView[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -111,11 +94,7 @@ export class AdminTenantsComponent implements OnInit {
         name: f.name.trim(),
         active: f.active
       });
-      this.snackBar.open(
-        'Mandant "' + saved.tenantKey + '" angelegt.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('Mandant "' + saved.tenantKey + '" angelegt.', 4000);
       this.form.set(initialForm());
       this.formOpen.set(false);
       await this.laden();
@@ -137,20 +116,19 @@ export class AdminTenantsComponent implements OnInit {
   /** Iteration 60 (CVM-110): Mandanten-Aktivitaet umschalten. */
   async toggleActive(t: TenantView): Promise<void> {
     if (t.defaultTenant && t.active) {
-      this.snackBar.open(
-        'Default-Mandant kann nicht deaktiviert werden.',
-        'OK', { duration: 4000 });
+      this.toast.warning('Default-Mandant kann nicht deaktiviert werden.');
       return;
     }
     try {
       const updated = await this.service.setActive(t.id, !t.active);
-      this.snackBar.open(
+      this.toast.success(
         'Mandant "' + updated.tenantKey + '" '
           + (updated.active ? 'aktiviert' : 'deaktiviert') + '.',
-        'OK', { duration: 3000 });
+        3000
+      );
       await this.laden();
     } catch {
-      this.snackBar.open('Toggle fehlgeschlagen.', 'OK', { duration: 4000 });
+      this.toast.error('Toggle fehlgeschlagen.');
     }
   }
 }

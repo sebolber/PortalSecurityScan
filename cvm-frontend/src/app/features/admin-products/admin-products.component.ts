@@ -1,13 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import {
   ProductCreateRequest,
   ProductVersionCreateRequest,
@@ -15,6 +8,8 @@ import {
   ProductView,
   ProductsService
 } from '../../core/products/products.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { UuidChipComponent } from '../../shared/components/uuid-chip.component';
 
 interface ProductCreateForm {
@@ -40,12 +35,7 @@ interface VersionCreateForm {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatTableModule,
+    CvmIconComponent,
     UuidChipComponent
   ],
   templateUrl: './admin-products.component.html',
@@ -53,7 +43,7 @@ interface VersionCreateForm {
 })
 export class AdminProductsComponent implements OnInit {
   private readonly products = inject(ProductsService);
-  private readonly snack = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly produkte = signal<readonly ProductView[]>([]);
   readonly versionen = signal<Record<string, readonly ProductVersionView[]>>({});
@@ -74,9 +64,6 @@ export class AdminProductsComponent implements OnInit {
     releasedAt: ''
   });
   readonly versionPending = signal<boolean>(false);
-
-  readonly produktSpalten = ['uuid', 'key', 'name', 'description', 'aktion'];
-  readonly versionSpalten = ['uuid', 'version', 'gitCommit', 'releasedAt', 'aktion'];
 
   async ngOnInit(): Promise<void> {
     await this.ladeProdukte();
@@ -101,8 +88,7 @@ export class AdminProductsComponent implements OnInit {
       const versions = await this.products.versions(id);
       this.versionen.set({ ...this.versionen(), [id]: versions });
     } catch {
-      this.snack.open('Versionen konnten nicht geladen werden.', 'OK',
-        { duration: 3000 });
+      this.toast.error('Versionen konnten nicht geladen werden.');
     }
   }
 
@@ -117,15 +103,12 @@ export class AdminProductsComponent implements OnInit {
   async legeProduktAn(form: NgForm): Promise<void> {
     const data = this.produktForm();
     if (!data.key.trim() || !data.name.trim()) {
-      this.snack.open('Key und Name sind Pflichtfelder.', 'OK',
-        { duration: 3000 });
+      this.toast.warning('Key und Name sind Pflichtfelder.');
       return;
     }
     if (!/^[a-z0-9-]{2,64}$/.test(data.key.trim())) {
-      this.snack.open(
-        'Key muss kleingeschrieben und nur Ziffern/Bindestrich enthalten (2-64 Zeichen).',
-        'OK',
-        { duration: 4000 }
+      this.toast.warning(
+        'Key muss kleingeschrieben und nur Ziffern/Bindestrich enthalten (2-64 Zeichen).'
       );
       return;
     }
@@ -137,14 +120,12 @@ export class AdminProductsComponent implements OnInit {
         description: data.description.trim() || null
       };
       const erstellt = await this.products.create(req);
-      this.snack.open(`Produkt "${erstellt.key}" angelegt.`, 'OK',
-        { duration: 3000 });
+      this.toast.success(`Produkt "${erstellt.key}" angelegt.`, 3000);
       this.produktForm.set({ key: '', name: '', description: '' });
       form.resetForm({ key: '', name: '', description: '' });
       await this.ladeProdukte();
     } catch (err) {
-      this.snack.open(this.fehlermeldung(err, 'Anlegen fehlgeschlagen.'),
-        'OK', { duration: 5000 });
+      this.toast.error(this.fehlermeldung(err, 'Anlegen fehlgeschlagen.'));
     } finally {
       this.produktPending.set(false);
     }
@@ -153,13 +134,12 @@ export class AdminProductsComponent implements OnInit {
   async legeVersionAn(form: NgForm): Promise<void> {
     const productId = this.selectedProductId();
     if (!productId) {
-      this.snack.open('Bitte zuerst ein Produkt auswaehlen.', 'OK',
-        { duration: 3000 });
+      this.toast.warning('Bitte zuerst ein Produkt auswaehlen.');
       return;
     }
     const data = this.versionForm();
     if (!data.version.trim()) {
-      this.snack.open('Versionsnummer ist Pflicht.', 'OK', { duration: 3000 });
+      this.toast.warning('Versionsnummer ist Pflicht.');
       return;
     }
     this.versionPending.set(true);
@@ -170,15 +150,13 @@ export class AdminProductsComponent implements OnInit {
         releasedAt: data.releasedAt ? new Date(data.releasedAt).toISOString() : null
       };
       const erstellt = await this.products.createVersion(productId, req);
-      this.snack.open(`Version "${erstellt.version}" angelegt.`, 'OK',
-        { duration: 3000 });
+      this.toast.success(`Version "${erstellt.version}" angelegt.`, 3000);
       this.versionForm.set({ version: '', gitCommit: '', releasedAt: '' });
       form.resetForm({ version: '', gitCommit: '', releasedAt: '' });
       const aktualisiert = await this.products.versions(productId);
       this.versionen.set({ ...this.versionen(), [productId]: aktualisiert });
     } catch (err) {
-      this.snack.open(this.fehlermeldung(err, 'Versions-Anlage fehlgeschlagen.'),
-        'OK', { duration: 5000 });
+      this.toast.error(this.fehlermeldung(err, 'Versions-Anlage fehlgeschlagen.'));
     } finally {
       this.versionPending.set(false);
     }
@@ -200,12 +178,10 @@ export class AdminProductsComponent implements OnInit {
     }
     try {
       await this.products.deleteVersion(productId, v.id);
-      this.snack.open(`Version "${v.version}" geloescht.`, 'OK', { duration: 3000 });
+      this.toast.success(`Version "${v.version}" geloescht.`, 3000);
       await this.waehleProdukt(productId);
     } catch (err) {
-      this.snack.open(
-        this.fehlermeldung(err, 'Loeschen der Version fehlgeschlagen.'),
-        'OK', { duration: 5000 });
+      this.toast.error(this.fehlermeldung(err, 'Loeschen der Version fehlgeschlagen.'));
     }
   }
 
@@ -226,12 +202,10 @@ export class AdminProductsComponent implements OnInit {
       if (this.selectedProductId() === p.id) {
         this.selectedProductId.set(null);
       }
-      this.snack.open(`Produkt "${p.key}" geloescht.`, 'OK', { duration: 3000 });
+      this.toast.success(`Produkt "${p.key}" geloescht.`, 3000);
       await this.ladeProdukte();
     } catch (err) {
-      this.snack.open(
-        this.fehlermeldung(err, 'Loeschen fehlgeschlagen.'),
-        'OK', { duration: 5000 });
+      this.toast.error(this.fehlermeldung(err, 'Loeschen fehlgeschlagen.'));
     }
   }
 
@@ -254,18 +228,10 @@ export class AdminProductsComponent implements OnInit {
         name: neuerName.trim(),
         description: neueBeschreibung === null ? null : neueBeschreibung.trim()
       });
-      this.snack.open(
-        `Produkt "${aktualisiert.key}" aktualisiert.`,
-        'OK',
-        { duration: 3000 }
-      );
+      this.toast.success(`Produkt "${aktualisiert.key}" aktualisiert.`, 3000);
       await this.ladeProdukte();
     } catch (err) {
-      this.snack.open(
-        this.fehlermeldung(err, 'Aktualisierung fehlgeschlagen.'),
-        'OK',
-        { duration: 5000 }
-      );
+      this.toast.error(this.fehlermeldung(err, 'Aktualisierung fehlgeschlagen.'));
     }
   }
 

@@ -3,14 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
 import { AhsCardComponent } from '../../shared/components/ahs-card.component';
 import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   AhsSeverity,
@@ -48,14 +43,9 @@ interface ProduktVersionOption {
     CommonModule,
     FormsModule,
     RouterLink,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTableModule,
     AhsCardComponent,
-    SeverityBadgeComponent
+    SeverityBadgeComponent,
+    CvmIconComponent
   ],
   templateUrl: './reports.component.html',
   styleUrls: ['./reports.component.scss']
@@ -89,8 +79,6 @@ export class ReportsComponent implements OnInit {
   readonly umgebungen = signal<readonly EnvironmentView[]>([]);
   readonly ladeKatalog = signal<boolean>(false);
   readonly katalogFehler = signal<string | null>(null);
-
-  readonly displayedColumns = ['title', 'gesamteinstufung', 'erzeugtAm', 'sha', 'actions'];
 
   async ngOnInit(): Promise<void> {
     this.ladeKatalog.set(true);

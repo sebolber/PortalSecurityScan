@@ -3,47 +3,134 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnChanges,
   Output,
-  inject
+  inject,
+  signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import {
-  ReachabilityStartDialogComponent,
-  ReachabilityStartDialogInput
-} from '../reachability/reachability-start-dialog.component';
-import { ReachabilityResult } from '../../core/reachability/reachability.service';
-import { SeverityBadgeComponent } from '../../shared/components/severity-badge.component';
+  ReachabilityQueryService,
+  ReachabilityResult,
+  ReachabilityStartRequest,
+  ReachabilitySuggestion
+} from '../../core/reachability/reachability.service';
+import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
+import {
+  Severity,
+  SeverityBadgeComponent
+} from '../../shared/components/severity-badge.component';
 import { QueueEntry, SEVERITY_REIHENFOLGE } from './queue.types';
-import { Severity } from '../../shared/components/severity-badge.component';
 import { braucheZweitfreigabe } from './vier-augen';
+
+interface ReachabilityFormState {
+  repoUrl: string;
+  branch: string;
+  commitSha: string;
+  vulnerableSymbol: string;
+  language: string;
+  instruction: string;
+}
+
+const REACH_STORAGE_KEY = 'cvm.reachability.last';
+const REACH_SPRACHEN = [
+  'java',
+  'javascript',
+  'typescript',
+  'python',
+  'go',
+  'rust'
+] as const;
+
+function leeresReachabilityFormular(): ReachabilityFormState {
+  return {
+    repoUrl: '',
+    branch: '',
+    commitSha: '',
+    vulnerableSymbol: '',
+    language: 'java',
+    instruction: ''
+  };
+}
+
+function ladeGespeicherteReachability(): ReachabilityFormState | null {
+  if (typeof localStorage === 'undefined') {
+    return null;
+  }
+  try {
+    const raw = localStorage.getItem(REACH_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw) as Partial<ReachabilityFormState>;
+    return {
+      ...leeresReachabilityFormular(),
+      ...parsed,
+      vulnerableSymbol: '',
+      instruction: ''
+    };
+  } catch {
+    return null;
+  }
+}
+
+function speichereReachability(state: ReachabilityFormState): void {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+  try {
+    localStorage.setItem(
+      REACH_STORAGE_KEY,
+      JSON.stringify({
+        repoUrl: state.repoUrl,
+        branch: state.branch,
+        commitSha: state.commitSha,
+        language: state.language
+      })
+    );
+  } catch {
+    // Private-Mode o.ae. - stumm verworfen.
+  }
+}
 
 /**
  * Slide-In-Detailpanel. Haelt lokal editierbare Kopien der
  * Severity/Rationale/Mitigation-Felder. Aktionen werden als Events an
  * den Container (Queue-Komponente) weitergereicht; der Container
  * orchestriert den Store-Aufruf.
+ *
+ * Iteration 61 (CVM-62): Material entfernt. Reachability-Dialog ist
+ * nun inline ueber `cvm-dialog` eingebettet; keine `MatDialog`-
+ * Abhaengigkeit mehr. SnackBar -> `CvmToastService`.
  */
 @Component({
   selector: 'cvm-queue-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SeverityBadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    CvmDialogComponent,
+    CvmIconComponent,
+    SeverityBadgeComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section
-      class="flex h-full w-full max-w-lg flex-col border-l bg-white shadow-xl"
+      class="flex h-full w-full max-w-lg flex-col border-l border-border bg-surface shadow-card"
       role="dialog"
       aria-label="Bewertungs-Detail"
       tabindex="-1"
     >
       @if (entry) {
-        <header class="flex items-center justify-between gap-2 border-b p-4">
-          <div>
-            <div class="text-xs uppercase text-zinc-500">
+        <header class="flex items-center justify-between gap-2 border-b border-border p-4">
+          <div class="flex flex-col gap-1">
+            <div class="text-xs uppercase tracking-wide text-text-muted">
               {{ entry.source }} &middot; v{{ entry.version }}
             </div>
             <a class="font-mono text-sm text-primary hover:underline"
@@ -52,116 +139,114 @@ import { braucheZweitfreigabe } from './vier-augen';
           </div>
           <button
             type="button"
-            class="text-sm text-zinc-500 hover:text-primary"
+            class="btn-icon"
             (click)="close.emit()"
             aria-label="Schliessen"
           >
-            Schliessen
+            <cvm-icon name="close" [size]="20"></cvm-icon>
           </button>
         </header>
 
         <div class="flex-1 space-y-4 overflow-y-auto p-4 text-sm">
-          <div>
-            <span class="block text-xs uppercase text-zinc-500">Aktueller Status</span>
+          <div class="form-group">
+            <span class="form-label">Aktueller Status</span>
             <span class="font-medium">{{ entry.status }}</span>
           </div>
 
-          <div>
-            <span class="block text-xs uppercase text-zinc-500">Original-Severity</span>
-            <ahs-severity-badge [severity]="entry.severity"></ahs-severity-badge>
+          <div class="form-group">
+            <span class="form-label">Original-Severity</span>
+            <div>
+              <ahs-severity-badge [severity]="entry.severity"></ahs-severity-badge>
+            </div>
           </div>
 
-          <label class="block">
-            <span class="mb-1 block text-xs uppercase text-zinc-500">
-              Vorschlags-Severity (editierbar)
-            </span>
+          <label class="form-group">
+            <span class="form-label">Vorschlags-Severity (editierbar)</span>
             <select
-              class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+              class="select-field"
               [(ngModel)]="zielSeverity"
             >
               @for (s of severities; track s) {
                 <option [value]="s">{{ s }}</option>
               }
             </select>
-            <span class="mt-1 block text-xs text-zinc-500">
+            <span class="form-help">
               Aenderung wird beim Klick auf <strong>Freigeben</strong>
               uebernommen. Ein Downgrade auf INFORMATIONAL oder
               NOT_APPLICABLE erfordert Zweitfreigabe.
             </span>
           </label>
 
-          <label class="block">
-            <span class="mb-1 block text-xs uppercase text-zinc-500">
-              Begruendung
-            </span>
+          <label class="form-group">
+            <span class="form-label">Begruendung</span>
             <textarea
-              class="h-24 w-full rounded border border-zinc-300 px-2 py-1 text-sm"
+              class="textarea-field"
               [(ngModel)]="rationale"
               placeholder="Warum wird so entschieden?"
             ></textarea>
           </label>
 
-          <fieldset class="rounded border border-zinc-200 p-3">
-            <legend class="px-1 text-xs uppercase text-zinc-500">Mitigation</legend>
-            <label class="mb-2 block">
-              <span class="mb-1 block text-xs text-zinc-500">Strategie</span>
-              <select
-                class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
-                [(ngModel)]="strategy"
-                name="strategy"
-              >
-                <option value="">(keine Angabe)</option>
-                @for (s of mitigationStrategien; track s) {
-                  <option [value]="s">{{ s }}</option>
-                }
-              </select>
-            </label>
-            <label class="mb-2 block">
-              <span class="mb-1 block text-xs text-zinc-500">Ziel-Release</span>
-              <input
-                type="text"
-                class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
-                [(ngModel)]="targetVersion"
-                placeholder="z.B. 1.15.0"
-              />
-            </label>
-            <label class="mb-2 block">
-              <span class="mb-1 block text-xs text-zinc-500">Geplant bis</span>
-              <input
-                type="date"
-                class="w-full rounded border border-zinc-300 px-2 py-1 text-sm"
-                [(ngModel)]="plannedFor"
-              />
-            </label>
+          <fieldset class="rounded-lg border border-border p-3">
+            <legend class="px-1 text-xs font-medium uppercase tracking-wide text-text-muted">Mitigation</legend>
+            <div class="flex flex-col gap-3">
+              <label class="form-group">
+                <span class="form-label">Strategie</span>
+                <select
+                  class="select-field"
+                  [(ngModel)]="strategy"
+                  name="strategy"
+                >
+                  <option value="">(keine Angabe)</option>
+                  @for (s of mitigationStrategien; track s) {
+                    <option [value]="s">{{ s }}</option>
+                  }
+                </select>
+              </label>
+              <label class="form-group">
+                <span class="form-label">Ziel-Release</span>
+                <input
+                  type="text"
+                  class="input-field"
+                  [(ngModel)]="targetVersion"
+                  placeholder="z.B. 1.15.0"
+                />
+              </label>
+              <label class="form-group">
+                <span class="form-label">Geplant bis</span>
+                <input
+                  type="date"
+                  class="input-field"
+                  [(ngModel)]="plannedFor"
+                />
+              </label>
+            </div>
           </fieldset>
 
           @if (zweitfreigabe) {
-            <div
-              class="rounded border border-amber-400 bg-amber-50 p-3 text-xs text-amber-800"
-              role="status"
-            >
-              Zweitfreigabe erforderlich: Downgrade auf {{ zielSeverity }} darf
-              nicht von der Person freigegeben werden, die den Vorschlag angelegt hat.
+            <div class="banner banner-warning" role="status">
+              <cvm-icon name="alert-triangle" [size]="18"></cvm-icon>
+              <span>
+                Zweitfreigabe erforderlich: Downgrade auf {{ zielSeverity }} darf
+                nicht von der Person freigegeben werden, die den Vorschlag angelegt hat.
+              </span>
             </div>
           }
 
           @if (showRejectKommentar) {
-            <label class="block">
-              <span class="mb-1 block text-xs uppercase text-zinc-500">
-                Ablehnungs-Kommentar (pflicht)
-              </span>
+            <label class="form-group">
+              <span class="form-label form-label--required">Ablehnungs-Kommentar</span>
               <textarea
-                class="h-20 w-full rounded border border-red-400 px-2 py-1 text-sm"
+                class="textarea-field is-invalid"
                 [(ngModel)]="rejectKommentar"
               ></textarea>
             </label>
           }
         </div>
 
-        <footer class="flex flex-wrap gap-2 border-t p-4">
+        <footer class="flex flex-wrap gap-2 border-t border-border p-4">
           <button
             type="button"
-            class="rounded bg-primary px-3 py-1 text-sm font-medium text-white disabled:opacity-50"
+            class="btn btn-primary"
             [disabled]="pending"
             (click)="onApprove()"
           >
@@ -169,7 +254,7 @@ import { braucheZweitfreigabe } from './vier-augen';
           </button>
           <button
             type="button"
-            class="rounded border border-red-400 px-3 py-1 text-sm text-red-700"
+            class="btn btn-danger"
             [disabled]="pending"
             (click)="toggleRejectKommentar()"
           >
@@ -177,17 +262,23 @@ import { braucheZweitfreigabe } from './vier-augen';
           </button>
           <button
             type="button"
-            class="rounded border border-zinc-300 px-3 py-1 text-sm text-zinc-700 hover:bg-zinc-50 disabled:opacity-50"
-            [disabled]="pending || reachabilityLaeuft"
-            (click)="onReachabilityStart()"
+            class="btn btn-secondary"
+            [disabled]="pending || reachabilityLaeuft()"
+            (click)="oeffneReachabilityDialog()"
             title="Startet eine Reachability-Analyse fuer das zugehoerige Finding."
           >
-            {{ reachabilityLaeuft ? 'Reachability laeuft...' : 'Reachability starten' }}
+            @if (reachabilityLaeuft()) {
+              <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
+              Reachability laeuft...
+            } @else {
+              <cvm-icon name="sparkles" [size]="16"></cvm-icon>
+              Reachability starten
+            }
           </button>
           @if (showRejectKommentar) {
             <button
               type="button"
-              class="rounded bg-red-600 px-3 py-1 text-sm text-white disabled:opacity-50"
+              class="btn btn-danger"
               [disabled]="pending || rejectKommentar.trim().length === 0"
               (click)="onReject()"
             >
@@ -196,24 +287,174 @@ import { braucheZweitfreigabe } from './vier-augen';
           }
         </footer>
       } @else {
-        <div class="flex h-full items-center justify-center p-8 text-sm text-zinc-500">
-          Keinen Vorschlag ausgewaehlt. {{ 'j'.toUpperCase() }}/{{ 'k'.toUpperCase() }}
-          bewegt durch die Liste.
+        <div class="flex h-full items-center justify-center p-8 text-sm text-text-muted">
+          Keinen Vorschlag ausgewaehlt. J/K bewegt durch die Liste.
         </div>
       }
     </section>
+
+    <cvm-dialog
+      [open]="reachabilityDialogOffen()"
+      title="Reachability-Analyse starten"
+      size="lg"
+      (close)="abbrechenReachability()"
+    >
+      @if (entry) {
+        <form #reachForm="ngForm" (ngSubmit)="starteReachability()" class="flex flex-col gap-4">
+          <p class="text-xs text-text-muted">
+            Finding <code class="text-code">{{ entry.findingId }}</code>
+            @if (entry.cveKey) {
+              <span>&middot; {{ entry.cveKey }}</span>
+            }
+          </p>
+
+          <label class="form-group">
+            <span class="form-label form-label--required">Repository-URL</span>
+            <input
+              type="text"
+              name="repoUrl"
+              required
+              class="input-field"
+              [ngModel]="reachFormular().repoUrl"
+              (ngModelChange)="updateReachFeld('repoUrl', $event)"
+              placeholder="https://git.example/portalcore.git"
+            />
+            <span class="form-help">Wird im Read-Only-Modus ausgecheckt.</span>
+          </label>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label class="form-group">
+              <span class="form-label">Branch (optional)</span>
+              <input
+                type="text"
+                name="branch"
+                class="input-field"
+                [ngModel]="reachFormular().branch"
+                (ngModelChange)="updateReachFeld('branch', $event)"
+                placeholder="main"
+              />
+            </label>
+            <label class="form-group">
+              <span class="form-label">Commit-SHA (optional)</span>
+              <input
+                type="text"
+                name="commitSha"
+                class="input-field"
+                [ngModel]="reachFormular().commitSha"
+                (ngModelChange)="updateReachFeld('commitSha', $event)"
+                placeholder="a3f9beef..."
+              />
+            </label>
+          </div>
+
+          <label class="form-group">
+            <span class="form-label form-label--required">Vulnerable Symbol</span>
+            <input
+              type="text"
+              name="vulnerableSymbol"
+              required
+              class="input-field"
+              [ngModel]="reachFormular().vulnerableSymbol"
+              (ngModelChange)="updateReachFeld('vulnerableSymbol', $event)"
+              placeholder="org.apache.commons.text.StringSubstitutor#replace"
+            />
+            <span class="form-help">Vollqualifizierter Name der anfaelligen Funktion / Methode.</span>
+          </label>
+
+          @if (reachVorschlag(); as v) {
+            <div class="banner banner-info" role="status">
+              <cvm-icon name="sparkles" [size]="18"></cvm-icon>
+              <div class="flex flex-col gap-1">
+                @if (v.symbol) {
+                  <span>
+                    Vorgeschlagen:
+                    <button
+                      type="button"
+                      class="font-mono text-xs px-2 py-0.5 rounded border border-border bg-surface hover:bg-surface-muted"
+                      (click)="uebernehmeReachabilityVorschlag()"
+                    >
+                      {{ v.symbol }}
+                    </button>
+                  </span>
+                } @else {
+                  <span>Keine automatische Ableitung moeglich - bitte manuell eingeben.</span>
+                }
+                @if (v.rationale) {
+                  <span class="text-xs text-text-muted">{{ v.rationale }}</span>
+                }
+              </div>
+            </div>
+          }
+
+          <label class="form-group">
+            <span class="form-label">Sprache</span>
+            <select
+              name="language"
+              class="select-field"
+              [ngModel]="reachFormular().language"
+              (ngModelChange)="updateReachFeld('language', $event)"
+            >
+              @for (s of reachSprachen; track s) {
+                <option [value]="s">{{ s }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="form-group">
+            <span class="form-label">Zusaetzliche Anweisung (optional)</span>
+            <textarea
+              name="instruction"
+              rows="3"
+              class="textarea-field"
+              [ngModel]="reachFormular().instruction"
+              (ngModelChange)="updateReachFeld('instruction', $event)"
+              placeholder="z.B. Ignoriere Test-Sources."
+            ></textarea>
+          </label>
+
+          @if (reachFehler(); as f) {
+            <div class="banner banner-critical" role="alert">
+              <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+              <span>{{ f }}</span>
+            </div>
+          }
+        </form>
+      }
+      <div footer>
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="abbrechenReachability()"
+          [disabled]="reachabilityLaeuft()"
+        >
+          Abbrechen
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="starteReachability()"
+          [disabled]="reachabilityLaeuft() || !reachFormularValid()"
+        >
+          @if (reachabilityLaeuft()) {
+            <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
+            Analyse laeuft...
+          } @else {
+            <cvm-icon name="play" [size]="16"></cvm-icon>
+            Analyse starten
+          }
+        </button>
+      </div>
+    </cvm-dialog>
   `
 })
-export class QueueDetailComponent {
-  private readonly dialog = inject(MatDialog);
-  private readonly snack = inject(MatSnackBar);
+export class QueueDetailComponent implements OnChanges {
+  private readonly toast = inject(CvmToastService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly reachabilityService = inject(ReachabilityQueryService);
 
   @Input() entry: QueueEntry | null = null;
   @Input() pending = false;
-
-  reachabilityLaeuft = false;
 
   @Output() readonly close = new EventEmitter<void>();
   @Output() readonly approve = new EventEmitter<{
@@ -246,6 +487,14 @@ export class QueueDetailComponent {
   plannedFor = '';
   rejectKommentar = '';
   showRejectKommentar = false;
+
+  // Reachability-Dialog (inline, Signal-gesteuert).
+  readonly reachSprachen = REACH_SPRACHEN;
+  readonly reachabilityDialogOffen = signal(false);
+  readonly reachabilityLaeuft = signal(false);
+  readonly reachFormular = signal<ReachabilityFormState>(leeresReachabilityFormular());
+  readonly reachFehler = signal<string | null>(null);
+  readonly reachVorschlag = signal<ReachabilitySuggestion | null>(null);
 
   ngOnChanges(): void {
     if (this.entry) {
@@ -285,49 +534,124 @@ export class QueueDetailComponent {
     this.reject.emit(this.rejectKommentar.trim());
   }
 
-  onReachabilityStart(): void {
+  oeffneReachabilityDialog(): void {
     const aktuell = this.entry;
-    if (!aktuell || this.reachabilityLaeuft) {
+    if (!aktuell || this.reachabilityLaeuft()) {
       return;
     }
+    const gespeichert = ladeGespeicherteReachability();
+    this.reachFormular.set(gespeichert ?? leeresReachabilityFormular());
+    this.reachFehler.set(null);
+    this.reachVorschlag.set(null);
+    this.reachabilityDialogOffen.set(true);
+    void this.ladeReachabilityVorschlag(aktuell.findingId);
+  }
+
+  abbrechenReachability(): void {
+    if (this.reachabilityLaeuft()) {
+      return;
+    }
+    this.reachabilityDialogOffen.set(false);
+    this.reachFehler.set(null);
+  }
+
+  updateReachFeld<K extends keyof ReachabilityFormState>(
+    key: K,
+    value: ReachabilityFormState[K]
+  ): void {
+    this.reachFormular.update((f) => ({ ...f, [key]: value }));
+  }
+
+  uebernehmeReachabilityVorschlag(): void {
+    const v = this.reachVorschlag();
+    if (!v || !v.symbol) {
+      return;
+    }
+    this.reachFormular.update((f) => ({
+      ...f,
+      vulnerableSymbol: v.symbol!,
+      language: v.language || f.language
+    }));
+  }
+
+  reachFormularValid(): boolean {
+    const f = this.reachFormular();
+    return f.repoUrl.trim().length > 0 && f.vulnerableSymbol.trim().length > 0;
+  }
+
+  async starteReachability(): Promise<void> {
+    const aktuell = this.entry;
+    if (!aktuell) {
+      return;
+    }
+    if (!this.reachFormularValid()) {
+      this.reachFehler.set('Repo-URL und Vulnerable Symbol sind Pflichtfelder.');
+      return;
+    }
+    const state = this.reachFormular();
     const triggeredBy = this.auth.username() || 'anonymous';
-    const data: ReachabilityStartDialogInput = {
-      findingId: aktuell.findingId,
-      cveKey: aktuell.cveKey,
+    const request: ReachabilityStartRequest = {
+      repoUrl: state.repoUrl.trim(),
+      branch: state.branch.trim() || null,
+      commitSha: state.commitSha.trim() || null,
+      vulnerableSymbol: state.vulnerableSymbol.trim(),
+      language: state.language || null,
+      instruction: state.instruction.trim() || null,
       triggeredBy
     };
-    this.reachabilityLaeuft = true;
-    const ref = this.dialog.open(ReachabilityStartDialogComponent, {
-      data,
-      disableClose: true,
-      autoFocus: 'dialog'
-    });
-    ref.afterClosed().subscribe((result: ReachabilityResult | null) => {
-      this.reachabilityLaeuft = false;
-      if (!result) {
-        return;
-      }
-      if (!result.available) {
-        // Feature deaktiviert / Timeout / Subprocess-Fehler. Keine
-        // Uebersicht-Action, weil nichts Neues persistiert wurde.
-        const hinweis = result.noteIfUnavailable?.trim()
-          || 'Kein Detail vom Backend gemeldet.';
-        this.snack.open(
-          'Reachability nicht verfuegbar: ' + hinweis,
-          'OK',
-          { duration: 10000 });
-        return;
-      }
-      const kurz = (result.summary && result.summary.trim().length > 0)
+    this.reachFehler.set(null);
+    this.reachabilityLaeuft.set(true);
+    try {
+      const result = await this.reachabilityService.startAnalysis(
+        aktuell.findingId,
+        request
+      );
+      speichereReachability(state);
+      this.reachabilityDialogOffen.set(false);
+      this.onReachabilityResult(result);
+    } catch (err) {
+      const msg =
+        err instanceof Error && err.message
+          ? err.message
+          : 'Reachability-Analyse fehlgeschlagen.';
+      this.reachFehler.set(msg);
+    } finally {
+      this.reachabilityLaeuft.set(false);
+    }
+  }
+
+  private async ladeReachabilityVorschlag(findingId: string): Promise<void> {
+    try {
+      const v = await this.reachabilityService.suggestion(findingId);
+      this.reachVorschlag.set(v);
+      this.reachFormular.update((f) => ({
+        ...f,
+        vulnerableSymbol: f.vulnerableSymbol || v.symbol || '',
+        language: f.language || v.language || f.language
+      }));
+    } catch {
+      // Suggestion-Endpoint nicht verfuegbar oder 404 -> leise
+      // ignorieren, UI funktioniert unveraendert.
+    }
+  }
+
+  private onReachabilityResult(result: ReachabilityResult | null): void {
+    if (!result) {
+      return;
+    }
+    if (!result.available) {
+      const hinweis =
+        result.noteIfUnavailable?.trim()
+        || 'Kein Detail vom Backend gemeldet.';
+      this.toast.warning('Reachability nicht verfuegbar: ' + hinweis);
+      return;
+    }
+    const kurz =
+      result.summary && result.summary.trim().length > 0
         ? result.summary.trim()
         : (result.recommendation ?? 'Analyse abgeschlossen.');
-      const ref2 = this.snack.open(
-        'Reachability fertig: ' + kurz,
-        'Uebersicht',
-        { duration: 8000 });
-      ref2.onAction().subscribe(() => {
-        void this.router.navigate(['/reachability']);
-      });
-    });
+    this.toast.success('Reachability fertig: ' + kurz, 8000);
+    // Uebersicht direkt oeffnen; der Toast bleibt lang genug sichtbar.
+    void this.router.navigate(['/reachability']);
   }
 }

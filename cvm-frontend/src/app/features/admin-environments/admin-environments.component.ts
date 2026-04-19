@@ -1,20 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTableModule } from '@angular/material/table';
 import {
   EnvironmentView,
   EnvironmentsService
 } from '../../core/environments/environments.service';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmToastService } from '../../shared/components/cvm-toast.service';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { UuidChipComponent } from '../../shared/components/uuid-chip.component';
 
@@ -43,15 +36,8 @@ function initialForm(): EnvFormState {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatCardModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatProgressSpinnerModule,
-    MatSelectModule,
-    MatTableModule,
     AhsBannerComponent,
+    CvmIconComponent,
     EmptyStateComponent,
     UuidChipComponent
   ],
@@ -60,10 +46,9 @@ function initialForm(): EnvFormState {
 })
 export class AdminEnvironmentsComponent implements OnInit {
   private readonly service = inject(EnvironmentsService);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly toast = inject(CvmToastService);
 
   readonly stages = STAGES;
-  readonly columns = ['uuid', 'key', 'name', 'stage', 'tenant', 'aktion'] as const;
 
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -114,11 +99,7 @@ export class AdminEnvironmentsComponent implements OnInit {
         stage: f.stage,
         tenant: f.tenant.trim() || null
       });
-      this.snackBar.open(
-        'Umgebung "' + saved.key + '" angelegt.',
-        'OK',
-        { duration: 4000 }
-      );
+      this.toast.success('Umgebung "' + saved.key + '" angelegt.', 4000);
       this.form.set(initialForm());
       this.formOpen.set(false);
       await this.laden();
@@ -148,12 +129,10 @@ export class AdminEnvironmentsComponent implements OnInit {
     }
     try {
       await this.service.delete(env.id);
-      this.snackBar.open('Umgebung "' + env.key + '" entfernt.', 'OK', {
-        duration: 4000
-      });
+      this.toast.success('Umgebung "' + env.key + '" entfernt.', 4000);
       await this.laden();
     } catch {
-      this.snackBar.open('Loeschen fehlgeschlagen.', 'OK', { duration: 4000 });
+      this.toast.error('Loeschen fehlgeschlagen.');
     }
   }
 }

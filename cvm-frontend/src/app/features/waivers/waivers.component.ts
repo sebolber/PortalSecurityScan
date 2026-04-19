@@ -1,12 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
-import { MatCardModule } from '@angular/material/card';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTableModule } from '@angular/material/table';
 import { AhsBannerComponent } from '../../shared/components/ahs-banner.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import {
   WaiverStatus,
@@ -31,12 +27,8 @@ const WAIVER_STATUSSE: readonly WaiverStatus[] = [
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonToggleModule,
-    MatCardModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTableModule,
     AhsBannerComponent,
+    CvmIconComponent,
     EmptyStateComponent,
     DatePipe
   ],
@@ -47,14 +39,6 @@ export class WaiversComponent implements OnInit {
   private readonly waivers = inject(WaiversService);
 
   readonly statusse = WAIVER_STATUSSE;
-  readonly columns = [
-    'status',
-    'assessment',
-    'reason',
-    'grantedBy',
-    'validUntil',
-    'age'
-  ] as const;
 
   status = signal<WaiverStatus>('ACTIVE');
   readonly loading = signal(false);

@@ -1,21 +1,36 @@
-<section class="cvm-waivers">
-  <header class="cvm-waivers__header">
-    <h1 class="text-title-lg">Waiver-Verwaltung</h1>
-    <p class="text-body">
-      Bestaetigte Risiko-Waiver mit validUntil-Ablauf-Warner. Aenderungen erfolgen
-      ueber die Assessment-Queue und unterliegen dem Vier-Augen-Prinzip.
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Waiver-Verwaltung</h1>
+      <p class="page-subtitle max-w-[80ch]">
+        Bestaetigte Risiko-Waiver mit validUntil-Ablauf-Warner. Aenderungen erfolgen
+        ueber die Assessment-Queue und unterliegen dem Vier-Augen-Prinzip.
+      </p>
+    </div>
   </header>
 
-  <mat-button-toggle-group
-    [value]="status()"
-    (change)="statusWechseln($event.value)"
-    aria-label="Status-Filter"
-  >
-    @for (s of statusse; track s) {
-      <mat-button-toggle [value]="s">{{ s }}</mat-button-toggle>
-    }
-  </mat-button-toggle-group>
+  <section class="card p-4">
+    <div class="filter-bar">
+      <div class="form-group">
+        <span class="form-label">Status</span>
+        <div
+          class="inline-flex rounded-lg border border-border bg-surface overflow-hidden h-10"
+          role="group"
+          aria-label="Status-Filter"
+        >
+          @for (s of statusse; track s) {
+            <button
+              type="button"
+              class="px-3 text-sm border-r border-border last:border-r-0 uppercase tracking-wide text-xs font-semibold"
+              [class.bg-primary-muted]="status() === s"
+              [class.text-primary]="status() === s"
+              (click)="statusWechseln(s)"
+            >{{ s }}</button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
 
   @if (abgelaufenBald().length > 0) {
     <ahs-banner kind="warn" title="Ablauf in den naechsten 14 Tagen">
@@ -29,64 +44,58 @@
   }
 
   @if (loading()) {
-    <mat-spinner diameter="36"></mat-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+      <span>Laedt...</span>
+    </div>
   } @else if (rows().length === 0) {
     <ahs-empty-state
-      icon="rule_folder"
+      icon="folder"
       title="Keine Waiver"
       [hint]="'Fuer Status ' + status() + ' liegen keine Waiver vor.'"
     ></ahs-empty-state>
   } @else {
-    <table
-      mat-table
-      [dataSource]="rows()"
-      [trackBy]="trackId"
-      class="cvm-waivers__table"
-    >
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let w">
-          <span class="cvm-waivers__status" [attr.data-status]="w.status">
-            {{ w.status }}
-          </span>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="assessment">
-        <th mat-header-cell *matHeaderCellDef>Assessment</th>
-        <td mat-cell *matCellDef="let w" class="text-code">
-          {{ w.assessmentId || '–' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="reason">
-        <th mat-header-cell *matHeaderCellDef>Begruendung</th>
-        <td mat-cell *matCellDef="let w">{{ w.reason }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="grantedBy">
-        <th mat-header-cell *matHeaderCellDef>Erteilt von</th>
-        <td mat-cell *matCellDef="let w">{{ w.grantedBy }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="validUntil">
-        <th mat-header-cell *matHeaderCellDef>Gueltig bis</th>
-        <td mat-cell *matCellDef="let w">
-          <span [class.cvm-waivers__ablauf-warn]="isBaldAblaufend(w)">
-            {{ w.validUntil | date: 'yyyy-MM-dd' }}
-          </span>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="age">
-        <th mat-header-cell *matHeaderCellDef>Erteilt</th>
-        <td mat-cell *matCellDef="let w">
-          {{ w.createdAt | date: 'yyyy-MM-dd' }}
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
-    </table>
+    <section class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Assessment</th>
+            <th>Begruendung</th>
+            <th>Erteilt von</th>
+            <th>Gueltig bis</th>
+            <th>Erteilt</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (w of rows(); track trackId($index, w)) {
+            <tr>
+              <td>
+                <span
+                  class="badge"
+                  [class.badge-success]="w.status === 'ACTIVE'"
+                  [class.badge-warning]="w.status === 'EXPIRED'"
+                  [class.badge-danger]="w.status === 'REVOKED'"
+                >
+                  {{ w.status }}
+                </span>
+              </td>
+              <td class="font-mono text-xs">{{ w.assessmentId || '-' }}</td>
+              <td>{{ w.reason }}</td>
+              <td>{{ w.grantedBy }}</td>
+              <td>
+                <span
+                  [class.text-severity-critical]="isBaldAblaufend(w)"
+                  [class.font-semibold]="isBaldAblaufend(w)"
+                >
+                  {{ w.validUntil | date: 'yyyy-MM-dd' }}
+                </span>
+              </td>
+              <td>{{ w.createdAt | date: 'yyyy-MM-dd' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
   }
-</section>
+</div>

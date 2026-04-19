@@ -1,94 +1,248 @@
-<ahs-card title="KI-Audit-Trail"
-          subtitle="Lesender Zugriff auf ai_call_audit. Prompts sind aus Datenschutzgruenden nicht exponiert.">
-  <div class="flex flex-wrap items-end gap-3 pb-3">
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Status</mat-label>
-      <mat-select name="status" [(ngModel)]="statusFilter">
-        @for (s of statusOptions; track s) {
-          <mat-option [value]="s">{{ s }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+<div class="page">
+  <ahs-card title="KI-Audit-Trail"
+            subtitle="Lesender Zugriff auf ai_call_audit. Prompts sind aus Datenschutzgruenden nicht exponiert.">
+    <div class="filter-bar pb-4">
+      <label class="form-group">
+        <span class="form-label">Status</span>
+        <select
+          class="select-field"
+          name="status"
+          [(ngModel)]="statusFilter"
+        >
+          @for (s of statusOptions; track s) {
+            <option [value]="s">{{ s }}</option>
+          }
+        </select>
+      </label>
 
-    <mat-form-field appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Use-Case (optional)</mat-label>
-      <input matInput name="useCase" [(ngModel)]="useCaseFilter"
-             placeholder="z. B. AUTO_ASSESSMENT oder COPILOT_REFINE_RATIONALE" />
-    </mat-form-field>
+      <label class="form-group grow min-w-[280px]">
+        <span class="form-label">Use-Case (optional)</span>
+        <input
+          type="text"
+          class="input-field"
+          name="useCase"
+          [(ngModel)]="useCaseFilter"
+          placeholder="z. B. AUTO_ASSESSMENT oder COPILOT_REFINE_RATIONALE"
+        />
+      </label>
 
-    <button mat-flat-button color="primary" (click)="applyFilter()"
-            [disabled]="busy()">
-      <mat-icon>search</mat-icon>
-      Filtern
-    </button>
-  </div>
+      <div class="form-group">
+        <span class="form-label">&nbsp;</span>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="applyFilter()"
+          [disabled]="busy()"
+        >
+          <cvm-icon name="search" [size]="16"></cvm-icon>
+          Filtern
+        </button>
+      </div>
+    </div>
 
-  @if (fehler()) {
-    <p class="text-sm text-red-600">{{ fehler() }}</p>
-  }
+    @if (fehler()) {
+      <div class="banner banner-critical">
+        <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+        <span>{{ fehler() }}</span>
+      </div>
+    }
 
-  @if (entries().length === 0 && !busy()) {
-    <p class="text-sm text-zinc-500">Keine Eintraege.</p>
-  } @else {
-    <table mat-table [dataSource]="entries()" class="w-full">
-      <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef>Zeit</th>
-        <td mat-cell *matCellDef="let a">{{ a.createdAt | date:'short' }}</td>
-      </ng-container>
+    @if (busy()) {
+      <div class="flex items-center gap-2 text-text-muted text-sm py-2">
+        <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+        <span>Laedt...</span>
+      </div>
+    }
 
-      <ng-container matColumnDef="useCase">
-        <th mat-header-cell *matHeaderCellDef>Use-Case</th>
-        <td mat-cell *matCellDef="let a" class="font-mono text-xs">{{ a.useCase }}</td>
-      </ng-container>
+    @if (entries().length === 0 && !busy()) {
+      <ahs-empty-state
+        icon="clipboard-list"
+        title="Keine Eintraege"
+        hint="Passe die Filter an oder entferne sie."
+      ></ahs-empty-state>
+    } @else if (entries().length > 0) {
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Zeit</th>
+              <th>Use-Case</th>
+              <th>Modell</th>
+              <th>Status</th>
+              <th>Tokens</th>
+              <th>Latenz</th>
+              <th>Ausgeloest von</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (a of entries(); track a.id) {
+              <tr class="cursor-pointer" (click)="oeffneDetails(a)">
+                <td>{{ a.createdAt | date:'short' }}</td>
+                <td class="font-mono text-xs">{{ a.useCase }}</td>
+                <td>{{ a.modelId }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge-success]="isStatusOk(a.status)"
+                    [class.badge-warning]="isStatusWarn(a.status)"
+                    [class.badge-danger]="isStatusErr(a.status)"
+                  >
+                    {{ a.status }}
+                  </span>
+                  @if (a.injectionRisk) {
+                    <cvm-icon
+                      name="alert-circle"
+                      [size]="18"
+                      class="text-severity-critical align-middle ml-2"
+                      [attr.title]="'Injection-Risiko getaggt'"
+                    ></cvm-icon>
+                  }
+                </td>
+                <td>
+                  {{ (a.promptTokens ?? '-') }} / {{ (a.completionTokens ?? '-') }}
+                </td>
+                <td>{{ a.latencyMs ?? '-' }} ms</td>
+                <td>{{ a.triggeredBy }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-icon"
+                    (click)="$event.stopPropagation(); oeffneDetails(a)"
+                    aria-label="Details anzeigen"
+                  >
+                    <cvm-icon name="visibility" [size]="18"></cvm-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
 
-      <ng-container matColumnDef="modelId">
-        <th mat-header-cell *matHeaderCellDef>Modell</th>
-        <td mat-cell *matCellDef="let a">{{ a.modelId }}</td>
-      </ng-container>
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-t border-border text-sm">
+          <div class="flex items-center gap-3">
+            <span class="text-text-muted">
+              {{ pageIndex() * pageSize() + 1 }}-{{ (pageIndex() + 1) * pageSize() > totalElements() ? totalElements() : (pageIndex() + 1) * pageSize() }}
+              von {{ totalElements() }}
+            </span>
+            <label class="inline-flex items-center gap-2">
+              <span class="text-text-muted text-xs uppercase tracking-wide">Pro Seite</span>
+              <select
+                class="select-field h-8 py-0 text-xs w-[72px]"
+                [ngModel]="pageSize()"
+                (ngModelChange)="changePageSize(+$event)"
+              >
+                <option [value]="10">10</option>
+                <option [value]="20">20</option>
+                <option [value]="50">50</option>
+                <option [value]="100">100</option>
+              </select>
+            </label>
+          </div>
+          <div class="flex items-center gap-1">
+            <button
+              type="button"
+              class="btn-icon"
+              (click)="prevPage()"
+              [disabled]="pageIndex() === 0"
+              aria-label="Vorherige Seite"
+            >
+              <cvm-icon name="chevron-left" [size]="18"></cvm-icon>
+            </button>
+            <button
+              type="button"
+              class="btn-icon"
+              (click)="nextPage()"
+              [disabled]="(pageIndex() + 1) * pageSize() >= totalElements()"
+              aria-label="Naechste Seite"
+            >
+              <cvm-icon name="chevron-right" [size]="18"></cvm-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </ahs-card>
+</div>
 
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let a">
-          <span class="cvm-status"
-                [class.cvm-status--ok]="a.status === 'OK'"
-                [class.cvm-status--warn]="a.status === 'PENDING'"
-                [class.cvm-status--err]="a.status !== 'OK' && a.status !== 'PENDING'">
+<!-- Iteration 61 (CVM-62): Inline-Dialog statt MatDialog fuer Details. -->
+<cvm-dialog
+  [open]="selected() !== null"
+  title="KI-Audit-Details"
+  size="lg"
+  (close)="schliesseDetails()"
+>
+  @if (selected(); as a) {
+    <div class="flex flex-col gap-4">
+      <dl class="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-2 text-sm">
+        <dt class="font-semibold text-text-muted">ID</dt>
+        <dd class="m-0 font-mono text-xs break-all">{{ a.id }}</dd>
+
+        <dt class="font-semibold text-text-muted">Use-Case</dt>
+        <dd class="m-0 font-mono text-xs">{{ a.useCase }}</dd>
+
+        <dt class="font-semibold text-text-muted">Modell</dt>
+        <dd class="m-0">{{ a.modelId }}</dd>
+
+        <dt class="font-semibold text-text-muted">Status</dt>
+        <dd class="m-0">
+          <span
+            class="badge"
+            [class.badge-success]="isStatusOk(a.status)"
+            [class.badge-warning]="isStatusWarn(a.status)"
+            [class.badge-danger]="isStatusErr(a.status)"
+          >
             {{ a.status }}
           </span>
           @if (a.injectionRisk) {
-            <mat-icon class="cvm-injection" title="Injection-Risiko getaggt">report</mat-icon>
+            <span class="badge badge-danger ml-2">Injection-Risiko</span>
           }
-        </td>
-      </ng-container>
+        </dd>
 
-      <ng-container matColumnDef="tokens">
-        <th mat-header-cell *matHeaderCellDef>Tokens</th>
-        <td mat-cell *matCellDef="let a">
-          {{ (a.promptTokens ?? '–') }} / {{ (a.completionTokens ?? '–') }}
-        </td>
-      </ng-container>
+        <dt class="font-semibold text-text-muted">Erzeugt</dt>
+        <dd class="m-0">{{ a.createdAt | date:'medium' }}</dd>
 
-      <ng-container matColumnDef="latency">
-        <th mat-header-cell *matHeaderCellDef>Latenz</th>
-        <td mat-cell *matCellDef="let a">{{ a.latencyMs ?? '–' }} ms</td>
-      </ng-container>
+        <dt class="font-semibold text-text-muted">Finalisiert</dt>
+        <dd class="m-0">{{ a.finalizedAt ? (a.finalizedAt | date:'medium') : '-' }}</dd>
 
-      <ng-container matColumnDef="triggeredBy">
-        <th mat-header-cell *matHeaderCellDef>Ausgeloest von</th>
-        <td mat-cell *matCellDef="let a">{{ a.triggeredBy }}</td>
-      </ng-container>
+        <dt class="font-semibold text-text-muted">Ausgeloest von</dt>
+        <dd class="m-0">{{ a.triggeredBy }}</dd>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-    </table>
+        <dt class="font-semibold text-text-muted">Umgebung</dt>
+        <dd class="m-0 font-mono text-xs">{{ a.environmentId || '-' }}</dd>
 
-    <mat-paginator
-      [length]="totalElements()"
-      [pageIndex]="pageIndex()"
-      [pageSize]="pageSize()"
-      [pageSizeOptions]="[10, 20, 50, 100]"
-      (page)="onPage($event)"
-      aria-label="Seitenauswahl">
-    </mat-paginator>
+        <dt class="font-semibold text-text-muted">Tokens (Prompt/Completion)</dt>
+        <dd class="m-0">{{ a.promptTokens ?? '-' }} / {{ a.completionTokens ?? '-' }}</dd>
+
+        <dt class="font-semibold text-text-muted">Latenz</dt>
+        <dd class="m-0">{{ a.latencyMs ?? '-' }} ms</dd>
+
+        <dt class="font-semibold text-text-muted">Kosten</dt>
+        <dd class="m-0">{{ a.costEur !== null ? (a.costEur + ' EUR') : '-' }}</dd>
+      </dl>
+
+      @if (a.invalidOutputReason) {
+        <div>
+          <h3 class="form-label">Invalid-Output-Grund</h3>
+          <pre class="bg-surface-muted text-text p-3 rounded-md overflow-x-auto text-sm whitespace-pre-wrap m-0">{{ a.invalidOutputReason }}</pre>
+        </div>
+      }
+
+      @if (a.errorMessage) {
+        <div>
+          <h3 class="form-label">Fehlermeldung</h3>
+          <pre class="bg-surface-muted text-text p-3 rounded-md overflow-x-auto text-sm whitespace-pre-wrap m-0">{{ a.errorMessage }}</pre>
+        </div>
+      }
+
+      <p class="text-caption">
+        Aus Datenschutzgruenden werden System- und User-Prompts nicht exponiert.
+      </p>
+    </div>
+    <div footer>
+      <button type="button" class="btn btn-secondary" (click)="schliesseDetails()">
+        Schliessen
+      </button>
+    </div>
   }
-</ahs-card>
+</cvm-dialog>

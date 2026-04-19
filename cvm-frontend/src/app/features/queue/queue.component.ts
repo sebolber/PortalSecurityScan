@@ -18,17 +18,22 @@ import { QueueTableComponent } from './queue-table.component';
 import { QueueDetailComponent } from './queue-detail.component';
 import { QueueHelpOverlayComponent } from './queue-help-overlay.component';
 import { AuthService } from '../../core/auth/auth.service';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
 import { QueueEntry, RejectCommand, ApproveCommand } from './queue.types';
 
 /**
  * Queue-Seite. Koordiniert {@link QueueStore}, Polling,
  * Tastatur-Shortcuts und die Slide-In-Detailansicht.
+ *
+ * Iteration 61 (CVM-62): Material entfernt, reines Tailwind. Toast-
+ * Feedback via {@code CvmToastService} (im Detail-Panel konsumiert).
  */
 @Component({
   selector: 'cvm-queue',
   standalone: true,
   imports: [
     CommonModule,
+    CvmIconComponent,
     QueueShortcutsDirective,
     QueueFilterBarComponent,
     QueueTableComponent,

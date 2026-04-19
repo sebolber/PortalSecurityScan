@@ -1,5 +1,5 @@
 <div
-  class="flex h-[calc(100vh-4rem)] w-full flex-col"
+  class="flex h-[calc(100vh-4rem)] w-full flex-col bg-surface-muted"
   cvmQueueShortcuts
   (next)="onNext()"
   (previous)="onPrevious()"
@@ -7,65 +7,74 @@
   (reject)="onShortcutReject()"
   (help)="openHelp()"
 >
-  <header class="flex items-center justify-between border-b bg-white px-4 py-2">
-    <div>
-      <h1 class="text-lg font-semibold">Bewertungs-Queue</h1>
-      <p class="text-xs text-zinc-500">
+  <header class="flex items-center justify-between border-b border-border bg-surface px-6 py-4">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Bewertungs-Queue</h1>
+      <p class="page-subtitle">
         Offene Vorschlaege. j/k bewegt, a freigibt, r lehnt ab, ? zeigt Hilfe.
       </p>
     </div>
     <div class="flex items-center gap-2">
       @if (checkedIds().size > 0) {
-        <span class="text-xs text-zinc-500">
+        <span class="text-xs text-text-muted">
           {{ checkedIds().size }} ausgewaehlt
         </span>
       }
       <button
         type="button"
-        class="rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50"
+        class="btn btn-secondary"
         (click)="onReload()"
         [disabled]="loading()"
       >
-        {{ loading() ? 'Lade...' : 'Aktualisieren' }}
+        @if (loading()) {
+          <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
+          Lade...
+        } @else {
+          <cvm-icon name="refresh" [size]="16"></cvm-icon>
+          Aktualisieren
+        }
       </button>
       <button
         type="button"
-        class="rounded border border-zinc-300 px-3 py-1 text-sm hover:bg-zinc-50"
+        class="btn-icon"
         (click)="openHelp()"
         aria-label="Tastatur-Shortcuts anzeigen"
+        title="Tastatur-Shortcuts"
       >
-        ?
+        <cvm-icon name="info" [size]="18"></cvm-icon>
       </button>
     </div>
   </header>
 
   @if (banner(); as b) {
-    <div
-      class="flex items-start justify-between gap-2 bg-amber-50 px-4 py-2 text-sm text-amber-800"
-      role="status"
-    >
-      <span>{{ b }}</span>
-      <button type="button" class="text-xs underline" (click)="dismissBanner()">
-        ausblenden
-      </button>
+    <div class="px-6 pt-4">
+      <div class="banner banner-warning" role="status">
+        <cvm-icon name="alert-triangle" [size]="18"></cvm-icon>
+        <span class="grow">{{ b }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="dismissBanner()">
+          ausblenden
+        </button>
+      </div>
     </div>
   }
   @if (error(); as e) {
-    <div
-      class="flex items-start justify-between gap-2 bg-red-50 px-4 py-2 text-sm text-red-800"
-      role="alert"
-    >
-      <span>{{ e }}</span>
-      <button type="button" class="text-xs underline" (click)="onReload()">
-        erneut laden
-      </button>
+    <div class="px-6 pt-4">
+      <div class="banner banner-critical" role="alert">
+        <cvm-icon name="alert-circle" [size]="18"></cvm-icon>
+        <span class="grow">{{ e }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="onReload()">
+          erneut laden
+        </button>
+      </div>
     </div>
   }
 
   <!-- Iteration 47: Filter-Balken oberhalb der Liste, Tabelle nimmt volle Breite. -->
-  <cvm-queue-filter-bar></cvm-queue-filter-bar>
+  <div class="px-6 pt-4">
+    <cvm-queue-filter-bar></cvm-queue-filter-bar>
+  </div>
 
-  <div class="flex flex-1 overflow-hidden">
+  <div class="flex flex-1 overflow-hidden p-6 gap-4">
     <main class="flex-1 overflow-auto">
       <cvm-queue-table
         [entries]="entries()"

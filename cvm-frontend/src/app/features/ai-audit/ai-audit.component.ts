@@ -1,15 +1,11 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { AhsCardComponent } from '../../shared/components/ahs-card.component';
+import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component';
+import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import {
   AiAuditService,
   AiCallAuditView,
@@ -29,19 +25,15 @@ import {
   imports: [
     CommonModule,
     FormsModule,
-    MatButtonModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
-    MatTableModule,
-    MatPaginatorModule,
-    AhsCardComponent
+    AhsCardComponent,
+    CvmIconComponent,
+    CvmDialogComponent,
+    EmptyStateComponent
   ],
   templateUrl: './ai-audit.component.html',
   styleUrls: ['./ai-audit.component.scss']
 })
-export class AiAuditComponent {
+export class AiAuditComponent implements OnInit {
   private readonly api = inject(AiAuditService);
 
   readonly statusOptions: readonly (AiCallStatus | 'ALL')[] = [
@@ -59,9 +51,8 @@ export class AiAuditComponent {
   readonly busy = signal<boolean>(false);
   readonly fehler = signal<string | null>(null);
 
-  readonly displayedColumns = [
-    'createdAt', 'useCase', 'modelId', 'status', 'tokens', 'latency', 'triggeredBy'
-  ];
+  // Iteration 61 (CVM-62): Details-Dialog statt MatDialog.
+  readonly selected = signal<AiCallAuditView | null>(null);
 
   async ngOnInit(): Promise<void> {
     await this.refresh();
@@ -72,10 +63,42 @@ export class AiAuditComponent {
     await this.refresh();
   }
 
-  async onPage(event: PageEvent): Promise<void> {
-    this.pageIndex.set(event.pageIndex);
-    this.pageSize.set(event.pageSize);
+  async prevPage(): Promise<void> {
+    if (this.pageIndex() === 0) return;
+    this.pageIndex.update((i) => i - 1);
     await this.refresh();
+  }
+
+  async nextPage(): Promise<void> {
+    if ((this.pageIndex() + 1) * this.pageSize() >= this.totalElements()) return;
+    this.pageIndex.update((i) => i + 1);
+    await this.refresh();
+  }
+
+  async changePageSize(size: number): Promise<void> {
+    this.pageSize.set(size);
+    this.pageIndex.set(0);
+    await this.refresh();
+  }
+
+  oeffneDetails(entry: AiCallAuditView): void {
+    this.selected.set(entry);
+  }
+
+  schliesseDetails(): void {
+    this.selected.set(null);
+  }
+
+  isStatusOk(s: AiCallStatus): boolean {
+    return s === 'OK';
+  }
+
+  isStatusWarn(s: AiCallStatus): boolean {
+    return s === 'PENDING';
+  }
+
+  isStatusErr(s: AiCallStatus): boolean {
+    return s !== 'OK' && s !== 'PENDING';
   }
 
   private async refresh(): Promise<void> {

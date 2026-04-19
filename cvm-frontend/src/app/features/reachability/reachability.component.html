@@ -1,77 +1,110 @@
-<section class="cvm-reachability">
-  <header class="cvm-reachability__header">
-    <h1 class="text-title-lg">Reachability-Analysen</h1>
-    <p class="text-body">
-      Zuletzt erzeugte Reachability-KI-Analysen fuer Findings. Einzelne
-      Analysen werden weiterhin in der Assessment-Queue pro Finding
-      gestartet (POST /api/v1/findings/&#123;id&#125;/reachability).
-    </p>
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Reachability-Analysen</h1>
+      <p class="page-subtitle">
+        Zuletzt erzeugte Reachability-KI-Analysen fuer Findings. Einzelne
+        Analysen werden weiterhin in der Assessment-Queue pro Finding
+        gestartet (POST /api/v1/findings/&#123;id&#125;/reachability).
+      </p>
+    </div>
+    <button
+      type="button"
+      class="btn btn-secondary"
+      data-testid="reachability-refresh"
+      (click)="laden()"
+      [disabled]="loading()"
+    >
+      <cvm-icon name="refresh" [size]="16"></cvm-icon>
+      Neu laden
+    </button>
   </header>
+
+  <section class="card p-4">
+    <div class="filter-bar">
+      <label class="form-group grow min-w-[280px]">
+        <span class="form-label">Neue Analyse fuer Finding-ID</span>
+        <input
+          type="text"
+          class="input-field"
+          data-testid="reachability-new-finding-id"
+          placeholder="UUID des Findings"
+          [ngModel]="neueFindingId()"
+          (ngModelChange)="neueFindingId.set($event)"
+          (keyup.enter)="oeffneStartDialog()"
+        />
+      </label>
+      <div class="form-group">
+        <span class="form-label">&nbsp;</span>
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-testid="reachability-open-dialog"
+          (click)="oeffneStartDialog()"
+        >
+          <cvm-icon name="play" [size]="16"></cvm-icon>
+          Analyse starten
+        </button>
+      </div>
+    </div>
+  </section>
 
   @if (error()) {
     <ahs-banner kind="critical" title="Fehler">{{ error() }}</ahs-banner>
   }
 
   @if (loading()) {
-    <mat-spinner diameter="36"></mat-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="18" class="animate-spin"></cvm-icon>
+      <span>Laedt...</span>
+    </div>
   } @else if (rows().length === 0) {
     <ahs-empty-state
-      icon="account_tree"
+      icon="git-branch"
       title="Keine Reachability-Analysen"
       hint="Bisher wurden keine Reachability-Analysen ausgeloest."
     ></ahs-empty-state>
   } @else {
-    <table
-      mat-table
-      [dataSource]="rows()"
-      [trackBy]="trackId"
-      class="cvm-reachability__table"
-    >
-      <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef>Zeit</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.createdAt | date: 'yyyy-MM-dd HH:mm' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="severity">
-        <th mat-header-cell *matHeaderCellDef>Severity</th>
-        <td mat-cell *matCellDef="let r">
-          <span
-            class="cvm-reachability__severity"
-            [attr.data-severity]="r.severity"
-          >
-            {{ r.severity || '–' }}
-          </span>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Status</th>
-        <td mat-cell *matCellDef="let r">{{ r.status }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="rationale">
-        <th mat-header-cell *matHeaderCellDef>Begruendung</th>
-        <td mat-cell *matCellDef="let r">{{ r.rationale }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="confidence">
-        <th mat-header-cell *matHeaderCellDef>Confidence</th>
-        <td mat-cell *matCellDef="let r">
-          {{ r.confidence ? (r.confidence | number: '1.2-2') : '–' }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="finding">
-        <th mat-header-cell *matHeaderCellDef>Finding</th>
-        <td mat-cell *matCellDef="let r" class="text-code">
-          {{ r.findingId || '–' }}
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
-    </table>
+    <section class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Zeit</th>
+            <th>Severity</th>
+            <th>Status</th>
+            <th>Begruendung</th>
+            <th>Confidence</th>
+            <th>Finding</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of rows(); track trackId($index, r)) {
+            <tr>
+              <td>{{ r.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+              <td>
+                @if (r.severity) {
+                  <span class="severity-chip" [attr.data-sev]="r.severity">
+                    {{ r.severity }}
+                  </span>
+                } @else {
+                  <span class="text-text-muted">-</span>
+                }
+              </td>
+              <td>{{ r.status }}</td>
+              <td>{{ r.rationale }}</td>
+              <td>{{ r.confidence ? (r.confidence | number: '1.2-2') : '-' }}</td>
+              <td class="text-code">{{ r.findingId || '-' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
   }
-</section>
+
+  <cvm-reachability-start-dialog
+    [open]="startDialogOffen()"
+    [data]="startDialogData()"
+    (confirm)="onDialogConfirm($event)"
+    (cancel)="onDialogCancel()"
+  ></cvm-reachability-start-dialog>
+</div>

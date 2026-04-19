@@ -1,92 +1,84 @@
-<section class="cvm-admin-tenants">
-  <header class="cvm-admin-tenants__header">
-    <div>
-      <h1 class="text-title-lg">Mandanten</h1>
-      <p class="text-body">
-        Uebersicht aller Mandanten. Anlage hier moeglich; die
+<div class="page">
+  <header class="page-header">
+    <div class="flex flex-col gap-1">
+      <h1 class="page-title">Mandanten</h1>
+      <p class="page-subtitle">
+        Uebersicht aller Mandanten. Anlage hier moeglich; das
         Keycloak-Realm-Mapping bleibt separat.
       </p>
     </div>
-    <div class="cvm-admin-tenants__actions">
-      <button
-        type="button"
-        mat-stroked-button
-        (click)="formularUmschalten()"
-      >
-        <mat-icon>{{ formOpen() ? 'close' : 'add' }}</mat-icon>
+    <div class="flex items-center gap-2">
+      <button type="button"
+              class="btn btn-secondary"
+              (click)="formularUmschalten()">
+        <cvm-icon [name]="formOpen() ? 'close' : 'add'" [size]="16"></cvm-icon>
         {{ formOpen() ? 'Formular schliessen' : 'Neuer Mandant' }}
       </button>
-      <button
-        type="button"
-        mat-stroked-button
-        (click)="laden()"
-        [disabled]="loading()"
-      >
-        <mat-icon>refresh</mat-icon>
+      <button type="button"
+              class="btn btn-secondary"
+              (click)="laden()"
+              [disabled]="loading()">
+        <cvm-icon name="refresh" [size]="16"></cvm-icon>
         Neu laden
       </button>
     </div>
   </header>
 
   @if (formOpen()) {
-    <mat-card class="cvm-admin-tenants__form-card">
-      <mat-card-header>
-        <mat-card-title>Neuer Mandant</mat-card-title>
-      </mat-card-header>
-      <mat-card-content>
+    <section class="card">
+      <header class="card-header">
+        <h2 class="card-title">Neuer Mandant</h2>
+      </header>
+      <div class="card-body flex flex-col gap-4">
         @if (saveError()) {
           <ahs-banner kind="critical" title="Fehler">
             {{ saveError() }}
           </ahs-banner>
         }
-        <form (submit)="$event.preventDefault(); anlegen()">
-          <div class="cvm-admin-tenants__form-row">
-            <mat-form-field appearance="outline">
-              <mat-label>Tenant-Key</mat-label>
-              <input
-                matInput
-                [ngModel]="form().tenantKey"
-                name="tenantKey"
-                (ngModelChange)="update('tenantKey', $event)"
-                required
-              />
-              <mat-hint>z.B. ahs-nord</mat-hint>
-            </mat-form-field>
-            <mat-form-field appearance="outline">
-              <mat-label>Anzeigename</mat-label>
-              <input
-                matInput
-                [ngModel]="form().name"
-                name="name"
-                (ngModelChange)="update('name', $event)"
-                required
-              />
-            </mat-form-field>
-            <mat-slide-toggle
-              name="active"
-              [ngModel]="form().active"
-              (ngModelChange)="update('active', $event)"
-            >
-              Aktiv
-            </mat-slide-toggle>
+        <form (submit)="$event.preventDefault(); anlegen()"
+              class="flex flex-col gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <label class="form-group">
+              <span class="form-label form-label--required">Tenant-Key</span>
+              <input class="input-field" type="text"
+                     [ngModel]="form().tenantKey"
+                     name="tenantKey"
+                     (ngModelChange)="update('tenantKey', $event)"
+                     required />
+              <span class="form-help">z.B. ahs-nord</span>
+            </label>
+            <label class="form-group">
+              <span class="form-label form-label--required">Anzeigename</span>
+              <input class="input-field" type="text"
+                     [ngModel]="form().name"
+                     name="name"
+                     (ngModelChange)="update('name', $event)"
+                     required />
+            </label>
+            <label class="inline-flex items-center gap-2 h-10">
+              <input type="checkbox" class="form-checkbox"
+                     name="active"
+                     [ngModel]="form().active"
+                     (ngModelChange)="update('active', $event)" />
+              <span class="text-sm">Aktiv</span>
+            </label>
           </div>
-          <div class="cvm-admin-tenants__form-actions">
-            <button
-              type="submit"
-              mat-flat-button
-              color="primary"
-              [disabled]="saving()"
-            >
+          <div class="flex justify-end">
+            <button type="submit"
+                    class="btn btn-primary"
+                    [disabled]="saving()">
               @if (saving()) {
+                <cvm-icon name="loader" [size]="16" class="animate-spin"></cvm-icon>
                 Speichere...
               } @else {
+                <cvm-icon name="save" [size]="16"></cvm-icon>
                 Anlegen
               }
             </button>
           </div>
         </form>
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </section>
   }
 
   @if (error()) {
@@ -94,75 +86,65 @@
   }
 
   @if (loading()) {
-    <mat-spinner diameter="36"></mat-spinner>
+    <div class="flex items-center gap-2 text-text-muted text-sm">
+      <cvm-icon name="loader" [size]="20" class="animate-spin"></cvm-icon>
+      <span>Laedt...</span>
+    </div>
   } @else if (rows().length === 0) {
     <ahs-empty-state
-      icon="group"
+      icon="users"
       title="Keine Mandanten"
-      hint="Pflege Mandanten via Admin-SQL oder Keycloak-Realm-Setup."
-    ></ahs-empty-state>
+      hint="Pflege Mandanten via Admin-SQL oder Keycloak-Realm-Setup.">
+    </ahs-empty-state>
   } @else {
-    <table
-      mat-table
-      [dataSource]="rows()"
-      [trackBy]="trackId"
-      class="cvm-admin-tenants__table"
-    >
-      <ng-container matColumnDef="tenantKey">
-        <th mat-header-cell *matHeaderCellDef>Key</th>
-        <td mat-cell *matCellDef="let t" class="text-code">
-          {{ t.tenantKey }}
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Name</th>
-        <td mat-cell *matCellDef="let t">{{ t.name }}</td>
-      </ng-container>
-
-      <ng-container matColumnDef="active">
-        <th mat-header-cell *matHeaderCellDef>Aktiv</th>
-        <td mat-cell *matCellDef="let t">
-          <mat-chip *ngIf="t.active" highlighted>aktiv</mat-chip>
-          <mat-chip *ngIf="!t.active" color="warn" highlighted>inaktiv</mat-chip>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="default">
-        <th mat-header-cell *matHeaderCellDef>Default</th>
-        <td mat-cell *matCellDef="let t">
-          <mat-chip *ngIf="t.defaultTenant" color="primary" highlighted>default</mat-chip>
-        </td>
-      </ng-container>
-
-      <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef>Angelegt</th>
-        <td mat-cell *matCellDef="let t">
-          {{ t.createdAt | date: 'yyyy-MM-dd HH:mm' }}
-        </td>
-      </ng-container>
-
-      <!-- Iteration 60 (CVM-110): Aktivitaets-Toggle. -->
-      <ng-container matColumnDef="aktion">
-        <th mat-header-cell *matHeaderCellDef>Aktion</th>
-        <td mat-cell *matCellDef="let t">
-          <button
-            type="button"
-            mat-icon-button
-            [disabled]="t.defaultTenant"
-            [attr.aria-label]="t.active ? 'Mandant deaktivieren' : 'Mandant aktivieren'"
-            [title]="t.defaultTenant
-              ? 'Default-Mandant - nicht umschaltbar'
-              : (t.active ? 'Deaktivieren' : 'Aktivieren')"
-            (click)="toggleActive(t)"
-          >
-            <mat-icon>{{ t.active ? 'toggle_on' : 'toggle_off' }}</mat-icon>
-          </button>
-        </td>
-      </ng-container>
-
-      <tr mat-header-row *matHeaderRowDef="columns"></tr>
-      <tr mat-row *matRowDef="let row; columns: columns"></tr>
-    </table>
+    <section class="table-card">
+      <div class="overflow-x-auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Key</th>
+              <th>Name</th>
+              <th>Aktiv</th>
+              <th>Default</th>
+              <th>Angelegt</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (t of rows(); track trackId($index, t)) {
+              <tr>
+                <td class="text-code">{{ t.tenantKey }}</td>
+                <td>{{ t.name }}</td>
+                <td>
+                  @if (t.active) {
+                    <span class="badge badge-success">aktiv</span>
+                  } @else {
+                    <span class="badge badge-danger">inaktiv</span>
+                  }
+                </td>
+                <td>
+                  @if (t.defaultTenant) {
+                    <span class="badge badge-info">default</span>
+                  }
+                </td>
+                <td>{{ t.createdAt | date: 'yyyy-MM-dd HH:mm' }}</td>
+                <td>
+                  <button type="button"
+                          class="btn-icon"
+                          [disabled]="t.defaultTenant"
+                          [attr.aria-label]="t.active ? 'Mandant deaktivieren' : 'Mandant aktivieren'"
+                          [attr.title]="t.defaultTenant
+                            ? 'Default-Mandant - nicht umschaltbar'
+                            : (t.active ? 'Deaktivieren' : 'Aktivieren')"
+                          (click)="toggleActive(t)">
+                    <cvm-icon [name]="t.active ? 'check-circle' : 'circle'" [size]="18"></cvm-icon>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
   }
-</section>
+</div>
