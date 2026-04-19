@@ -43,6 +43,8 @@ export interface ReachabilityResult {
   readonly recommendation: string | null;
   readonly summary: string | null;
   readonly callSites: readonly ReachabilityCallSite[];
+  readonly available: boolean;
+  readonly noteIfUnavailable: string | null;
 }
 
 export interface ReachabilitySuggestion {

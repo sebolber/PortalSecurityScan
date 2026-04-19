@@ -307,6 +307,17 @@ export class QueueDetailComponent {
       if (!result) {
         return;
       }
+      if (!result.available) {
+        // Feature deaktiviert / Timeout / Subprocess-Fehler. Keine
+        // Uebersicht-Action, weil nichts Neues persistiert wurde.
+        const hinweis = result.noteIfUnavailable?.trim()
+          || 'Kein Detail vom Backend gemeldet.';
+        this.snack.open(
+          'Reachability nicht verfuegbar: ' + hinweis,
+          'OK',
+          { duration: 10000 });
+        return;
+      }
       const kurz = (result.summary && result.summary.trim().length > 0)
         ? result.summary.trim()
         : (result.recommendation ?? 'Analyse abgeschlossen.');
