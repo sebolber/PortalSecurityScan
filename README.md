@@ -19,6 +19,38 @@ pendant zu PortalCore und ZPV.
 
 ## Quickstart
 
+### Komplett per Start-Skript (empfohlen)
+
+```bash
+scripts/start.sh              # aktueller HEAD, startet alles
+scripts/start.sh main         # vorher auf main wechseln + ff-pull
+```
+
+Das Skript (Details in `scripts/start.sh`) fuehrt der Reihe nach aus:
+
+1. Voraussetzungen pruefen (git, java, mvnw, docker, node, npm).
+2. Optionaler Branch-Checkout + Fast-Forward-Pull (nur wenn ein Branch-
+   Argument uebergeben wurde und das Working-Tree sauber ist).
+3. `docker compose up -d` (Postgres + pgvector, Keycloak, MailHog),
+   Warten auf Postgres-Healthcheck.
+4. Backend `./mvnw spring-boot:run -pl cvm-app` im Hintergrund,
+   Warten auf `/actuator/health`.
+5. Frontend `ng serve` im Hintergrund, Warten auf Port 4200.
+6. `tail -f` auf alle Log-Dateien (Ctrl-C beendet alles sauber).
+
+Nuetzliche Flags/Variablen:
+
+```bash
+scripts/start.sh main --skip-frontend    # nur Backend-Stack
+scripts/start.sh main --no-tail          # ohne live-tail
+CVM_BACKEND_PORT=8082 scripts/start.sh   # abweichender Backend-Port
+CVM_LOG_DIR=/tmp/cvm-logs scripts/start.sh
+```
+
+Logs landen unter `logs/YYYYMMDD-HHMMSS/` (docker-, backend-, frontend.log).
+
+### Manuell (wenn du die Schritte einzeln brauchst)
+
 ```bash
 # 1. Lokale Infrastruktur hochfahren (Postgres + pgvector, Keycloak, MailHog)
 docker compose up -d
