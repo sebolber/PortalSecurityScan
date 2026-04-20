@@ -11,6 +11,7 @@
 #   scripts/start.sh claude/continue-next-session-WIofO
 #   scripts/start.sh feature/foo --skip-frontend
 #   scripts/start.sh main --no-tail
+#   scripts/start.sh --initial           # DB + Keycloak vollstaendig zuruecksetzen
 #
 # Was es tut:
 #   1. Pruefung der Voraussetzungen (git, java, mvnw, docker, node, npm).
@@ -51,6 +52,7 @@ SKIP_FRONTEND=false
 NO_TAIL=false
 ALLOW_DIRTY=false
 FORCE_FREE_PORTS=false
+INITIAL_RESET=false
 BRANCH=""
 
 # --- Farben fuer Log-Ausgabe --------------------------------------------------
@@ -89,6 +91,14 @@ Optionen:
                       freiraeumen: alte cvm-*-Docker-Container entfernen und
                       lokale Listener per SIGTERM beenden (nach 5s SIGKILL).
                       Ohne dieses Flag werden fremde Prozesse nur gemeldet.
+  --initial           System neu aufsetzen mit leerer Datenbank. Raeumt den
+                      kompletten Docker-Compose-Stack inkl. aller Volumes ab
+                      ('docker compose down -v --remove-orphans') bevor er
+                      wieder hochfaehrt. Damit wird auch der Keycloak-
+                      Container neu gebaut, sodass '--import-realm' den
+                      Dev-Realm aus 'infra/keycloak/dev-realm.json' frisch
+                      lesen kann. NUR fuer DEV - zerstoert alle lokalen
+                      Postgres-Daten und die Keycloak-H2-DB.
   -h | --help         Diese Hilfe anzeigen
 
 Beispiele:
@@ -108,6 +118,7 @@ while (( "$#" )); do
         --no-tail)           NO_TAIL=true; shift ;;
         --allow-dirty)       ALLOW_DIRTY=true; shift ;;
         --force-free-ports)  FORCE_FREE_PORTS=true; shift ;;
+        --initial|-initial)  INITIAL_RESET=true; shift ;;
         -h|--help)           usage; exit 0 ;;
         --*)             fail "Unbekannte Option: $1"; usage; exit 64 ;;
         *)
@@ -409,6 +420,31 @@ checkout_branch() {
     ok "Auf Branch $(git rev-parse --abbrev-ref HEAD) (commit $(git rev-parse --short HEAD))."
 }
 
+# --- Initialer Reset (leere DB + frischer Keycloak-Realm) --------------------
+# Raeumt den Compose-Stack inklusive aller Volumes ab. Wichtig: nur so wird
+# auch der Keycloak-Container neu gebaut, damit '--import-realm' den Dev-
+# Realm frisch aus 'infra/keycloak/dev-realm.json' einliest. Ein alleiniges
+# Loeschen des Postgres-Volumes laesst den Keycloak-Container mit seiner
+# (leeren oder halb gefuellten) H2-DB zurueck, was zu "Login kaputt nach
+# Volume-Delete"-Symptomen fuehrt.
+initial_reset() {
+    if ! "${INITIAL_RESET}"; then
+        return 0
+    fi
+    if "${SKIP_DOCKER}"; then
+        fail "--initial und --skip-docker schliessen sich gegenseitig aus."
+        exit 64
+    fi
+    info "Initial-Reset: entferne Docker-Stack inkl. aller Volumes..."
+    cd "${REPO_ROOT}"
+    if ! docker compose down -v --remove-orphans 2>&1 \
+            | tee -a "${LOG_DIR}/docker.log"; then
+        fail "'docker compose down -v' fehlgeschlagen."
+        exit 81
+    fi
+    ok "Docker-Stack und Volumes entfernt - DB ist leer, Keycloak wird neu importiert."
+}
+
 # --- Docker-Compose -----------------------------------------------------------
 start_docker() {
     if "${SKIP_DOCKER}"; then
@@ -591,6 +627,7 @@ if [[ -n "${BRANCH}" ]]; then
 else
     info "Ueberspringe git-Update (kein Branch-Argument)."
 fi
+initial_reset
 prepare_ports
 start_docker
 start_backend
