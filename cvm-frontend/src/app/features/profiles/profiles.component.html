@@ -159,6 +159,7 @@
                 <ngx-monaco-editor
                   [options]="{ language: 'yaml', theme: 'vs', automaticLayout: true, minimap: { enabled: false }, tabSize: 2 }"
                   [ngModel]="row.editorYaml"
+                  [ngModelOptions]="{ standalone: true }"
                   (ngModelChange)="editorInhalt(row, $event)"
                 ></ngx-monaco-editor>
               </div>
