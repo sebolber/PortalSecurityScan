@@ -171,6 +171,15 @@
                 <button
                   type="button"
                   class="btn btn-secondary"
+                  (click)="vorlageEinfuegen(row)"
+                  data-testid="vorlage-einfuegen"
+                >
+                  <cvm-icon name="file-text" [size]="16"></cvm-icon>
+                  Vorlage einfuegen
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary"
                   (click)="zuruecksetzen(row)"
                 >
                   Auf aktive Version zuruecksetzen

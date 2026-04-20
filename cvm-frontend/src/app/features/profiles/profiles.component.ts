@@ -333,6 +333,67 @@ export class ProfilesComponent implements OnInit {
     });
   }
 
+  /**
+   * Laedt ein kommentiertes Beispiel-Profil in den Editor. Der
+   * Anwender soll sehen, welche Abschnitte es im Schema v1 gibt und
+   * welche Flags typischerweise gesetzt werden. Key und Stage werden
+   * aus der aktuellen Umgebung vorausgefuellt, damit die Vorlage
+   * sofort gegen das Schema validiert.
+   */
+  vorlageEinfuegen(row: ProfileRow): void {
+    this.patchRow(row, {
+      editorYaml: this.buildVorlage(row.env.key, row.env.stage),
+      fehler: null,
+      meldung:
+        'Vorlage geladen. Passe die Flags und Frameworks an die Umgebung an.'
+    });
+  }
+
+  private buildVorlage(umgebungKey: string, stage: string): string {
+    return (
+      '# Beispiel-Kontextprofil (Schema v1).\n' +
+      '# Passe die Flags unten an die tatsaechliche Umgebung an.\n' +
+      '# Dokumentation: docs/initial/04-Kontextprofil.md\n' +
+      'schemaVersion: 1\n' +
+      '\n' +
+      'umgebung:\n' +
+      '  key: ' +
+      umgebungKey +
+      '\n' +
+      '  stage: ' +
+      stage +
+      '\n' +
+      '  # tenant: mein-tenant   # optional, nur bei Multi-Tenancy\n' +
+      '\n' +
+      '# Architektur der Umgebung (Boolean-Flags).\n' +
+      'architecture:\n' +
+      '  windows_hosts: false\n' +
+      '  linux_hosts: true\n' +
+      '  containerized: true\n' +
+      '  kubernetes: true\n' +
+      '  serverless: false\n' +
+      '\n' +
+      '# Netzwerk-Exposition.\n' +
+      'network:\n' +
+      '  internet_egress: false\n' +
+      '  internet_ingress: false\n' +
+      '  vpn_only: true\n' +
+      '\n' +
+      '# Hardening-Massnahmen, die in der Umgebung greifen.\n' +
+      'hardening:\n' +
+      '  tls_mtls: true\n' +
+      '  waf: false\n' +
+      '  secrets_in_vault: true\n' +
+      '  patching_auto: true\n' +
+      '\n' +
+      '# Compliance-Rahmenwerke fuer diese Umgebung.\n' +
+      'compliance:\n' +
+      '  frameworks:\n' +
+      '    - BSI_C5\n' +
+      '    - ISO_27001\n'
+    );
+  }
+
   /** Iteration 57 (CVM-107): Monaco Side-by-Side Diff auf-/zuklappen. */
   diffUmschalten(row: ProfileRow): void {
     this.patchRow(row, { diffOffen: !row.diffOffen });
