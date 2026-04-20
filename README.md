@@ -5,7 +5,7 @@ entwickelt von adesso health solutions GmbH als Nachbau-/Weiterentwicklungs-
 pendant zu PortalCore und ZPV.
 
 > Verbindliche Arbeitsgrundlage ist `CLAUDE.md`. Die Iterations-Roadmap steht
-> in `README-Iterationsplan.md`. Das Fachkonzept liegt unter
+> in `docs/initial/README-Iterationsplan.md`. Das Fachkonzept liegt unter
 > `docs/konzept/CVE-Relevance-Manager-Konzept-v0.2.md`.
 
 ## Voraussetzungen
@@ -45,13 +45,17 @@ npm start
 cvm-domain/              POJOs, Value Objects (keine Spring-Abhaengigkeiten)
 cvm-persistence/         JPA-Entities, Repositories, Flyway-Migrationen
 cvm-application/         Services, Use Cases, Orchestrierung
-cvm-integration/         Adapter zu NVD/GHSA/KEV/EPSS, Jira, Git, SMTP
-cvm-llm-gateway/         LLM-Abstraktion (leer bis Iteration 11)
-cvm-ai-services/         KI-Anwendungsfaelle (leer bis Iteration 13)
-cvm-api/                 REST-Controller, DTOs, OpenAPI
+cvm-integration/         Adapter zu NVD/GHSA/KEV/EPSS/OSV, Jira, Git, SMTP
+cvm-llm-gateway/         LLM-Abstraktion (Claude, Ollama, OpenAI),
+                         Prompt-Templates, Injection-Detector, Validator
+cvm-ai-services/         KI-Anwendungsfaelle: Vorbewertung, Copilot,
+                         Delta-Summary, Reachability, Fix-Verifikation,
+                         Regel-Extraktion, Anomalie-Check, Profil-Assistent
+cvm-api/                 REST-Controller, DTOs, OpenAPI (SpringDoc 2)
 cvm-app/                 Spring-Boot-Einstiegspunkt
 cvm-architecture-tests/  ArchUnit-Regeln (Modulgrenzen)
-cvm-frontend/            Angular 18 (Standalone, Material, Tailwind)
+cvm-frontend/            Angular 18 (Standalone, Tailwind, Lucide,
+                         ngx-echarts, Monaco-Editor)
 ```
 
 ## Tests
@@ -69,8 +73,11 @@ uebersprungen, wenn kein Docker-Daemon erreichbar ist
 ## Weitere Dokumente
 
 - `CLAUDE.md` &mdash; Arbeitsregeln und Tech-Stack (verbindlich)
-- `README-Iterationsplan.md` &mdash; Phasen 0 bis 4 der Umsetzung
+- `docs/initial/` &mdash; urspruengliche Iterations-Prompts der Phase 0-4
+  (`README-Iterationsplan.md` + `00-Initialisierung.md` bis
+  `21-Mandanten-CICD-KPIs.md`, `27-*`, `28-*`)
 - `docs/konzept/` &mdash; Fachkonzept v0.2
+- `docs/api/` &mdash; REST-Schnittstellenbeschreibung
 - `docs/YYYYMMDD/` &mdash; tagesaktuelle Fortschrittsberichte
 
 ## Lizenz

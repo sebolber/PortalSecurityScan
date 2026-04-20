@@ -307,7 +307,9 @@ Finding in den Report – auch wenn das Skript `INHALT` gemeldet hat.
 
 - `docs/konzept/CVE-Relevance-Manager-Konzept-v0.2.md` – Fachkonzept (verbindlich)
 - `docs/konzept/ER-Diagramm.png` – Datenmodell
-- `docs/iterationen/` – Einzelprompts pro Iteration
+- `docs/initial/` – urspruengliche Iterations-Prompts Phase 0-4
+  (`README-Iterationsplan.md`, `00-Initialisierung.md` bis `28-*`)
+- `docs/api/` – aktuelle REST-Schnittstellenbeschreibung
 - PortalCore `CLAUDE.md` – Referenz für Stil und Guardrails
 
 ---
