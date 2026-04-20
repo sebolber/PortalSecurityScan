@@ -138,6 +138,15 @@ export class DashboardComponent implements OnInit {
   );
 
   async ngOnInit(): Promise<void> {
+    // Dashboard ist eine public Route (app.routes.ts), damit die Shell
+    // auch ohne Keycloak-Session sichtbar ist. Die KPI- und Report-
+    // Endpoints verlangen jedoch einen Bearer-Token; ohne Login laeuft
+    // jeder Aufruf in ein 401 und wuerde den User mit einem
+    // missverstaendlichen Fehler-Toast begruessen. Wir laden die Daten
+    // daher erst, sobald der User angemeldet ist.
+    if (!this.auth.loggedIn()) {
+      return;
+    }
     await this.ladeKpi();
     if (this.darfReports()) {
       await this.ladeLetzteReports();
