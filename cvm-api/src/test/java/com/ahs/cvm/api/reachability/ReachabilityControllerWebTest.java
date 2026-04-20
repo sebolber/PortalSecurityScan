@@ -91,6 +91,20 @@ class ReachabilityControllerWebTest {
     }
 
     @Test
+    @DisplayName("Reachability-Controller: 400 bei fehlendem commitSha")
+    void fehlendesCommitSha() throws Exception {
+        String body = """
+                {"repoUrl":"ssh://git@example/cvm.git",
+                 "commitSha":"",
+                 "vulnerableSymbol":"X.y",
+                 "triggeredBy":"t@x"}""";
+        mockMvc.perform(post("/api/v1/findings/" + FINDING + "/reachability")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("GET /{id}/reachability/suggestion: 200 mit abgeleitetem Symbol")
     void suggestionHappyPath() throws Exception {
         given(reachabilityQueryService.suggestionForFinding(eq(FINDING)))

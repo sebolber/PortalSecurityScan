@@ -63,7 +63,7 @@ public class ReachabilityController {
     public record ReachabilityApiRequest(
             @NotBlank String repoUrl,
             String branch,
-            String commitSha,
+            @NotBlank String commitSha,
             @NotBlank String vulnerableSymbol,
             String language,
             String instruction,

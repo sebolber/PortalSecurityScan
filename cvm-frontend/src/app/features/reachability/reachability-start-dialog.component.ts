@@ -120,16 +120,18 @@ function leeresFormular(): FormState {
             </label>
 
             <label class="form-group">
-              <span class="form-label">Commit-SHA (optional)</span>
+              <span class="form-label form-label--required">Commit-SHA</span>
               <input
                 type="text"
                 class="input-field"
                 name="commitSha"
+                required
                 data-testid="reachability-commit"
                 [ngModel]="formular().commitSha"
                 (ngModelChange)="updateFeld('commitSha', $event)"
                 placeholder="a3f9beef..."
               />
+              <span class="form-help">Pflicht - JGit clont genau diesen Commit.</span>
             </label>
           </div>
 
@@ -310,12 +312,18 @@ export class ReachabilityStartDialogComponent implements OnInit, OnChanges {
 
   istFormularGueltig(): boolean {
     const f = this.formular();
-    return f.repoUrl.trim().length > 0 && f.vulnerableSymbol.trim().length > 0;
+    return (
+      f.repoUrl.trim().length > 0 &&
+      f.commitSha.trim().length > 0 &&
+      f.vulnerableSymbol.trim().length > 0
+    );
   }
 
   async starte(form: NgForm): Promise<void> {
     if (form.invalid) {
-      this.fehler.set('Repo-URL und Vulnerable Symbol sind Pflichtfelder.');
+      this.fehler.set(
+        'Repo-URL, Commit-SHA und Vulnerable Symbol sind Pflichtfelder.'
+      );
       return;
     }
     await this.starteDirekt();
@@ -326,14 +334,16 @@ export class ReachabilityStartDialogComponent implements OnInit, OnChanges {
       return;
     }
     if (!this.istFormularGueltig()) {
-      this.fehler.set('Repo-URL und Vulnerable Symbol sind Pflichtfelder.');
+      this.fehler.set(
+        'Repo-URL, Commit-SHA und Vulnerable Symbol sind Pflichtfelder.'
+      );
       return;
     }
     const aktuell = this.formular();
     const request: ReachabilityStartRequest = {
       repoUrl: aktuell.repoUrl.trim(),
       branch: aktuell.branch.trim() || null,
-      commitSha: aktuell.commitSha.trim() || null,
+      commitSha: aktuell.commitSha.trim(),
       vulnerableSymbol: aktuell.vulnerableSymbol.trim(),
       language: aktuell.language || null,
       instruction: aktuell.instruction.trim() || null,
