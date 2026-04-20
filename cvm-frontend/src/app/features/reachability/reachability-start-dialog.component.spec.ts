@@ -3,6 +3,7 @@ import { ReachabilityStartDialogComponent } from './reachability-start-dialog.co
 import {
   ReachabilityQueryService,
   ReachabilityResult,
+  ReachabilityStartContext,
   ReachabilityStartRequest
 } from '../../core/reachability/reachability.service';
 
@@ -23,6 +24,15 @@ class FakeReach {
       }
     );
   suggestion = jasmine.createSpy('suggestion').and.rejectWith(new Error('no'));
+  contextResponse: ReachabilityStartContext = {
+    findingId: 'f1',
+    repoUrl: null,
+    commitSha: null,
+    rationale: null
+  };
+  context = jasmine
+    .createSpy('context')
+    .and.callFake(() => Promise.resolve(this.contextResponse));
 }
 
 /**
@@ -89,5 +99,47 @@ describe('ReachabilityStartDialogComponent - commitSha Pflichtfeld', () => {
 
     expect(reach.startAnalysis).not.toHaveBeenCalled();
     expect(c.fehler()).toContain('Commit-SHA');
+  });
+
+  it('CVM-339: ladeKontext befuellt leere Pflichtfelder aus Product/Version', async () => {
+    const c = mkComponent();
+    const reach = TestBed.inject(ReachabilityQueryService) as unknown as FakeReach;
+    reach.contextResponse = {
+      findingId: 'f1',
+      repoUrl: 'https://git.example/portalcore.git',
+      commitSha: 'a3f9beef',
+      rationale: 'Vorbelegt aus Produkt und Produkt-Version.'
+    };
+    // Trigger ngOnChanges-Pfad auf open=true.
+    c.ngOnChanges({
+      open: { currentValue: true, previousValue: false, firstChange: false, isFirstChange: () => false }
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(reach.context).toHaveBeenCalledWith('f1');
+    expect(c.formular().repoUrl).toBe('https://git.example/portalcore.git');
+    expect(c.formular().commitSha).toBe('a3f9beef');
+    expect(c.kontext()?.rationale).toContain('Vorbelegt');
+  });
+
+  it('CVM-339: leere Context-Felder belassen das Formular unveraendert', async () => {
+    const c = mkComponent();
+    const reach = TestBed.inject(ReachabilityQueryService) as unknown as FakeReach;
+    reach.contextResponse = {
+      findingId: 'f1',
+      repoUrl: null,
+      commitSha: null,
+      rationale: 'Produkt hat keine Repo-URL - bitte manuell eintragen.'
+    };
+    c.ngOnChanges({
+      open: { currentValue: true, previousValue: false, firstChange: false, isFirstChange: () => false }
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(c.formular().repoUrl).toBe('');
+    expect(c.formular().commitSha).toBe('');
+    expect(c.kontext()?.rationale).toContain('Produkt hat keine Repo-URL');
   });
 });

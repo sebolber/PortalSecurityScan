@@ -13,6 +13,7 @@ import com.ahs.cvm.ai.reachability.ReachabilityAgent;
 import com.ahs.cvm.ai.reachability.ReachabilityResult;
 import com.ahs.cvm.ai.reachability.ReachabilityResult.CallSite;
 import com.ahs.cvm.application.reachability.ReachabilityQueryService;
+import com.ahs.cvm.application.reachability.ReachabilityStartContextView;
 import com.ahs.cvm.application.reachability.ReachabilitySuggestionView;
 import java.util.List;
 import java.util.UUID;
@@ -129,6 +130,35 @@ class ReachabilityControllerWebTest {
                 .given(reachabilityQueryService).suggestionForFinding(eq(FINDING));
 
         mockMvc.perform(get("/api/v1/findings/" + FINDING + "/reachability/suggestion"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").value("finding_not_found"));
+    }
+
+    @Test
+    @DisplayName("GET /{id}/reachability/context: 200 mit Repo und Commit")
+    void contextHappyPath() throws Exception {
+        given(reachabilityQueryService.contextForFinding(eq(FINDING)))
+                .willReturn(new ReachabilityStartContextView(
+                        FINDING,
+                        "https://git.example/portalcore.git",
+                        "a3f9beef",
+                        "Vorbelegt aus Produkt und Produkt-Version."));
+
+        mockMvc.perform(get("/api/v1/findings/" + FINDING + "/reachability/context"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.repoUrl").value("https://git.example/portalcore.git"))
+                .andExpect(jsonPath("$.commitSha").value("a3f9beef"))
+                .andExpect(jsonPath("$.rationale").value(
+                        "Vorbelegt aus Produkt und Produkt-Version."));
+    }
+
+    @Test
+    @DisplayName("GET /{id}/reachability/context: 404 bei unbekanntem Finding")
+    void contextNotFound() throws Exception {
+        willThrow(new ReachabilityQueryService.FindingNotFoundException(FINDING))
+                .given(reachabilityQueryService).contextForFinding(eq(FINDING));
+
+        mockMvc.perform(get("/api/v1/findings/" + FINDING + "/reachability/context"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("finding_not_found"));
     }

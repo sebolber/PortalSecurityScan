@@ -4,6 +4,7 @@ import com.ahs.cvm.ai.reachability.ReachabilityAgent;
 import com.ahs.cvm.ai.reachability.ReachabilityRequest;
 import com.ahs.cvm.ai.reachability.ReachabilityResult;
 import com.ahs.cvm.application.reachability.ReachabilityQueryService;
+import com.ahs.cvm.application.reachability.ReachabilityStartContextView;
 import com.ahs.cvm.application.reachability.ReachabilitySuggestionView;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -58,6 +59,18 @@ public class ReachabilityController {
     public ResponseEntity<ReachabilitySuggestionView> suggestion(
             @PathVariable("id") UUID findingId) {
         return ResponseEntity.ok(queryService.suggestionForFinding(findingId));
+    }
+
+    /**
+     * Iteration 97 (CVM-339): Start-Kontext (repoUrl + commitSha)
+     * aus Produkt und Produkt-Version. Der Reachability-Dialog
+     * befuellt damit die Pflichtfelder vor.
+     */
+    @GetMapping("/{id}/reachability/context")
+    @Operation(summary = "Vorbelegung fuer den Reachability-Start-Dialog.")
+    public ResponseEntity<ReachabilityStartContextView> context(
+            @PathVariable("id") UUID findingId) {
+        return ResponseEntity.ok(queryService.contextForFinding(findingId));
     }
 
     public record ReachabilityApiRequest(

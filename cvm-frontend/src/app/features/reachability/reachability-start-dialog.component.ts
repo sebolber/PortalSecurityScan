@@ -16,6 +16,7 @@ import { CvmDialogComponent } from '../../shared/components/cvm-dialog.component
 import {
   ReachabilityQueryService,
   ReachabilityResult,
+  ReachabilityStartContext,
   ReachabilityStartRequest,
   ReachabilitySuggestion
 } from '../../core/reachability/reachability.service';
@@ -89,6 +90,13 @@ function leeresFormular(): FormState {
               <span> &middot; {{ data.cveKey }}</span>
             }
           </p>
+
+          @if (kontext()?.rationale; as r) {
+            <div class="banner banner-info" role="status" data-testid="reachability-context-hint">
+              <cvm-icon name="info" [size]="16"></cvm-icon>
+              <span class="text-sm">{{ r }}</span>
+            </div>
+          }
 
           <label class="form-group">
             <span class="form-label form-label--required">Repository-URL</span>
@@ -253,6 +261,8 @@ export class ReachabilityStartDialogComponent implements OnInit, OnChanges {
   readonly laeuft = signal(false);
   readonly fehler = signal<string | null>(null);
   readonly vorschlag = signal<ReachabilitySuggestion | null>(null);
+  // Iteration 97 (CVM-339): Kontext-Vorbelegung (Repo + Commit).
+  readonly kontext = signal<ReachabilityStartContext | null>(null);
 
   ngOnInit(): void {
     this.ladeGespeichert();
@@ -263,10 +273,33 @@ export class ReachabilityStartDialogComponent implements OnInit, OnChanges {
       // Bei jedem Oeffnen: Zustand zuruecksetzen und Vorschlag laden.
       this.fehler.set(null);
       this.vorschlag.set(null);
+      this.kontext.set(null);
       this.ladeGespeichert();
       if (this.data) {
         void this.ladeVorschlag();
+        void this.ladeKontext();
       }
+    }
+  }
+
+  /**
+   * Iteration 97 (CVM-339): Holt Repo-URL und Commit-SHA aus
+   * Produkt/Produkt-Version und befuellt die leeren Felder vor.
+   * Bestehende Nutzereingaben werden nicht ueberschrieben.
+   */
+  private async ladeKontext(): Promise<void> {
+    if (!this.data) return;
+    try {
+      const k = await this.service.context(this.data.findingId);
+      this.kontext.set(k);
+      this.formular.update((f) => ({
+        ...f,
+        repoUrl: f.repoUrl || k.repoUrl || '',
+        commitSha: f.commitSha || k.commitSha || ''
+      }));
+    } catch {
+      // Context-Endpoint optional - leise ignorieren, User kann
+      // die Felder manuell befuellen.
     }
   }
 

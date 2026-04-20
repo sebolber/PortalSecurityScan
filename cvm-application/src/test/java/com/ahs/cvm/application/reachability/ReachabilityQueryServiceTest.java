@@ -15,8 +15,11 @@ import com.ahs.cvm.persistence.ai.AiSuggestion;
 import com.ahs.cvm.persistence.ai.AiSuggestionRepository;
 import com.ahs.cvm.persistence.finding.Finding;
 import com.ahs.cvm.persistence.finding.FindingRepository;
+import com.ahs.cvm.persistence.product.Product;
+import com.ahs.cvm.persistence.product.ProductVersion;
 import com.ahs.cvm.persistence.scan.Component;
 import com.ahs.cvm.persistence.scan.ComponentOccurrence;
+import com.ahs.cvm.persistence.scan.Scan;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -105,6 +108,54 @@ class ReachabilityQueryServiceTest {
         given(findingRepo.findById(id)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.suggestionForFinding(id))
+                .isInstanceOf(ReachabilityQueryService.FindingNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("contextForFinding: liefert repoUrl und commitSha aus Produkt und Produkt-Version")
+    void contextHappyPath() {
+        UUID id = UUID.randomUUID();
+        Product product = Product.builder()
+                .repoUrl("https://git.example/portalcore.git").build();
+        ProductVersion version = ProductVersion.builder()
+                .product(product).gitCommit("a3f9beef").build();
+        Scan scan = Scan.builder().productVersion(version).build();
+        Finding finding = Finding.builder().id(id).scan(scan).build();
+        given(findingRepo.findById(id)).willReturn(Optional.of(finding));
+
+        ReachabilityStartContextView view = service.contextForFinding(id);
+
+        assertThat(view.findingId()).isEqualTo(id);
+        assertThat(view.repoUrl()).isEqualTo("https://git.example/portalcore.git");
+        assertThat(view.commitSha()).isEqualTo("a3f9beef");
+        assertThat(view.rationale()).containsIgnoringCase("vorbelegt");
+    }
+
+    @Test
+    @DisplayName("contextForFinding: fehlende Repo-URL liefert null + Hinweis")
+    void contextFehlendeRepoUrl() {
+        UUID id = UUID.randomUUID();
+        Product product = Product.builder().repoUrl(null).build();
+        ProductVersion version = ProductVersion.builder()
+                .product(product).gitCommit("a3f9beef").build();
+        Scan scan = Scan.builder().productVersion(version).build();
+        Finding finding = Finding.builder().id(id).scan(scan).build();
+        given(findingRepo.findById(id)).willReturn(Optional.of(finding));
+
+        ReachabilityStartContextView view = service.contextForFinding(id);
+
+        assertThat(view.repoUrl()).isNull();
+        assertThat(view.commitSha()).isEqualTo("a3f9beef");
+        assertThat(view.rationale()).containsIgnoringCase("repo-url");
+    }
+
+    @Test
+    @DisplayName("contextForFinding: Finding existiert nicht -> FindingNotFoundException")
+    void contextFindingFehlt() {
+        UUID id = UUID.randomUUID();
+        given(findingRepo.findById(id)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.contextForFinding(id))
                 .isInstanceOf(ReachabilityQueryService.FindingNotFoundException.class);
     }
 

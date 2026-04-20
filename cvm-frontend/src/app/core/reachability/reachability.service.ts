@@ -55,6 +55,14 @@ export interface ReachabilitySuggestion {
   readonly rationale: string | null;
 }
 
+/** Iteration 97 (CVM-339): Vorbelegung fuer den Start-Dialog. */
+export interface ReachabilityStartContext {
+  readonly findingId: string;
+  readonly repoUrl: string | null;
+  readonly commitSha: string | null;
+  readonly rationale: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReachabilityQueryService {
   private readonly api = inject(ApiClient);
@@ -93,6 +101,19 @@ export class ReachabilityQueryService {
     return firstValueFrom(
       this.api.get<ReachabilitySuggestion>(
         `/api/v1/findings/${encodeURIComponent(findingId)}/reachability/suggestion`
+      )
+    );
+  }
+
+  /**
+   * Iteration 97 (CVM-339): Holt Repo-URL und Commit-SHA aus Produkt
+   * und Produkt-Version. Felder koennen null sein, wenn am Produkt
+   * nichts hinterlegt ist.
+   */
+  context(findingId: string): Promise<ReachabilityStartContext> {
+    return firstValueFrom(
+      this.api.get<ReachabilityStartContext>(
+        `/api/v1/findings/${encodeURIComponent(findingId)}/reachability/context`
       )
     );
   }

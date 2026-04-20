@@ -3,8 +3,11 @@ package com.ahs.cvm.application.reachability;
 import com.ahs.cvm.persistence.ai.AiSuggestionRepository;
 import com.ahs.cvm.persistence.finding.Finding;
 import com.ahs.cvm.persistence.finding.FindingRepository;
+import com.ahs.cvm.persistence.product.Product;
+import com.ahs.cvm.persistence.product.ProductVersion;
 import com.ahs.cvm.persistence.scan.Component;
 import com.ahs.cvm.persistence.scan.ComponentOccurrence;
+import com.ahs.cvm.persistence.scan.Scan;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,6 +77,49 @@ public class ReachabilityQueryService {
                 derived.map(PurlSymbolDeriver.Suggestion::language).orElse(null),
                 derived.map(PurlSymbolDeriver.Suggestion::rationale)
                         .orElse("PURL unbekannt oder nicht parsebar - bitte Symbol manuell eingeben."));
+    }
+
+    /**
+     * Iteration 97 (CVM-339): Liefert Repo-URL und Commit-SHA aus
+     * {@code Product}/{@code ProductVersion} fuer das Finding,
+     * damit der Start-Dialog die Pflichtfelder vorbelegen kann.
+     */
+    @Transactional(readOnly = true)
+    public ReachabilityStartContextView contextForFinding(UUID findingId) {
+        Finding finding = findingRepository.findById(findingId)
+                .orElseThrow(() -> new FindingNotFoundException(findingId));
+        ProductVersion version = Optional.ofNullable(finding.getScan())
+                .map(Scan::getProductVersion)
+                .orElse(null);
+        Product product = version == null ? null : version.getProduct();
+        String repoUrl = product == null ? null : product.getRepoUrl();
+        String commitSha = version == null ? null : version.getGitCommit();
+        String rationale = rationalFor(repoUrl, commitSha);
+        return new ReachabilityStartContextView(
+                findingId,
+                blankToNull(repoUrl),
+                blankToNull(commitSha),
+                rationale);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private static String rationalFor(String repoUrl, String commitSha) {
+        boolean repoFehlt = repoUrl == null || repoUrl.isBlank();
+        boolean commitFehlt = commitSha == null || commitSha.isBlank();
+        if (repoFehlt && commitFehlt) {
+            return "Produkt hat keine Repo-URL und keinen Commit-SHA "
+                    + "- bitte beide manuell eintragen.";
+        }
+        if (repoFehlt) {
+            return "Produkt hat keine Repo-URL - bitte manuell eintragen.";
+        }
+        if (commitFehlt) {
+            return "Produkt-Version hat keinen Git-Commit - bitte manuell eintragen.";
+        }
+        return "Vorbelegt aus Produkt und Produkt-Version.";
     }
 
     /** 404-Marker fuer den ExceptionHandler. */
