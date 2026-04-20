@@ -24,20 +24,20 @@ public class AssessmentQueueService {
         this.assessmentRepository = assessmentRepository;
     }
 
+    /**
+     * Iteration 99 (CVM-341): Queue-Liste. {@code status=null} liefert
+     * alle aktuellen Assessments (ALLE-Chip im UI), sonst genau den
+     * angegebenen Status. Superseded-Versionen bleiben raus.
+     */
     @Transactional(readOnly = true)
     public List<FindingQueueView> findeOffene(QueueFilter filter) {
-        if (filter.status() != null
-                && filter.status() != AssessmentStatus.PROPOSED
-                && filter.status() != AssessmentStatus.NEEDS_REVIEW) {
-            return List.of();
-        }
         return assessmentRepository
-                .findeOffeneQueue(
+                .findeQueueNachStatus(
+                        filter.status(),
                         filter.environmentId(),
                         filter.productVersionId(),
                         filter.source())
                 .stream()
-                .filter(a -> filter.status() == null || a.getStatus() == filter.status())
                 .map(FindingQueueView::from)
                 .toList();
     }

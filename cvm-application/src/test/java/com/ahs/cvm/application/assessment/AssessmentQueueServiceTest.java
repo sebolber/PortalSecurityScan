@@ -3,8 +3,10 @@ package com.ahs.cvm.application.assessment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import com.ahs.cvm.domain.enums.AhsSeverity;
 import com.ahs.cvm.domain.enums.AssessmentStatus;
@@ -29,7 +31,7 @@ class AssessmentQueueServiceTest {
     @DisplayName("findeOffene filtert nach environmentId und liefert View-Liste")
     void filterNachEnv() {
         UUID envId = UUID.randomUUID();
-        given(repository.findeOffeneQueue(eq(envId), any(), any()))
+        given(repository.findeQueueNachStatus(isNull(), eq(envId), any(), any()))
                 .willReturn(List.of(
                         eintrag(AhsSeverity.HIGH, AssessmentStatus.PROPOSED),
                         eintrag(AhsSeverity.LOW, AssessmentStatus.NEEDS_REVIEW)));
@@ -43,12 +45,10 @@ class AssessmentQueueServiceTest {
     }
 
     @Test
-    @DisplayName("findeOffene mit Status-Filter PROPOSED blendet NEEDS_REVIEW aus")
+    @DisplayName("findeOffene mit Status-Filter PROPOSED leitet den Status ans Repository durch")
     void statusFilter() {
-        given(repository.findeOffeneQueue(any(), any(), any()))
-                .willReturn(List.of(
-                        eintrag(AhsSeverity.HIGH, AssessmentStatus.PROPOSED),
-                        eintrag(AhsSeverity.LOW, AssessmentStatus.NEEDS_REVIEW)));
+        given(repository.findeQueueNachStatus(eq(AssessmentStatus.PROPOSED), any(), any(), any()))
+                .willReturn(List.of(eintrag(AhsSeverity.HIGH, AssessmentStatus.PROPOSED)));
 
         List<FindingQueueView> offen = service.findeOffene(
                 new AssessmentQueueService.QueueFilter(
@@ -56,15 +56,43 @@ class AssessmentQueueServiceTest {
 
         assertThat(offen).hasSize(1);
         assertThat(offen.get(0).status()).isEqualTo(AssessmentStatus.PROPOSED);
+        verify(repository).findeQueueNachStatus(
+                eq(AssessmentStatus.PROPOSED), any(), any(), any());
     }
 
     @Test
-    @DisplayName("findeOffene liefert leere Liste fuer Status ausserhalb PROPOSED/NEEDS_REVIEW")
-    void unzulaessigerStatus() {
-        assertThat(service.findeOffene(
+    @DisplayName("Iteration 99: Status=APPROVED liefert die vom Repository zurueckgegebenen Zeilen")
+    void approvedFilter() {
+        given(repository.findeQueueNachStatus(
+                eq(AssessmentStatus.APPROVED), any(), any(), any()))
+                .willReturn(List.of(eintrag(AhsSeverity.HIGH, AssessmentStatus.APPROVED)));
+
+        List<FindingQueueView> offen = service.findeOffene(
                 new AssessmentQueueService.QueueFilter(
-                        AssessmentStatus.APPROVED, null, null, null)))
-                .isEmpty();
+                        AssessmentStatus.APPROVED, null, null, null));
+
+        assertThat(offen).hasSize(1);
+        assertThat(offen.get(0).status()).isEqualTo(AssessmentStatus.APPROVED);
+    }
+
+    @Test
+    @DisplayName("Iteration 99: Status=null liefert alles aus dem Repository (ALLE-Chip)")
+    void statusNullReichtDurch() {
+        given(repository.findeQueueNachStatus(isNull(), any(), any(), any()))
+                .willReturn(List.of(
+                        eintrag(AhsSeverity.HIGH, AssessmentStatus.PROPOSED),
+                        eintrag(AhsSeverity.MEDIUM, AssessmentStatus.APPROVED),
+                        eintrag(AhsSeverity.LOW, AssessmentStatus.REJECTED)));
+
+        List<FindingQueueView> offen = service.findeOffene(
+                new AssessmentQueueService.QueueFilter(null, null, null, null));
+
+        assertThat(offen).hasSize(3);
+        assertThat(offen).extracting(FindingQueueView::status)
+                .containsExactly(
+                        AssessmentStatus.PROPOSED,
+                        AssessmentStatus.APPROVED,
+                        AssessmentStatus.REJECTED);
     }
 
     private Assessment eintrag(AhsSeverity severity, AssessmentStatus status) {

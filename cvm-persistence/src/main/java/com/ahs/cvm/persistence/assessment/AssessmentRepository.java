@@ -84,6 +84,26 @@ public interface AssessmentRepository extends JpaRepository<Assessment, UUID> {
             @Param("source") ProposalSource source);
 
     /**
+     * Iteration 99 (CVM-341): Queue-Query mit optionalem Status. Bei
+     * {@code status=null} werden alle aktuellen Assessments (nicht
+     * superseded) unabhaengig vom Status geliefert, damit das UI
+     * "ALLE" inklusive APPROVED/REJECTED/EXPIRED anzeigen kann.
+     */
+    @Query("SELECT a FROM Assessment a "
+            + "WHERE a.supersededAt IS NULL "
+            + "  AND a.status <> com.ahs.cvm.domain.enums.AssessmentStatus.SUPERSEDED "
+            + "  AND (:status IS NULL OR a.status = :status) "
+            + "  AND (:environmentId IS NULL OR a.environment.id = :environmentId) "
+            + "  AND (:productVersionId IS NULL OR a.productVersion.id = :productVersionId) "
+            + "  AND (:source IS NULL OR a.proposalSource = :source) "
+            + "ORDER BY a.severity ASC, a.createdAt ASC")
+    List<Assessment> findeQueueNachStatus(
+            @Param("status") AssessmentStatus status,
+            @Param("environmentId") UUID environmentId,
+            @Param("productVersionId") UUID productVersionId,
+            @Param("source") ProposalSource source);
+
+    /**
      * Findet APPROVED-Assessments, deren {@code validUntil} vor
      * {@code grenze} liegt und die noch nicht {@code supersededAt} sind.
      * Basis fuer den Expiry-Scheduler.
