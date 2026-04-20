@@ -4,6 +4,10 @@ import { DashboardComponent } from './dashboard.component';
 import { AlertBannerService } from '../../core/alerts/alert-banner.service';
 import { AuthService } from '../../core/auth/auth.service';
 import {
+  DashboardKpiService,
+  DashboardKpiView
+} from '../../core/dashboard/dashboard-kpi.service';
+import {
   ReportListResponse,
   ReportsService
 } from '../../core/reports/reports.service';
@@ -44,6 +48,23 @@ class FakeReports {
   list = jasmine.createSpy('list').and.callFake(() => of(this.listResponse));
 }
 
+class FakeKpi {
+  response: DashboardKpiView = {
+    offeneCves: 0,
+    severityVerteilung: {
+      CRITICAL: 0,
+      HIGH: 0,
+      MEDIUM: 0,
+      LOW: 0,
+      INFORMATIONAL: 0,
+      NOT_APPLICABLE: 0
+    },
+    aeltesteKritisch: null,
+    weiterbetriebOk: true
+  };
+  load = jasmine.createSpy('load').and.callFake(() => Promise.resolve(this.response));
+}
+
 function configure(): void {
   TestBed.configureTestingModule({
     imports: [DashboardComponent],
@@ -52,6 +73,7 @@ function configure(): void {
       { provide: AuthService, useClass: FakeAuth },
       { provide: AlertBannerService, useClass: FakeAlertBanner },
       { provide: ReportsService, useClass: FakeReports },
+      { provide: DashboardKpiService, useClass: FakeKpi },
       LocaleService,
       ChartThemeService
     ]
@@ -179,5 +201,59 @@ describe('DashboardComponent - Iteration 94 Handlungszentrale', () => {
     const el: HTMLElement = fixture.nativeElement;
     expect(el.querySelector('[data-testid="dashboard-reports-error"]'))
       .not.toBeNull();
+  });
+});
+
+describe('DashboardComponent - Iteration 100 KPI-Endpoint', () => {
+  beforeEach(() => configure());
+
+  it('laedt die KPIs beim Init und rendert offeneCves', async () => {
+    const auth = TestBed.inject(AuthService) as unknown as FakeAuth;
+    auth.setRoles(['CVM_VIEWER']);
+    const kpi = TestBed.inject(DashboardKpiService) as unknown as FakeKpi;
+    kpi.response = {
+      offeneCves: 42,
+      severityVerteilung: {
+        CRITICAL: 7,
+        HIGH: 12,
+        MEDIUM: 18,
+        LOW: 5,
+        INFORMATIONAL: 0,
+        NOT_APPLICABLE: 0
+      },
+      aeltesteKritisch: { cveKey: 'CVE-2017-18640', tage: 33 },
+      weiterbetriebOk: false
+    };
+
+    const fixture = TestBed.createComponent(DashboardComponent);
+    await fixture.componentInstance.ngOnInit();
+    fixture.detectChanges();
+
+    expect(kpi.load).toHaveBeenCalled();
+    expect(fixture.componentInstance.offene()).toBe(42);
+    expect(fixture.componentInstance.weiterbetriebOk()).toBeFalse();
+    expect(fixture.componentInstance.aeltesteCritical())
+      .toContain('CVE-2017-18640');
+    expect(fixture.componentInstance.aeltesteCritical()).toContain('33');
+  });
+
+  it('KPI-Laden-Fehler setzt das Fehler-Signal und fallbacked auf 0', async () => {
+    const auth = TestBed.inject(AuthService) as unknown as FakeAuth;
+    auth.setRoles(['CVM_VIEWER']);
+    const kpi = TestBed.inject(DashboardKpiService) as unknown as FakeKpi;
+    kpi.load.and.callFake(() => Promise.reject(new Error('boom')));
+
+    const fixture = TestBed.createComponent(DashboardComponent);
+    await fixture.componentInstance.ngOnInit();
+
+    expect(fixture.componentInstance.kpiFehler()).toBeTrue();
+    expect(fixture.componentInstance.offene()).toBe(0);
+    expect(fixture.componentInstance.weiterbetriebOk()).toBeTrue();
+  });
+
+  it('aeltesteCritical rendert "-", wenn kein CRITICAL offen ist', () => {
+    const fixture = TestBed.createComponent(DashboardComponent);
+    fixture.detectChanges();
+    expect(fixture.componentInstance.aeltesteCritical()).toBe('-');
   });
 });

@@ -12,6 +12,10 @@ import {
 import { AlertBannerService } from '../../core/alerts/alert-banner.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { CVM_ROLES } from '../../core/auth/cvm-roles';
+import {
+  DashboardKpiService,
+  DashboardKpiView
+} from '../../core/dashboard/dashboard-kpi.service';
 import { LocaleService } from '../../core/i18n/locale.service';
 import {
   ReportResponse,
@@ -61,6 +65,7 @@ export class DashboardComponent implements OnInit {
   private readonly reports = inject(ReportsService);
   private readonly alerts = inject(AlertBannerService);
   private readonly onboarding = inject(OnboardingService);
+  private readonly kpiService = inject(DashboardKpiService);
 
   readonly texte = this.locale.messages.dashboard;
 
@@ -88,17 +93,28 @@ export class DashboardComponent implements OnInit {
       this.auth.hasRole(CVM_ROLES.APPROVER)
   );
 
-  readonly offene = 0;
+  // Iteration 100 (CVM-342): echte KPIs aus dem Backend.
+  readonly kpi = signal<DashboardKpiView | null>(null);
+  readonly kpiFehler = signal<boolean>(false);
 
-  readonly severityVerteilung: readonly SeverityCount[] = [
-    { severity: 'CRITICAL', anzahl: 0 },
-    { severity: 'HIGH', anzahl: 0 },
-    { severity: 'MEDIUM', anzahl: 0 },
-    { severity: 'LOW', anzahl: 0 }
-  ];
+  readonly offene = computed<number>(() => this.kpi()?.offeneCves ?? 0);
 
-  readonly aeltesteCritical = '–';
-  readonly weiterbetriebOk = true;
+  readonly severityVerteilung = computed<readonly SeverityCount[]>(() => {
+    const v = this.kpi()?.severityVerteilung;
+    const sev: Severity[] = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'];
+    return sev.map((s) => ({ severity: s, anzahl: v ? (v[s] ?? 0) : 0 }));
+  });
+
+  readonly aeltesteCritical = computed<string>(() => {
+    const k = this.kpi()?.aeltesteKritisch;
+    if (!k) return '-';
+    const tageWort = k.tage === 1 ? 'Tag' : 'Tage';
+    return `${k.cveKey} (${k.tage} ${tageWort})`;
+  });
+
+  readonly weiterbetriebOk = computed<boolean>(
+    () => this.kpi()?.weiterbetriebOk ?? true
+  );
 
   // Iteration 94 (CVM-334): Dashboard als Handlungszentrale -
   // letzte 5 Reports und aktuelle T2-Eskalations-Anzahl.
@@ -122,8 +138,19 @@ export class DashboardComponent implements OnInit {
   );
 
   async ngOnInit(): Promise<void> {
+    await this.ladeKpi();
     if (this.darfReports()) {
       await this.ladeLetzteReports();
+    }
+  }
+
+  async ladeKpi(): Promise<void> {
+    this.kpiFehler.set(false);
+    try {
+      this.kpi.set(await this.kpiService.load());
+    } catch {
+      this.kpi.set(null);
+      this.kpiFehler.set(true);
     }
   }
 
@@ -157,7 +184,7 @@ export class DashboardComponent implements OnInit {
             borderWidth: 2
           },
           label: { show: false },
-          data: this.severityVerteilung.map((e) => ({
+          data: this.severityVerteilung().map((e) => ({
             name: e.severity,
             value: e.anzahl,
             itemStyle: { color: colors[e.severity] }

@@ -96,7 +96,7 @@
       </header>
       <div class="card-body">
         <div class="flex items-baseline gap-2">
-          <span class="text-4xl font-bold">{{ offene }}</span>
+          <span class="text-4xl font-bold">{{ offene() }}</span>
           <span class="text-sm text-text-muted">CVEs</span>
         </div>
       </div>
@@ -127,7 +127,7 @@
       <div class="card-body">
         <div class="flex items-center gap-3">
           <ahs-severity-badge severity="CRITICAL"></ahs-severity-badge>
-          <span class="text-lg">{{ aeltesteCritical }}</span>
+          <span class="text-lg">{{ aeltesteCritical() }}</span>
         </div>
       </div>
     </section>
@@ -139,7 +139,7 @@
         </div>
       </header>
       <div class="card-body">
-        @if (weiterbetriebOk) {
+        @if (weiterbetriebOk()) {
           <div class="flex items-center gap-3">
             <ahs-severity-badge severity="LOW"></ahs-severity-badge>
             <span>{{ texte.operationStatusOk }}</span>
