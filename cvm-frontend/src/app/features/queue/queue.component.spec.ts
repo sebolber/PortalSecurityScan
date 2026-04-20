@@ -10,11 +10,21 @@ import { QueueComponent } from './queue.component';
 import { QueueApiService } from './queue-api.service';
 import { QueueStore } from './queue-store';
 import { AuthService } from '../../core/auth/auth.service';
+import { EnvironmentsService } from '../../core/environments/environments.service';
+import { ProductsService } from '../../core/products/products.service';
 
 class FakeApi {
   list = jasmine.createSpy('list').and.returnValue(of([]));
   approve = jasmine.createSpy('approve').and.returnValue(of({}));
   reject = jasmine.createSpy('reject').and.returnValue(of({}));
+}
+
+class FakeProducts {
+  list = () => Promise.resolve([]);
+  versions = () => Promise.resolve([]);
+}
+class FakeEnvs {
+  list = () => Promise.resolve([]);
 }
 
 class FakeAuth {
@@ -50,6 +60,8 @@ describe('QueueComponent', () => {
         QueueStore,
         { provide: QueueApiService, useClass: FakeApi },
         { provide: AuthService, useClass: FakeAuth },
+        { provide: ProductsService, useClass: FakeProducts },
+        { provide: EnvironmentsService, useClass: FakeEnvs },
         { provide: ActivatedRoute, useValue: fakeRoute }
       ]
     });

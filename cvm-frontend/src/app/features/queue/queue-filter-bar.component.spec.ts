@@ -1,6 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { QueueFilterBarComponent } from './queue-filter-bar.component';
 import { QueueStore } from './queue-store';
+import { EnvironmentsService } from '../../core/environments/environments.service';
+import { ProductsService } from '../../core/products/products.service';
+
+class FakeProducts {
+  list = () => Promise.resolve([]);
+  versions = () => Promise.resolve([]);
+}
+class FakeEnvs {
+  list = () => Promise.resolve([]);
+}
 
 /**
  * Iteration 47: der Filter liegt jetzt als Balken **oberhalb** der Tabelle
@@ -20,7 +30,11 @@ describe('QueueFilterBarComponent', () => {
 
     TestBed.configureTestingModule({
       imports: [QueueFilterBarComponent],
-      providers: [{ provide: QueueStore, useValue: store }]
+      providers: [
+        { provide: QueueStore, useValue: store },
+        { provide: ProductsService, useClass: FakeProducts },
+        { provide: EnvironmentsService, useClass: FakeEnvs }
+      ]
     });
   });
 
@@ -78,5 +92,36 @@ describe('QueueFilterBarComponent', () => {
     ) as HTMLButtonElement;
     btn.click();
     expect(store.setFilter).toHaveBeenCalledWith({ status: undefined });
+  });
+
+  it('Iteration 98: uebernehmeProduktVersion setzt Store-Filter und Label', () => {
+    const fixture = TestBed.createComponent(QueueFilterBarComponent);
+    fixture.componentInstance.pvPickerOffen.set(true);
+    fixture.componentInstance.uebernehmeProduktVersion({
+      versionId: 'abc-123',
+      label: 'PortalCore-Test 1.14.2'
+    });
+    expect(store.setFilter).toHaveBeenCalledWith({ productVersionId: 'abc-123' });
+    expect(fixture.componentInstance.pvLabel()).toBe('PortalCore-Test 1.14.2');
+    expect(fixture.componentInstance.pvPickerOffen()).toBeFalse();
+  });
+
+  it('Iteration 98: uebernehmeUmgebung setzt Store-Filter und Label', () => {
+    const fixture = TestBed.createComponent(QueueFilterBarComponent);
+    fixture.componentInstance.envPickerOffen.set(true);
+    fixture.componentInstance.uebernehmeUmgebung({
+      environmentId: 'env-1',
+      label: 'Referenz Test (REF)'
+    });
+    expect(store.setFilter).toHaveBeenCalledWith({ environmentId: 'env-1' });
+    expect(fixture.componentInstance.envLabel()).toBe('Referenz Test (REF)');
+    expect(fixture.componentInstance.envPickerOffen()).toBeFalse();
+  });
+
+  it('Iteration 98: manuelles Editieren der UUID verwirft das Label', () => {
+    const fixture = TestBed.createComponent(QueueFilterBarComponent);
+    fixture.componentInstance.pvLabel.set('alt');
+    fixture.componentInstance.auf('productVersionId', 'neu');
+    expect(fixture.componentInstance.pvLabel()).toBeNull();
   });
 });

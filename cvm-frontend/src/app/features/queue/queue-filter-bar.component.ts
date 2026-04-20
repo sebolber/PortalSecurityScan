@@ -1,7 +1,9 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CvmIconComponent } from '../../shared/components/cvm-icon.component';
+import { EnvironmentPickerComponent } from './environment-picker.component';
+import { ProductVersionPickerComponent } from './product-version-picker.component';
 import { QueueStore } from './queue-store';
 import {
   AssessmentStatus,
@@ -39,32 +41,90 @@ const STATUS_CHIPS: readonly StatusChip[] = [
 @Component({
   selector: 'cvm-queue-filter-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, CvmIconComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    CvmIconComponent,
+    EnvironmentPickerComponent,
+    ProductVersionPickerComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="card p-4" aria-label="Filter">
       <div class="filter-bar">
-        <label class="form-group grow min-w-[14rem]">
-          <span class="form-label">Produktversion (UUID)</span>
-          <input
-            class="input-field"
-            type="text"
-            [ngModel]="store.filter().productVersionId ?? ''"
-            (ngModelChange)="auf('productVersionId', $event)"
-            placeholder="z.B. 11111111-1111-..."
-          />
-        </label>
+        <div class="form-group grow min-w-[18rem]">
+          <span class="form-label">Produktversion</span>
+          <div class="flex items-stretch gap-1">
+            <input
+              class="input-field grow"
+              type="text"
+              [ngModel]="store.filter().productVersionId ?? ''"
+              (ngModelChange)="auf('productVersionId', $event)"
+              placeholder="UUID oder ueber Suche waehlen"
+            />
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-testid="queue-product-version-picker-open"
+              [attr.aria-label]="'Produkt-Version suchen'"
+              title="Produkt-Version suchen"
+              (click)="pvPickerOffen.set(true)"
+            >
+              <cvm-icon name="search" [size]="16"></cvm-icon>
+            </button>
+          </div>
+          @if (pvLabel()) {
+            <span class="text-caption" data-testid="queue-product-version-label">
+              {{ pvLabel() }}
+              <button
+                type="button"
+                class="btn-icon"
+                (click)="pvLabel.set(null); auf('productVersionId', '')"
+                [attr.aria-label]="'Produkt-Version-Filter entfernen'"
+                title="Entfernen"
+              >
+                <cvm-icon name="close" [size]="14"></cvm-icon>
+              </button>
+            </span>
+          }
+        </div>
 
-        <label class="form-group grow min-w-[14rem]">
-          <span class="form-label">Umgebung (UUID)</span>
-          <input
-            class="input-field"
-            type="text"
-            [ngModel]="store.filter().environmentId ?? ''"
-            (ngModelChange)="auf('environmentId', $event)"
-            placeholder="z.B. 22222222-2222-..."
-          />
-        </label>
+        <div class="form-group grow min-w-[18rem]">
+          <span class="form-label">Umgebung</span>
+          <div class="flex items-stretch gap-1">
+            <input
+              class="input-field grow"
+              type="text"
+              [ngModel]="store.filter().environmentId ?? ''"
+              (ngModelChange)="auf('environmentId', $event)"
+              placeholder="UUID oder ueber Suche waehlen"
+            />
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-testid="queue-environment-picker-open"
+              [attr.aria-label]="'Umgebung suchen'"
+              title="Umgebung suchen"
+              (click)="envPickerOffen.set(true)"
+            >
+              <cvm-icon name="search" [size]="16"></cvm-icon>
+            </button>
+          </div>
+          @if (envLabel()) {
+            <span class="text-caption" data-testid="queue-environment-label">
+              {{ envLabel() }}
+              <button
+                type="button"
+                class="btn-icon"
+                (click)="envLabel.set(null); auf('environmentId', '')"
+                [attr.aria-label]="'Umgebungs-Filter entfernen'"
+                title="Entfernen"
+              >
+                <cvm-icon name="close" [size]="14"></cvm-icon>
+              </button>
+            </span>
+          }
+        </div>
 
         <div class="form-group">
           <span class="form-label">Status</span>
@@ -133,6 +193,18 @@ const STATUS_CHIPS: readonly StatusChip[] = [
         </div>
       </div>
     </section>
+
+    <cvm-product-version-picker
+      [visible]="pvPickerOffen()"
+      (close)="pvPickerOffen.set(false)"
+      (selected)="uebernehmeProduktVersion($event)"
+    ></cvm-product-version-picker>
+
+    <cvm-environment-picker
+      [visible]="envPickerOffen()"
+      (close)="envPickerOffen.set(false)"
+      (selected)="uebernehmeUmgebung($event)"
+    ></cvm-environment-picker>
   `
 })
 export class QueueFilterBarComponent {
@@ -140,12 +212,32 @@ export class QueueFilterBarComponent {
   readonly severities = SEVERITY_REIHENFOLGE;
   readonly statusChips = STATUS_CHIPS;
 
+  // Iteration 98 (CVM-340): Suchdialoge fuer Produkt-Version und Umgebung.
+  readonly pvPickerOffen = signal<boolean>(false);
+  readonly envPickerOffen = signal<boolean>(false);
+  readonly pvLabel = signal<string | null>(null);
+  readonly envLabel = signal<string | null>(null);
+
+  uebernehmeProduktVersion(ev: { versionId: string; label: string }): void {
+    this.store.setFilter({ productVersionId: ev.versionId });
+    this.pvLabel.set(ev.label);
+    this.pvPickerOffen.set(false);
+  }
+
+  uebernehmeUmgebung(ev: { environmentId: string; label: string }): void {
+    this.store.setFilter({ environmentId: ev.environmentId });
+    this.envLabel.set(ev.label);
+    this.envPickerOffen.set(false);
+  }
+
   auf(
     key: 'productVersionId' | 'environmentId',
     value: string
   ): void {
     const trimmed = value.trim();
     this.store.setFilter({ [key]: trimmed.length === 0 ? undefined : trimmed });
+    if (key === 'productVersionId') this.pvLabel.set(null);
+    if (key === 'environmentId') this.envLabel.set(null);
   }
 
   status(key: AssessmentStatus | null): void {
