@@ -151,18 +151,20 @@
           @if (row.editorOffen) {
             <div class="flex flex-col gap-3 p-4 border border-border rounded-md bg-surface-muted">
               <!--
-                Iteration 54 (CVM-104): Monaco YAML-Editor statt Textarea.
-                Syntax-Highlight, Auto-Indent, 2-Leerzeichen-Tabs.
+                Textarea-Editor: Monaco funktioniert in einigen Dev-
+                Umgebungen (Asset-Loader) nicht zuverlaessig; bis das
+                stabilisiert ist, bleibt es eine Plain-Textarea. Das
+                Schema wird serverseitig beim PUT validiert.
               -->
               <span class="form-label">YAML-Quelle</span>
-              <div class="cvm-profiles__monaco w-full h-[420px] border border-border rounded-md overflow-hidden bg-surface">
-                <ngx-monaco-editor
-                  [options]="{ language: 'yaml', theme: 'vs', automaticLayout: true, minimap: { enabled: false }, tabSize: 2 }"
-                  [ngModel]="row.editorYaml"
-                  [ngModelOptions]="{ standalone: true }"
-                  (ngModelChange)="editorInhalt(row, $event)"
-                ></ngx-monaco-editor>
-              </div>
+              <textarea
+                class="input-field font-mono text-sm w-full h-[420px] resize-y"
+                spellcheck="false"
+                data-testid="profile-yaml-textarea"
+                [ngModel]="row.editorYaml"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="editorInhalt(row, $event)"
+              ></textarea>
               <p class="text-caption">
                 Schema v1: schemaVersion, umgebung, architecture, network,
                 hardening, compliance.frameworks
