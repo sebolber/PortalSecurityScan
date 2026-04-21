@@ -164,9 +164,10 @@ export class ScanUploadComponent implements OnInit {
 
   async hochladen(): Promise<void> {
     const versionId = this.selectedVersionId();
+    const environmentId = this.selectedEnvironmentId();
     const file = this.selectedFile();
-    if (!versionId || !file) {
-      this.toast.warning('Bitte Version und Datei auswaehlen.');
+    if (!versionId || !environmentId || !file) {
+      this.toast.warning('Bitte Version, Umgebung und Datei auswaehlen.');
       return;
     }
     this.state.set('uploading');
@@ -224,6 +225,9 @@ export class ScanUploadComponent implements OnInit {
       }
       if (obj.status === 400 && obj.error?.error === 'sbom_parse_error') {
         return 'SBOM konnte nicht geparst werden (kein gueltiges JSON).';
+      }
+      if (obj.status === 400 && obj.error?.error === 'environment_required') {
+        return 'Umgebung ist Pflicht - bitte im Formular auswaehlen.';
       }
       if (obj.status === 413) {
         return 'Datei zu gross fuer den Server.';

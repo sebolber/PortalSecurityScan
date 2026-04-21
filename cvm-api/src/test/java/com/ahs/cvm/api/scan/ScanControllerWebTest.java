@@ -83,7 +83,8 @@ class ScanControllerWebTest {
 
         mockMvc.perform(multipart("/api/v1/scans")
                         .file(sbom)
-                        .param("productVersionId", PRODUKT_VERSION_ID.toString()))
+                        .param("productVersionId", PRODUKT_VERSION_ID.toString())
+                        .param("environmentId", UMGEBUNG_ID.toString()))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.existingScanId").value(bestehend.toString()));
     }
@@ -100,9 +101,24 @@ class ScanControllerWebTest {
 
         mockMvc.perform(multipart("/api/v1/scans")
                         .file(sbom)
-                        .param("productVersionId", PRODUKT_VERSION_ID.toString()))
+                        .param("productVersionId", PRODUKT_VERSION_ID.toString())
+                        .param("environmentId", UMGEBUNG_ID.toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("sbom_schema_error"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/scans: 400 environment_required wenn environmentId fehlt")
+    void uploadOhneEnvironment() throws Exception {
+        MockMultipartFile sbom = new MockMultipartFile(
+                "sbom", "klein.json", MediaType.APPLICATION_JSON_VALUE,
+                "{\"bomFormat\":\"CycloneDX\"}".getBytes());
+
+        mockMvc.perform(multipart("/api/v1/scans")
+                        .file(sbom)
+                        .param("productVersionId", PRODUKT_VERSION_ID.toString()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("environment_required"));
     }
 
     @Test
@@ -120,11 +136,12 @@ class ScanControllerWebTest {
     void uploadRawJson() throws Exception {
         UUID scanId = UUID.randomUUID();
         given(scanIngestService.uploadAkzeptieren(
-                        eq(PRODUKT_VERSION_ID), eq(null), eq("trivy"), any()))
+                        eq(PRODUKT_VERSION_ID), eq(UMGEBUNG_ID), eq("trivy"), any()))
                 .willReturn(new ScanUploadResponse(scanId, "/api/v1/scans/" + scanId));
 
         mockMvc.perform(post("/api/v1/scans")
                         .param("productVersionId", PRODUKT_VERSION_ID.toString())
+                        .param("environmentId", UMGEBUNG_ID.toString())
                         .param("scanner", "trivy")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"bomFormat\":\"CycloneDX\"}"))

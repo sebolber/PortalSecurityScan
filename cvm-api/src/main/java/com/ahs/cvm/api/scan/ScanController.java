@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 import java.util.UUID;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,15 +36,19 @@ public class ScanController {
     @Operation(summary = "CycloneDX-SBOM hochladen und Scan anstossen")
     @ApiResponses({
         @ApiResponse(responseCode = "202", description = "Upload akzeptiert, Verarbeitung laeuft asynchron"),
-        @ApiResponse(responseCode = "400", description = "Invalide SBOM (Parse- oder Schema-Fehler)"),
+        @ApiResponse(responseCode = "400", description = "Invalide SBOM (Parse- oder Schema-Fehler) oder fehlende Umgebung"),
         @ApiResponse(responseCode = "409", description = "Scan mit identischem Inhalt wurde bereits verarbeitet")
     })
-    public ResponseEntity<ScanUploadResponse> uploadMultipart(
+    public ResponseEntity<?> uploadMultipart(
             @RequestParam("productVersionId") UUID productVersionId,
             @RequestParam(value = "environmentId", required = false) UUID environmentId,
             @RequestParam(value = "scanner", defaultValue = "trivy") String scanner,
             @RequestParam("sbom") MultipartFile sbom)
             throws IOException {
+        ResponseEntity<Map<String, Object>> envFehler = pruefeEnvironment(environmentId);
+        if (envFehler != null) {
+            return envFehler;
+        }
         ScanUploadResponse response = scanIngestService.uploadAkzeptieren(
                 productVersionId, environmentId, scanner, sbom.getBytes());
         return ResponseEntity.accepted()
@@ -53,17 +59,38 @@ public class ScanController {
 
     @PostMapping(consumes = "application/json")
     @Operation(summary = "CycloneDX-SBOM als Raw-JSON hochladen")
-    public ResponseEntity<ScanUploadResponse> uploadRaw(
+    public ResponseEntity<?> uploadRaw(
             @RequestParam("productVersionId") UUID productVersionId,
             @RequestParam(value = "environmentId", required = false) UUID environmentId,
             @RequestParam(value = "scanner", defaultValue = "trivy") String scanner,
             @org.springframework.web.bind.annotation.RequestBody byte[] rawJson) {
+        ResponseEntity<Map<String, Object>> envFehler = pruefeEnvironment(environmentId);
+        if (envFehler != null) {
+            return envFehler;
+        }
         ScanUploadResponse response = scanIngestService.uploadAkzeptieren(
                 productVersionId, environmentId, scanner, rawJson);
         return ResponseEntity.accepted()
                 .header("Location", response.statusUri())
                 .location(URI.create(response.statusUri()))
                 .body(response);
+    }
+
+    /**
+     * Die Cascade ueberspringt Scans ohne environmentId still (Assessment.
+     * environment ist NOT NULL). Frueher fuehrte das zu einer leeren Queue
+     * trotz erfolgreichem Upload. Wir lehnen den Upload jetzt direkt mit
+     * 400 ab, damit der Client einen klaren Fehler sieht.
+     */
+    private ResponseEntity<Map<String, Object>> pruefeEnvironment(UUID environmentId) {
+        if (environmentId == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of(
+                            "error", "environment_required",
+                            "message", "Umgebung ist Pflicht: ohne environmentId"
+                                    + " waere die automatische Bewertung uebersprungen."));
+        }
+        return null;
     }
 
     @GetMapping("/{scanId}")

@@ -56,14 +56,14 @@
         </label>
 
         <label class="form-group grow min-w-[240px]">
-          <span class="form-label">Umgebung (optional)</span>
+          <span class="form-label">Umgebung</span>
           <select
             class="select-field"
             data-testid="scan-upload-environment"
             [ngModel]="selectedEnvironmentId()"
             (ngModelChange)="onEnvironmentChange($event)"
           >
-            <option [ngValue]="null">(keine)</option>
+            <option [ngValue]="null">(bitte waehlen)</option>
             @for (e of umgebungen(); track e.id) {
               <option [value]="e.id">{{ e.key }} ({{ e.stage }})</option>
             }
@@ -111,7 +111,8 @@
           class="btn btn-primary"
           data-testid="scan-upload-submit"
           [disabled]="state() === 'uploading' || state() === 'polling'
-                      || !selectedFile() || !selectedVersionId()"
+                      || !selectedFile() || !selectedVersionId()
+                      || !selectedEnvironmentId()"
           (click)="hochladen()"
         >
           @if (state() === 'uploading' || state() === 'polling') {
