@@ -24,6 +24,7 @@ class ProductRepositoryIntegrationsTest extends AbstractPersistenceIntegrationsT
     @DisplayName("Product: save setzt id und createdAt via @PrePersist")
     void produktSpeichernSetztTechnischeFelder() {
         Product portalcore = Product.builder()
+                .tenantId(DEFAULT_TENANT_ID)
                 .name("PortalCore-Test")
                 .key("portalcore-test")
                 .description("Referenz-Produkt")
@@ -39,11 +40,15 @@ class ProductRepositoryIntegrationsTest extends AbstractPersistenceIntegrationsT
     @Test
     @DisplayName("ProductVersion: findByProductIdAndVersion liefert eindeutigen Treffer")
     void produktVersionLookup() {
-        Product produkt = productRepository.save(
-                Product.builder().name("SmileKH-Test").key("smile-test").build());
+        Product produkt = productRepository.save(Product.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .name("SmileKH-Test")
+                .key("smile-test")
+                .build());
 
         ProductVersion version = productVersionRepository.save(
                 ProductVersion.builder()
+                        .tenantId(DEFAULT_TENANT_ID)
                         .product(produkt)
                         .version("1.14.2-test")
                         .gitCommit("a3f9beef")

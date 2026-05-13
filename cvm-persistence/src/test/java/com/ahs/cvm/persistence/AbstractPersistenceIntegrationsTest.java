@@ -1,6 +1,7 @@
 package com.ahs.cvm.persistence;
 
 import com.ahs.cvm.persistence.support.DockerAvailability;
+import java.util.UUID;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -16,6 +17,15 @@ import org.testcontainers.utility.DockerImageName;
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public abstract class AbstractPersistenceIntegrationsTest {
+
+    /**
+     * Default-Mandant, der von Flyway-Migration V0023 als
+     * {@code is_default = TRUE} angelegt wird. Persistenz-Tests haben
+     * keine Aspect-Infrastruktur, die tenant_id automatisch fuellt -
+     * Fixtures setzen die Mandanten-Zuordnung deshalb explizit hierueber.
+     */
+    protected static final UUID DEFAULT_TENANT_ID =
+            UUID.fromString("00000000-0000-0000-0000-000000000001");
 
     @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
