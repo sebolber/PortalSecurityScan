@@ -1,0 +1,314 @@
+# ---------------------------------------------------------------------------
+# CI - Build, Test, Sonar-Scan, Sonar-Snapshot, Playwright-E2E
+#
+# Triggers:
+#   - push nach main         -> volle Pipeline + Sonar + Snapshot-Issue
+#   - pull_request           -> Build, Tests, E2E (kein Sonar-Snapshot)
+#   - workflow_dispatch      -> manueller Rerun
+#
+# Sonar-Snapshot-Issue (Label: sonar-snapshot) wird nach jedem main-Push
+# aktualisiert, damit offene Sonar-Findings ueber GitHub abrufbar sind.
+# Schema und Update-Logik in scripts/fetch-sonar-issues.sh.
+# ---------------------------------------------------------------------------
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  NODE_VERSION: '22'
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Backend: Build, Tests (mit JaCoCo), Sonar-Scan + Snapshot-Issue auf main.
+  # -------------------------------------------------------------------------
+  backend:
+    name: Backend (Build + Test + Sonar)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Sonar braucht die volle Historie fuer "new code" Berechnung.
+          fetch-depth: 0
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
+      - name: Maven Verify (Build + Tests + JaCoCo)
+        run: ./mvnw -B -T 1C -ntp verify
+
+      - name: Upload Backend-JAR (fuer E2E)
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-jar
+          path: cvm-app/target/cvm-app-*.jar
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: SonarCloud-Scan
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.SONAR_TOKEN != ''
+        run: |
+          ./mvnw -B -ntp -DskipTests \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:5.0.0.4389:sonar \
+            -Dsonar.projectBaseDir="$GITHUB_WORKSPACE" \
+            -Dsonar.token="$SONAR_TOKEN"
+
+      - name: Sonar-Snapshot in GitHub-Issue schreiben
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.SONAR_TOKEN != ''
+        env:
+          SONAR_PROJECT_KEY: sebolber_PortalSecurityScan
+          SONAR_ORGANIZATION: sebolber
+          SONAR_HOST_URL: https://sonarcloud.io
+          # Warte bis SonarCloud den frischen Scan verarbeitet hat, sonst
+          # zeigt der Snapshot Issues vom vorherigen Lauf.
+          WAIT_FOR_SCAN: '1'
+        run: |
+          set -euo pipefail
+          gh label create sonar-snapshot \
+            --description "Auto-managed: offene Sonar-Findings (siehe scripts/fetch-sonar-issues.sh)" \
+            --color 0075ca --force || true
+
+          body_file=$(mktemp)
+          bash scripts/fetch-sonar-issues.sh > "$body_file"
+
+          issue_number=$(gh issue list --label sonar-snapshot --state open \
+                          --json number --jq '.[0].number // empty')
+          if [ -n "$issue_number" ]; then
+            echo "Aktualisiere Issue #$issue_number"
+            gh issue edit "$issue_number" --body-file "$body_file"
+          else
+            echo "Erstelle neuen Snapshot-Issue"
+            gh issue create \
+              --title "Sonar Issue Snapshot - main" \
+              --label sonar-snapshot \
+              --body-file "$body_file"
+          fi
+
+  # -------------------------------------------------------------------------
+  # Frontend: Lint, Build, Unit-Tests (Karma/Jasmine ChromeHeadless).
+  # -------------------------------------------------------------------------
+  frontend:
+    name: Frontend (Lint + Build + Test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cvm-frontend/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: cvm-frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: cvm-frontend
+        run: npm run lint
+
+      - name: Unit-Tests (ChromeHeadlessNoSandbox)
+        working-directory: cvm-frontend
+        run: npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox
+
+      - name: Build (development fuer E2E)
+        working-directory: cvm-frontend
+        run: npm run build -- --configuration=development
+
+      - name: Upload Frontend-Dist (fuer E2E)
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: cvm-frontend/dist/cvm-frontend/browser
+          if-no-files-found: error
+          retention-days: 1
+
+  # -------------------------------------------------------------------------
+  # E2E: Playwright-Smoke-Test (Login -> Dashboard) gegen frisch gebauten
+  # Stack (Postgres + Keycloak + Backend + Frontend). Trace/Screenshot/Video
+  # bei Failure als Artefakt.
+  # -------------------------------------------------------------------------
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [backend, frontend]
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: cvm
+          POSTGRES_PASSWORD: cvm
+          POSTGRES_DB: cvm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U cvm -d cvm"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=15
+
+      keycloak:
+        image: quay.io/keycloak/keycloak:24.0
+        env:
+          KEYCLOAK_ADMIN: admin
+          KEYCLOAK_ADMIN_PASSWORD: admin
+          KC_HEALTH_ENABLED: 'true'
+        ports:
+          - 8080:8080
+        options: >-
+          --health-cmd="curl -fsS http://localhost:8080/health/ready || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=30
+
+    env:
+      CVM_SERVER_PORT: '8081'
+      E2E_BASE_URL: 'http://localhost:4200'
+      E2E_KEYCLOAK_URL: 'http://localhost:8080'
+      E2E_ADMIN_USER: 'a.admin@ahs.test'
+      E2E_ADMIN_PASS: 'admin'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: cvm-frontend/package-lock.json
+
+      - name: Download Backend-JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-jar
+          path: cvm-app/target
+
+      - name: Download Frontend-Dist
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: cvm-frontend/dist/cvm-frontend/browser
+
+      - name: Import Keycloak-Realm
+        run: |
+          set -euo pipefail
+          echo "Warte auf Keycloak-Ready..."
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/health/ready >/dev/null 2>&1; then
+              echo "Keycloak ready."
+              break
+            fi
+            sleep 2
+          done
+          TOKEN=$(curl -fsS -X POST \
+            -d "grant_type=password" \
+            -d "client_id=admin-cli" \
+            -d "username=admin" \
+            -d "password=admin" \
+            http://localhost:8080/realms/master/protocol/openid-connect/token \
+            | jq -r .access_token)
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d @infra/keycloak/dev-realm.json \
+            http://localhost:8080/admin/realms
+          echo "Realm cvm-local importiert."
+
+      - name: Start Backend
+        run: |
+          set -euo pipefail
+          nohup java -jar cvm-app/target/cvm-app-*.jar \
+            --spring.datasource.url=jdbc:postgresql://localhost:5432/cvm \
+            --spring.datasource.username=cvm \
+            --spring.datasource.password=cvm \
+            > backend.log 2>&1 &
+          echo $! > backend.pid
+          echo "Warte auf /actuator/health..."
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8081/actuator/health 2>/dev/null | grep -q '"status":"UP"'; then
+              echo "Backend up nach $i Versuchen."
+              break
+            fi
+            sleep 2
+            if [ "$i" = "90" ]; then
+              echo "Backend nicht gestartet. Letzte Logzeilen:"
+              tail -100 backend.log
+              exit 1
+            fi
+          done
+
+      - name: Serve Frontend
+        working-directory: cvm-frontend
+        run: |
+          set -euo pipefail
+          nohup npx --yes http-server dist/cvm-frontend/browser \
+            -p 4200 --proxy "http://localhost:4200?" \
+            > ../frontend.log 2>&1 &
+          echo $! > ../frontend.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:4200 >/dev/null 2>&1; then
+              echo "Frontend up nach $i Versuchen."
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Install Playwright + Chromium
+        working-directory: cvm-frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Playwright-Smoke laufen lassen
+        working-directory: cvm-frontend
+        run: npx playwright test
+
+      - name: Upload Playwright-Report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.run_number }}
+          path: |
+            cvm-frontend/playwright-report/
+            cvm-frontend/test-results/
+            backend.log
+            frontend.log
+          retention-days: 14
