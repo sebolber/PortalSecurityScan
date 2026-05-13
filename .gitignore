@@ -33,3 +33,9 @@ application-local.yaml
 
 # Testcontainers Reuse-Properties (lokal)
 .testcontainers.properties
+
+# Playwright (E2E)
+**/playwright-report/
+**/test-results/
+backend.pid
+frontend.pid
