@@ -96,6 +96,7 @@ class AssessmentImmutableTest extends AbstractPersistenceIntegrationsTest {
                 .productVersion(pv)
                 .sbomFormat("CycloneDX")
                 .sbomChecksum("sha256:imm")
+                .contentSha256("sha256:imm-content")
                 .scannedAt(Instant.now())
                 .build());
         Component comp = componentRepository.save(
