@@ -57,12 +57,12 @@
         <failsafe-plugin.version>3.5.1</failsafe-plugin.version>
 
         <!-- SonarCloud -->
-        <sonar.projectKey>TBD</sonar.projectKey>
-        <sonar.organization>TBD</sonar.organization>
+        <sonar.projectKey>sebolber_PortalSecurityScan</sonar.projectKey>
+        <sonar.organization>sebolber</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>
-            ${project.basedir}/../target/site/jacoco-aggregate/jacoco.xml
-        </sonar.coverage.jacoco.xmlReportPaths>
+        <!-- Per-Modul-Pfad: Sonar laeuft je Maven-Modul und liest jeweils das modul-eigene jacoco.xml. -->
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.exclusions>cvm-frontend/dist/**,cvm-frontend/node_modules/**,**/generated-sources/**,**/target/**</sonar.exclusions>
 
         <!-- JaCoCo Schwellwert -->
         <jacoco.minimum.line.coverage>0.80</jacoco.minimum.line.coverage>
