@@ -75,45 +75,53 @@ class AssessmentImmutableTest extends AbstractPersistenceIntegrationsTest {
     }
 
     private Assessment bereiteAssessmentVor() {
-        Product produkt = productRepository.save(
-                Product.builder().name("PortalCore-Test").key("pc-imm").build());
-        ProductVersion pv = productVersionRepository.save(
-                ProductVersion.builder()
-                        .product(produkt)
-                        .version("1.0.0-imm")
-                        .build());
-        Environment env = environmentRepository.save(
-                Environment.builder()
-                        .key("REF-IMM")
-                        .name("Referenz Immutable")
-                        .stage(EnvironmentStage.REF)
-                        .build());
-        Scan scan = scanRepository.save(
-                Scan.builder()
-                        .productVersion(pv)
-                        .sbomFormat("CycloneDX")
-                        .sbomChecksum("sha256:imm")
-                        .scannedAt(Instant.now())
-                        .build());
+        Product produkt = productRepository.save(Product.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .name("PortalCore-Test")
+                .key("pc-imm")
+                .build());
+        ProductVersion pv = productVersionRepository.save(ProductVersion.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .product(produkt)
+                .version("1.0.0-imm")
+                .build());
+        Environment env = environmentRepository.save(Environment.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .key("REF-IMM")
+                .name("Referenz Immutable")
+                .stage(EnvironmentStage.REF)
+                .build());
+        Scan scan = scanRepository.save(Scan.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .productVersion(pv)
+                .sbomFormat("CycloneDX")
+                .sbomChecksum("sha256:imm")
+                .scannedAt(Instant.now())
+                .build());
         Component comp = componentRepository.save(
                 Component.builder()
                         .purl("pkg:maven/org.test/imm@1.0")
                         .name("imm")
                         .version("1.0")
                         .build());
-        ComponentOccurrence occ = occurrenceRepository.save(
-                ComponentOccurrence.builder().scan(scan).component(comp).direct(true).build());
+        ComponentOccurrence occ = occurrenceRepository.save(ComponentOccurrence.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .scan(scan)
+                .component(comp)
+                .direct(true)
+                .build());
         Cve cve = cveRepository.save(
                 Cve.builder().cveId("CVE-2026-22610").source("NVD").build());
-        Finding finding = findingRepository.save(
-                Finding.builder()
-                        .scan(scan)
-                        .componentOccurrence(occ)
-                        .cve(cve)
-                        .detectedAt(Instant.now())
-                        .build());
+        Finding finding = findingRepository.save(Finding.builder()
+                .tenantId(DEFAULT_TENANT_ID)
+                .scan(scan)
+                .componentOccurrence(occ)
+                .cve(cve)
+                .detectedAt(Instant.now())
+                .build());
 
         Assessment assessment = Assessment.builder()
+                .tenantId(DEFAULT_TENANT_ID)
                 .finding(finding)
                 .productVersion(pv)
                 .environment(env)
